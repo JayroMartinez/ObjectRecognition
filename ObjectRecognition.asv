@@ -8,11 +8,6 @@ function ObjectRecognition
 % CREATED:          17/06/21
 % LAST MODIFIED:    19/07/21
 
-% TODO:
-%       - Variance explained plots
-%       - Calculate (cluster) Synergies
-%       - Plot Synergies
-
 %% DATA LOADING
 
 subjects_to_load = {'Subject_3';'Subject_4'};
@@ -31,7 +26,7 @@ pca_values = {};
 
 for j = 1:numel(all_data)
    
-    [coeff, scores, explained] = pca_calculation(table2array(all_data{j}));
+    [coeff, scores, explained] = pca_calculation(all_data{j});
     
     pca_values{j,1} = coeff;
     pca_values{j,2} = scores;
@@ -43,15 +38,22 @@ end
 
 %% PCA CALCULATION FOR ALL SUBJECTS
 
-all_subjects = [];
+all_data = 
+[] = 
 
-for k = 1:numel(pca_values(:,1))
-
-    [all_subjects] = [all_subjects; cell2mat(pca_values(k,1))];
-
-end
-
-[all_subjects_coeff, all_subjects_scores, all_subjects_explained] = pca_calculation(all_subjects);
+%% DATA PROJECTED INTO PCS 1-3 LAYING IN THE ORIGINAL SPACE
+% reconstruction_pc1 = n_score(:,1) * n_coeff(:,1)';
+% reconstruction_pc2 = n_score(:,2) * n_coeff(:,2)';
+% reconstruction_pc3 = n_score(:,3) * n_coeff(:,3)';
+% 
+% figure;
+% hold on;
+% scatter3(table2array(norm_data(:,1)),table2array(norm_data(:,2)),table2array(norm_data(:,3)), 'y.');
+% plot3(reconstruction_pc1(:,1),reconstruction_pc1(:,2),reconstruction_pc1(:,3), 'b');
+% plot3(reconstruction_pc2(:,1),reconstruction_pc2(:,2),reconstruction_pc2(:,3), 'g');
+% plot3(reconstruction_pc3(:,1),reconstruction_pc3(:,2),reconstruction_pc3(:,3), 'r');
+% daspect([1 1 1]);
+% grid on;
 
 
 %% CLUSTERING
