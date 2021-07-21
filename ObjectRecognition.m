@@ -8,11 +8,6 @@ function ObjectRecognition
 % CREATED:          17/06/21
 % LAST MODIFIED:    20/07/21
 
-% TODO:
-%       - Variance explained plots
-%       - Calculate (cluster) Synergies
-%       - Plot Synergies
-
 %% DATA LOADING
 
 subjects_to_load = {'Subject_3';'Subject_4'};
@@ -70,9 +65,24 @@ for l = 1:numel(subjects_to_load)
     
 end
 
-% Add coeffs calculated for all subjects together
-pcs = [pcs; all_subjects_coeff'];
+% Logical that indicates if we include data from all subjects together
+include_all_subjects = logical(false);
+% If the data from all subjects together is included, we update the number
+% of subjects and add coeffs calculated for all subjects together
+if include_all_subjects
+    number_of_subjects = numel(subjects_to_load) + 1;
+    pcs = [pcs; all_subjects_coeff'];
+else
+    number_of_subjects = numel(subjects_to_load);
+end
 
-clustering(pcs, numel(subjects_to_load));
+% synergies = clustering(pcs, number_of_subjects);
+
+% Because clustering is not giving good results for two subjects + both
+% subjects together, we want to perform a recursive clustering.
+synergies = []; % Array to be filled with synergies
+synergies = recursive_clustering(pcs, number_of_subjects, synergies);
+
+% WARNING: Sort synergies by eigenvalues
 
 end
