@@ -1,9 +1,4 @@
-function clusters = clustering(pcs, number_of_subjects)
-
-%%%%%%% WARNING: 
-%%%%%%% 1) Return synergies and not clusters
-%%%%%%% 2) After creating the synergies we have to sort it depending
-%%%%%%%    on the eigenvalues
+function synergies = clustering(pcs, number_of_subjects)
 
 % CLUSTERING Generates the synergies through clustering. It should be
 % notices that the clusters have no restrictions so could be clusters with
@@ -22,9 +17,9 @@ function clusters = clustering(pcs, number_of_subjects)
 % number_of_subjects:   Number of subjects that has been loaded.
 %
 % OUTPUT
-% clusters:             Matrix with a row per PC and a column per subject.
-%                       The value in each position (i,j) represents the
-%                       cluster for PC 'i' and Subject 'j'.
+% synergies:            Array with the synergies. Each value in position 
+%                       (i,j) represents the PC for subject 'j' that 
+%                       belongs to synergy 'i'.
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          19/07/21
@@ -41,241 +36,99 @@ ylabel('Cluster');
 
 clusters = aux_kmean;
 
-% BARPLOTS SYNERGIES
-% joint_names = clean_data.Properties.VariableNames;
-% joint_names = regexprep(joint_names, '\w_', '');
-% 
-% % S1
-% figure;
-% b = bar([s3_coeff(:,1),s4_coeff(:,1)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 1');
-% legend('Location', 'best');
-% 
-% 
-% % S2
-% figure;
-% subplot(2,2,1);
-% b = bar([s3_coeff(:,2),s4_coeff(:,3)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 2');
-% % legend('Location', 'best');
-% 
-% % S3
-% % figure;
-% subplot(2,2,2);
-% b = bar([s3_coeff(:,3),s4_coeff(:,2)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 3');
-% % legend('Location', 'best');
-% 
-% % S4
-% % figure;
-% subplot(2,2,3);
-% b = bar([s3_coeff(:,4),s4_coeff(:,7)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 4');
-% % legend('Location', 'best');
-% 
-% % S5
-% % figure;
-% subplot(2,2,4);
-% b = bar([s3_coeff(:,5),s4_coeff(:,5)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 5');
-% legend('Location', 'best');
-% 
-% % S6
-% figure;
-% subplot(2,2,1);
-% b = bar([s3_coeff(:,6),s4_coeff(:,6)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 6');
-% % legend('Location', 'best');
-% 
-% % S7
-% % figure;
-% subplot(2,2,2);
-% b = bar([s3_coeff(:,7),s4_coeff(:,10)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 7');
-% % legend('Location', 'best');
-% 
-% % S8
-% % figure;
-% subplot(2,2,3);
-% b = bar([s3_coeff(:,8),s4_coeff(:,13)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 8');
-% % legend('Location', 'best');
-% 
-% % S9
-% % figure;
-% subplot(2,2,4);
-% b = bar([s3_coeff(:,9),s4_coeff(:,12)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 9');
-% legend('Location', 'best');
-% 
-% % S10
-% figure;
-% subplot(2,2,1);
-% b = bar([s3_coeff(:,10),s4_coeff(:,9)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 10');
-% % legend('Location', 'best');
-% 
-% % S11
-% % figure;
-% subplot(2,2,2);
-% b = bar([s3_coeff(:,11),s4_coeff(:,8)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 11');
-% % legend('Location', 'best');
-% 
-% % S12
-% % figure;
-% subplot(2,2,3);
-% b = bar([s3_coeff(:,12),s4_coeff(:,14)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 12');
-% % legend('Location', 'best');
-% 
-% % S13
-% % figure;
-% subplot(2,2,4);
-% b = bar([s3_coeff(:,13),s4_coeff(:,15)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 13');
-% legend('Location', 'best');
-% 
-% % S14
-% figure;
-% subplot(2,2,1);
-% b = bar([s3_coeff(:,14),s4_coeff(:,4)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 14');
-% % legend('Location', 'best');
-% 
-% % S15
-% % figure;
-% subplot(2,2,2);
-% b = bar([s3_coeff(:,15),s4_coeff(:,16)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 15');
-% % legend('Location', 'best');
-% 
-% % S16
-% % figure;
-% subplot(2,2,3);
-% b = bar([s3_coeff(:,16),s4_coeff(:,11)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 16');
-% % legend('Location', 'best');
-% 
-% % S17
-% % figure;
-% subplot(2,2,4);
-% b = bar([s3_coeff(:,17),s4_coeff(:,18)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 17');
-% legend('Location', 'best');
-% 
-% % S18
-% figure;
-% b = bar([s3_coeff(:,18),s4_coeff(:,17)]);
-% b(1).FaceColor = 'red';
-% b(2).FaceColor = 'blue';
-% set(b, {'DisplayName'}, {'Subject 3'; 'Subject 4'});
-% set(gca,'xtick',1:numel(joint_names));
-% set(gca,'XTickLabel',joint_names);
-% xtickangle(45);
-% title('Synergy 18');
-% legend('Location', 'best');
+%% Synergy creation
+
+synergies = [];
+
+for iter = 1:size(clusters,1)
+    
+    % Find all PCs corresponding to cluster 'i'
+    [row_i, col_i] = find(ismember(aux_kmean,iter));
+    
+    aux_synergy = [];
+
+    % PC only once per subject and present in all subjects
+    if numel(col_i) == numel(unique(col_i)) && numel(col_i) == number_of_subjects
+
+        for i = 1:number_of_subjects
+            aux_synergy = [aux_synergy, row_i(find(ismember(col_i,i)))];
+        end
+
+    % PC only once per subject but NOT present in all subjects
+    elseif numel(col_i) == numel(unique(col_i)) && numel(col_i) < number_of_subjects
+
+        for i = 1:number_of_subjects
+            if ~isempty(find(ismember(col_i,i))) % If subject is present in the synergy
+
+                aux_synergy = [aux_synergy, row_i(find(ismember(col_i,i)))];
+
+            else % Else, write NaN
+
+                aux_synergy = [aux_synergy, NaN];
+
+            end
+        end
+
+    % PC repeated in some subject and present in all subjects
+    elseif numel(col_i) > numel(unique(col_i)) && numel(unique(col_i)) == number_of_subjects
+
+        clu_sc = reshape(silh3, [], number_of_subjects); % PC silhouette scores by subject
+
+        for i = 1:number_of_subjects
+
+            if numel(find(ismember(col_i,i))) == 1 % If there is only one PC for subject 'i'
+
+                aux_synergy = [aux_synergy, row_i(find(ismember(col_i,i)))];
+
+            else
+
+                % Get sihlouette scores for 'i' subject's PCs
+                sh_max = max(clu_sc(row_i(find(ismember(col_i,i))),i));
+
+                % Get PC with higher silhouette value
+                sh_max_pos = find(ismember(clu_sc(:,i),sh_max));
+
+                % Save that PC
+                aux_synergy = [aux_synergy, sh_max_pos];
+
+            end
+
+        end
+        
+    % PC repeated in some subject but NOT present in all subjects
+    elseif numel(col_i) > numel(unique(col_i)) && numel(unique(col_i)) < number_of_subjects
+
+        clu_sc = reshape(silh3, [], number_of_subjects); % PC silhouette scores by subject
+
+        for i = 1:number_of_subjects
+
+            if isempty(find(ismember(col_i,i))) % If subject is NOT present in the synergy
+                
+                aux_synergy = [aux_synergy, NaN];
+            
+            elseif numel(find(ismember(col_i,i))) == 1 % If there is only one PC for subject 'i'
+
+                aux_synergy = [aux_synergy, row_i(find(ismember(col_i,i)))];
+
+            else % If there is more than one PC for subject 'i'
+
+                % Get sihlouette scores for 'i' subject's PCs
+                sh_max = max(clu_sc(row_i(find(ismember(col_i,i))),i));
+
+                % Get PC with higher silhouette value
+                sh_max_pos = find(ismember(clu_sc(:,i),sh_max));
+
+                % Save that PC
+                aux_synergy = [aux_synergy, sh_max_pos];
+
+            end
+
+        end
+
+    end
+    
+    synergies = [synergies; aux_synergy];
+    
+end
 
 end

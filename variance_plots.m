@@ -45,5 +45,4 @@ ylim([0 100]);
 legend('Location', 'best', 'Interpreter', 'none');
 title('Cumulative variance');
 
-
 end
