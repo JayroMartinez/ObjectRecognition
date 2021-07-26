@@ -66,7 +66,7 @@ for l = 1:numel(subjects_to_load)
 end
 
 % Logical that indicates if we include data from all subjects together
-include_all_subjects = logical(true);
+include_all_subjects = logical(false);
 % If the data from all subjects together is included, we update the number
 % of subjects and add coeffs calculated for all subjects together
 if include_all_subjects
@@ -96,11 +96,25 @@ r_synergies = recursive_clustering(pcs, number_of_subjects, r_synergies, number_
 % SORT SYNERGIES
 [sorted_r_syn,sorted_r_var] = sort_synergies(r_synergies,expl_var);
 
+% CLUSTER EVALUATION
+qual_trad = cluster_evaluation(sorted_syn, pcs);
+mean_trad = mean(qual_trad);
+qual_rec = cluster_evaluation(sorted_r_syn, pcs);
+mean_rec = mean(qual_rec);
+
+max_y = max([qual_trad, qual_rec],[],'all');
+figure;
+b = bar([qual_trad, qual_rec]);
+set(b, {'DisplayName'}, [{'Modified Traditional'}; {'Recursive'}]);
+text(1, max_y - 0.05, ['Modified Traditional Mean: ' num2str(round(mean_trad,3))]);
+text(1, max_y - 0.08, ['Recursive Mean: ' num2str(round(mean_rec,3))]);
+legend('Location', 'best', 'Interpreter', 'none');
+
 %% SYNERGY PLOTS
 
 joint_names = all_data{1}.Properties.VariableNames;
 
-plot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
-plot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
+% plot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
+% plot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
 end

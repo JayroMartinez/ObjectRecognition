@@ -1,5 +1,31 @@
 function plot_synergies(synergies, joint_names, subjects_to_load, coeffs)
 
+% PLOT_SYNERGIES Creates a barplot for each synergy containing all subjects
+%                present in that synergy.
+%
+% INPUT
+% synergies:        NxM matrix where each row represents a synergy and each
+%                   column represents a subject. Each position (i,j)
+%                   represents the PC for subject 'j'that belongs to
+%                   synergy 'i'.
+%
+% joint_names:      A cell array containing the joint names.
+%
+% subjects_to_load: A cell array containing the subjects names.
+%
+% coeffs:           Cell array with a position for each subject. 
+%                   Each position contains the coefficients for that
+%                   particular subject as  a NxM matrix with each row
+%                   representing a joint and each column representing a PC.
+%                   Each position (i,j) in this matrix is the coefficient
+%                   for joint 'i' that belongs to PC 'j'.
+% 
+%
+% AUTHOR:           Jayro Martinez-Cervero
+% CREATED:          22/07/21
+% LAST MODIFIED:    22/07/21
+
+
 % Clean joint names
 joint_names = regexprep(joint_names, '\w_', '');
 
