@@ -28,7 +28,7 @@ function [synergies] = recursive_clustering(pcs, number_of_subjects, synergies, 
 
 if number_of_clusters > 2 
 
-    [idx_means,C,sumd,D] = kmeans(pcs,number_of_clusters, 'Distance', 'sqEuclidean','EmptyAction','error','OnlinePhase','on','Replicates',25);
+    [idx_means,C,sumd,D] = kmeans(pcs,number_of_clusters, 'Distance', 'sqEuclidean','EmptyAction','error','OnlinePhase','on','Replicates',250);
     aux_kmean = reshape(idx_means, [], number_of_subjects); % Split by subjects
 
     eva = evalclusters(pcs, idx_means, 'silhouette'); % Evaluate clusters
@@ -131,13 +131,15 @@ if number_of_clusters > 2
             end
 
         end
-
+        
         pcs_per_subject = size(aux_kmean,1);
 
         for j = 1:numel(aux_synergy)
-            row_to_delete = (j-1)*pcs_per_subject + aux_synergy(j); 
+            row_to_delete = (j-1)*pcs_per_subject + aux_synergy(j);
             % Delete data from PCs added to synergies
-            pcs(row_to_delete,:) = NaN;
+            if ~isnan(row_to_delete)
+                pcs(row_to_delete,:) = NaN;
+            end
         end
 
     end 
