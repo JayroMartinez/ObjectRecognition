@@ -6,17 +6,28 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    03/11/21
+% LAST MODIFIED:    18/11/21
+
+clear all;
+close all;
+clc;
 
 %% DATA LOADING
 
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11'};
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_14'};
+% subjects_to_load = {'Subject_14'};
+
+% Sources initialization
+glove = logical(false);
+vicon = logical(true);
+
+sources = [glove vicon];
 
 all_data = {};
 
 for i = 1:numel(subjects_to_load)
     
-    all_data{i} = load_subject(subjects_to_load{i});
+    all_data{i} = load_subject(subjects_to_load{i}, sources);
    
 end
 

@@ -63,7 +63,7 @@ function random_function(sorted_syn, pca_values, means, stdevs, joint_names, sub
 
 %% DEFINE SYNERGIES
 
-syn_to_plot = 10;
+syn_to_plot = 1;
 
 % load('qm.mat');        
 % starting_conf = qm';
