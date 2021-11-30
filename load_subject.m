@@ -1,49 +1,68 @@
-function [out_data] = load_subject(subject_to_load, sources)
+function [out_data] = load_subject(subject_to_load)
 
-% LOAD_SUBJECT Function to load data corresponding to a single subject. The
-%              aim of this function is to call the load functions
-%              corresponding to the selected sources. If more that one
-%              source is selected some trasnformation is required in order
-%              to have same number of datapoints per trial on each source.
+% LOAD_SUBJECT      Function to load data corresponding to a single subject.
+%                   Because each sorce has a different number of datapoints
+%                   per trial, we have to load each trial and perform
+%                   Dynamic Time Warping on both signals. After that, both
+%                   signals are merged into a single variable.
 %
 % INPUT
 % subject_to_load:  String with the subject's name.
-% sources:          Logical array containing the selected sources. Each
-%                   position corresponds to a particular source. 
-%                   [ Glove Vicon ].
 %
 % OUTPUT
 % out_data:         Data from the corresponding subject.
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          18/11/21
-% LAST MODIFIED:    18/11/21
+% LAST MODIFIED:    25/11/21
 
+  
+file = [pwd,'/Data/', 'Cut_Data_', subject_to_load, '.mat'];
+aux_data = load(file);
 
-% Perform DTW over Glove & Vicon time to have both sources with the same
-% number of datapoints and merge both signals in the same dataset.
-if sources(1) & sources(2)
-    glove_data = load_subject_glove(subject_to_load);
-    vicon_data = load_subject_vicon(subject_to_load);
+out_data = [];
+
+for i = 1:numel(aux_data.haptic_exploration_data.subjects.tasks)
+
+    glove_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(4).data;
+    vicon_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(7).data;
     
+    % CLEAN TRIALS
+    fields_to_remove = {'ThumbAb', 'MiddleIndexAb', 'RingMiddleAb', 'PinkieRingAb'};
+    glove_clean = table2array(removevars(glove_trial, fields_to_remove));
+    fields_to_select = {'UNIX_time', 'Index_Proj_J1_Z', 'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z', 'Thumb_Proj_J1_Z'};
+    vicon_clean = vicon_trial{:,fields_to_select};
+
     % DTW
-    
-    % MERGE DATA
-   
-else
-    if sources(1) % Glove
-        glove_data = load_subject_glove(subject_to_load);
-        % Remove the abduction/adduction variables
-        fields_to_remove = {'ThumbAb', 'MiddleIndexAb', 'RingMiddleAb', 'PinkieRingAb'};
-        out_data = removevars(glove_data, fields_to_remove);
-        
-    else sources(2) % Vicon
-        vicon_data = load_subject_vicon(subject_to_load);
-        % Select only Time and abduction/adduction variables
-        fields_to_select = {'UNIX_time', 'Index_Proj_J1_Z', 'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z', 'Thumb_Proj_J1_Z'};
-        out_data = vicon_data(:, fields_to_select);
-    end
-end
+    [~, new_glove_time, new_vicon_time] = dtw(glove_clean(:,1), vicon_clean(:,1));
+    new_glove_trial = glove_clean(new_glove_time, :);
+    new_vicon_trial = vicon_clean(new_vicon_time, :);
 
+%         close all;
+%         figure_name = [subject_to_load ' Trial: ' aux_data.haptic_exploration_data.subjects.tasks(i).experiment_name];
+%         figure('Name', figure_name);
+%         subplot(2,1,1);
+%         plot(glove_clean(:,1), 'b');
+%         hold on;
+%         plot(vicon_clean(:,1), 'r');
+%         legend('Glove', 'Vicon', 'Location', 'best');
+% 
+%         subplot(2,1,2);
+%         plot(new_glove_trial(:,1), 'b');
+%         hold on;
+%         plot(new_vicon_trial(:,1), 'r');
+%         legend('Glove', 'Vicon', 'Location', 'best');
+% 
+%         figure('Name', figure_name);
+%         plot(vicon_clean(:,1), vicon_clean(:,2), '.b');
+%         hold on;
+%         plot(new_glove_trial(:,1), new_vicon_trial(:,2), 'r');
+%         legend('Old Vicon', 'New Vicon', 'Location', 'best');
+
+    % MERGE DATA
+    new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end)];
+    out_data = [out_data; new_trial];
+    
+end
 
 end

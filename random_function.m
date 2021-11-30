@@ -1,4 +1,4 @@
-function random_function(sorted_syn, pca_values, means, stdevs, joint_names, subjects)
+function random_function(sorted_syn, pca_values, means, subjects)
 %% SYNERGY CALCULATION
 
 % suj_scores = cell2mat(pca_values(1,2));
@@ -63,13 +63,13 @@ function random_function(sorted_syn, pca_values, means, stdevs, joint_names, sub
 
 %% DEFINE SYNERGIES
 
-syn_to_plot = 1;
+syn_to_plot = 12;
 
 % load('qm.mat');        
 % starting_conf = qm';
 
 empty_conf = zeros(size(means,1),1);
-starting_conf = deg2rad(cat(2,means(:,1), means(:,4), means(:,2), means(:,3), empty_conf, means(:,5), means(:,6), empty_conf, empty_conf, means(:,7), means(:,8), empty_conf, empty_conf, means(:,10), means(:,11), empty_conf, empty_conf, means(:,13), means(:,14), empty_conf));
+starting_conf = deg2rad(cat(2,means(:,1), means(:,19), means(:,2), means(:,3), means(:,15), means(:,4), means(:,5), empty_conf, means(:,18), means(:,6), means(:,7), empty_conf, means(:,17), means(:,8), means(:,9), empty_conf, means(:,16), means(:,10), means(:,11), empty_conf));
 
 hand_array = [];
 
@@ -86,25 +86,25 @@ for suj = 1:size(sorted_syn,2)
         empty_row = zeros(1,size(coeffs,1));
 
         hand_syn = [coeffs(1,:),    % Thumb Rot
-                    coeffs(4,:),    % Thumb Ab
-                    coeffs(2,:),    % Thumb MPJ F
+                    coeffs(19,:),   % Thumb Ab
+                    coeffs(2,:),    % Thumb MPJ Flex
                     coeffs(3,:),    % Thumb Thumb Ij
-                    empty_row,      % Index MPJ Ab   [EMPTY]
-                    coeffs(5,:),    % Index MPJ F
-                    coeffs(6,:),    % Index PIJ
+                    coeffs(15,:),   % Index MPJ Ab
+                    coeffs(4,:),    % Index MPJ Flex
+                    coeffs(5,:),    % Index PIJ
                     empty_row,      % Index DIP      [EMPTY]
-                    empty_row,      % Middle MPJ Ab  [EMPTY]
-                    coeffs(7,:),    % Middle MPJ F
-                    coeffs(8,:),    % Middle PIJ
+                    coeffs(18,:),   % Middle MPJ Ab
+                    coeffs(6,:),    % Middle MPJ Flex
+                    coeffs(7,:),    % Middle PIJ
                     empty_row,      % Middle DIP     [EMPTY]
-                    empty_row,      % Ring MPJ Ab    [EMPTY]
-                    coeffs(10,:),   % Ring MPJ F
-                    coeffs(11,:),   % Ring PIJ
+                    coeffs(17,:),   % Ring MPJ Ab
+                    coeffs(8,:),    % Ring MPJ Flex
+                    coeffs(9,:),    % Ring PIJ
                     empty_row,      % Ring DIP       [EMPTY]
-                    empty_row,      % Little MPJ Ab  [EMPTY]
-                    coeffs(13,:),   % Little MPJ F
-                    coeffs(14,:),   % Little PIJ
-                    empty_row];     % Little DIP     [EMPTY]
+                    coeffs(16,:),   % Pinkie MPJ Ab
+                    coeffs(10,:),   % Pinkie MPJ Flex
+                    coeffs(11,:),   % Pinkie PIJ
+                    empty_row];     % Pinkie DIP     [EMPTY]
 
         synergy_activation = zeros(size(coeffs,1),1);
         synergy_activation(get_pc) = 1;
@@ -120,7 +120,7 @@ for suj = 1:size(sorted_syn,2)
         hand_array = [hand_array; ha_init ha_mean ha_end];
     
     else
-        subjects(strcmp(subjects,original_subjects(suj))) = []
+        subjects(strcmp(subjects,original_subjects(suj))) = [];
     end
     
 end

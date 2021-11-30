@@ -1,5 +1,9 @@
 function [out_data] = load_subject(subject_to_load)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                     DEPRECATED                    %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % LOAD_SUBJECT_VICON Function to load Vicon data corresponding to a single 
 %                    subject.
 %

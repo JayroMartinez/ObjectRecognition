@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    18/11/21
+% LAST MODIFIED:    25/11/21
 
 clear all;
 close all;
@@ -14,20 +14,15 @@ clc;
 
 %% DATA LOADING
 
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_14'};
-% subjects_to_load = {'Subject_14'};
-
-% Sources initialization
-glove = logical(false);
-vicon = logical(true);
-
-sources = [glove vicon];
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10'};
+% subjects_to_load = {'Subject_3';'Subject_4';'Subject_5'};
+% subjects_to_load = {'Subject_5'};
 
 all_data = {};
 
 for i = 1:numel(subjects_to_load)
     
-    all_data{i} = load_subject(subjects_to_load{i}, sources);
+    all_data{i} = load_subject(subjects_to_load{i});
    
 end
 
@@ -35,14 +30,14 @@ end
 
 pca_values = {};
 means = [];
-stdevs = [];
+% stdevs = [];
 
 for j = 1:numel(all_data)
     
-    aux_mean = [];
-    aux_stdev = [];
+%     aux_mean = [];
+%     aux_stdev = [];
     
-    subject_data = table2array(all_data{j});
+    subject_data = all_data{j};
    
     [coeff, scores, explained] = pca_calculation(subject_data);
     
@@ -50,18 +45,17 @@ for j = 1:numel(all_data)
     pca_values{j,2} = scores;
     pca_values{j,3} = explained;
     
-    aux_mean = mean(subject_data);
-    aux_stdev = std(subject_data);
-    
+    aux_mean = mean(subject_data, 'omitnan');
+%     aux_stdev = std(subject_data);
+%     
     means = [means; aux_mean];
-    stdevs = [stdevs; aux_stdev];
+%     stdevs = [stdevs; aux_stdev];
     
-    clear coeff scores explained aux_mean aux_stdev;
+    clear coeff scores explained aux_mean;
+%     clear aux_mean aux_stdev;
     
 end
 
-% joint_names = all_data{1}.Properties.VariableNames;
-% random_function(pca_values, means, stdevs,joint_names);
 
 %% PCA CALCULATION FOR ALL SUBJECTS
 
@@ -69,7 +63,7 @@ all_subjects = [];
 
 for k = 1:numel(pca_values(:,1))
 
-    [all_subjects] = [all_subjects; table2array(all_data{k})];
+    [all_subjects] = [all_subjects; all_data{k}];
 
 end
 
@@ -83,7 +77,7 @@ end
 
 % Here we change oder. PCS coeffs are organized as Joints x PCs (rows x
 % columns) and we want PCs x Joints (note that PC1 from a subject comes the
-% row after PC18 of previous subject.
+% row after last PC of previous subject.
 pcs = [];
 
 for l = 1:numel(subjects_to_load)
@@ -102,8 +96,8 @@ if include_all_subjects
     expl_var = [cell2mat(pca_values(:,3)'), all_subjects_explained];
     coeffs = [pca_values(:,1);{all_subjects_coeff}];
     subjects_to_load = [subjects_to_load;{'All Subjects'}];
-    means = [means; mean(all_subjects)];
-    stdevs = [stdevs; std(all_subjects)];
+    means = [means; mean(all_subjects, 'omitnan')];
+%     stdevs = [stdevs; std(all_subjects)];
     pca_values{3,1} = all_subjects_coeff;
     pca_values{3,2} = all_subjects_scores;
     pca_values{3,3} = all_subjects_explained;
@@ -145,10 +139,9 @@ mean_trad = mean(qual_trad);
 
 %% SYNERGY PLOTS
 
-joint_names = all_data{1}.Properties.VariableNames;
-
 % plot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
 % plot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
-random_function(sorted_syn, pca_values, means, stdevs, joint_names, subjects_to_load);
+random_function(sorted_syn, pca_values, means, subjects_to_load);
+
 end

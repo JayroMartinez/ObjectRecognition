@@ -1,4 +1,8 @@
-function [out_data] = load_subject_glove(subject_to_load)
+function [out_data] = load_subject_glove(subject_to_load) 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                     DEPRECATED                    %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % LOAD_SUBJECT_GLOVE Function to load data corresponding to a single subject.
 %
