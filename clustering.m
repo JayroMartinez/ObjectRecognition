@@ -12,7 +12,8 @@ function synergies = clustering(pcs, number_of_subjects)
 %                       PCs per subject]. After last PC from a subject it 
 %                       comes the first PC of the next subject. The last 
 %                       group of PCs correspond to those calculated from 
-%                       the data for all subjects together.
+%                       the data for all subjects together (in case we 
+%                       selected to include it).
 %
 % number_of_subjects:   Number of subjects that has been loaded.
 %

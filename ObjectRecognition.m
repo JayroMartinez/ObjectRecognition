@@ -139,9 +139,12 @@ mean_trad = mean(qual_trad);
 
 %% SYNERGY PLOTS
 
-% plot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
-% plot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
+% barplot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
+% barplot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
-random_function(sorted_syn, pca_values, means, subjects_to_load);
+sorted_pcs = sort_data_synergies(sorted_syn, pca_values);
+
+synergy_to_plot = 19;
+handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
 
 end

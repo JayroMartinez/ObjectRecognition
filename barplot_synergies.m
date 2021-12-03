@@ -1,6 +1,6 @@
-function plot_synergies(synergies, joint_names, subjects_to_load, coeffs)
+function barplot_synergies(synergies, joint_names, subjects_to_load, coeffs)
 
-% PLOT_SYNERGIES Creates a barplot for each synergy containing all subjects
+% BARPLOT_SYNERGIES Creates a barplot for each synergy containing all subjects
 %                present in that synergy.
 %
 % INPUT

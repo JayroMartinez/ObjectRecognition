@@ -1,5 +1,9 @@
 function [out_data] = load_subject(subject_to_load)
 
+%%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
+% TO DO: Include Thorax, Elbow and Shoulder data from Vicon %
+%%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
+
 % LOAD_SUBJECT      Function to load data corresponding to a single subject.
 %                   Because each sorce has a different number of datapoints
 %                   per trial, we have to load each trial and perform
@@ -14,7 +18,7 @@ function [out_data] = load_subject(subject_to_load)
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          18/11/21
-% LAST MODIFIED:    25/11/21
+% LAST MODIFIED:    30/11/21
 
   
 file = [pwd,'/Data/', 'Cut_Data_', subject_to_load, '.mat'];

@@ -1,4 +1,4 @@
-function random_function(sorted_syn, pca_values, means, subjects)
+function old_handplot_synergies(sorted_syn, pca_values, means, subjects)
 %% SYNERGY CALCULATION
 
 % suj_scores = cell2mat(pca_values(1,2));
@@ -63,13 +63,10 @@ function random_function(sorted_syn, pca_values, means, subjects)
 
 %% DEFINE SYNERGIES
 
-syn_to_plot = 12;
-
-% load('qm.mat');        
-% starting_conf = qm';
+syn_to_plot = 1;
 
 empty_conf = zeros(size(means,1),1);
-starting_conf = deg2rad(cat(2,means(:,1), means(:,19), means(:,2), means(:,3), means(:,15), means(:,4), means(:,5), empty_conf, means(:,18), means(:,6), means(:,7), empty_conf, means(:,17), means(:,8), means(:,9), empty_conf, means(:,16), means(:,10), means(:,11), empty_conf));
+starting_conf = deg2rad(cat(2,means(:,19), means(:,1), means(:,2), -means(:,3), means(:,15), means(:,4), means(:,5), empty_conf, means(:,18), means(:,6), means(:,7), empty_conf, means(:,17), means(:,8), means(:,9), empty_conf, means(:,16), means(:,10), means(:,11), empty_conf));
 
 hand_array = [];
 
@@ -85,10 +82,10 @@ for suj = 1:size(sorted_syn,2)
 
         empty_row = zeros(1,size(coeffs,1));
 
-        hand_syn = [coeffs(1,:),    % Thumb Rot
-                    coeffs(19,:),   % Thumb Ab
+        hand_syn = [coeffs(19,:),   % Thumb Ab
+                    coeffs(1,:),    % Thumb Rot
                     coeffs(2,:),    % Thumb MPJ Flex
-                    coeffs(3,:),    % Thumb Thumb Ij
+                    -coeffs(3,:),   % Thumb Thumb Ij
                     coeffs(15,:),   % Index MPJ Ab
                     coeffs(4,:),    % Index MPJ Flex
                     coeffs(5,:),    % Index PIJ
