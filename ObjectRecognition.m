@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    25/11/21
+% LAST MODIFIED:    07/12/21
 
 clear all;
 close all;
@@ -110,7 +110,7 @@ end
 
 synergies = clustering(pcs, number_of_subjects);
 
-% SORT SYNERGIES
+%% SORT SYNERGIES
 [sorted_syn,sorted_var] = sort_synergies(synergies,expl_var);
 
 % % Because clustering is not giving good results for two subjects + both
@@ -144,7 +144,11 @@ mean_trad = mean(qual_trad);
 
 sorted_pcs = sort_data_synergies(sorted_syn, pca_values);
 
-synergy_to_plot = 19;
-handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
+% synergy_to_plot = 19;
+% handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
+
+%% SYNERGY VARIANCE CALCULATION
+
+synergy_variances = syn_variance_calculation(sorted_pcs);
 
 end

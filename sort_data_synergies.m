@@ -12,8 +12,9 @@ function sorted_pcs = sort_data_synergies(sorted_syn, pca_values)
 %              variance.
 %
 % OUTPUT
-% sorted_pca:   M x N x P couble array [Joints x Subjects x Synergies]. 
-% sorted_means: 
+% sorted_pcs:   M x N x P couble array [Joints x Subjects x Synergies].
+%               Value (m,n,p) correspond to the joint 'm' for subject 'n'
+%               and synergy 'p'. 
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          03/12/21
