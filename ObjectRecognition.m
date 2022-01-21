@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    07/12/21
+% LAST MODIFIED:    20/01/22
 
 clear all;
 close all;
@@ -14,7 +14,7 @@ clc;
 
 %% DATA LOADING
 
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10'};
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_14'};
 % subjects_to_load = {'Subject_3';'Subject_4';'Subject_5'};
 % subjects_to_load = {'Subject_5'};
 
@@ -144,11 +144,11 @@ mean_trad = mean(qual_trad);
 
 sorted_pcs = sort_data_synergies(sorted_syn, pca_values);
 
-% synergy_to_plot = 19;
-% handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
+synergy_to_plot = 2;
+handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
 
 %% SYNERGY VARIANCE CALCULATION
 
-synergy_variances = syn_variance_calculation(sorted_pcs);
+% synergy_variances = syn_variance_calculation(sorted_pcs);
 
 end

@@ -12,19 +12,22 @@ function synergy_variances = syn_variance_calculation(sorted_pcs)
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          07/12/21
-% LAST MODIFIED:    07/12/21
+% LAST MODIFIED:    20/01/22
 
 
 synergy_variances = {};
 mean_syn_var = NaN(size(sorted_pcs, 3),1);
+mean_eucl = NaN(size(sorted_pcs, 3),1);
 
 for syn = 1:size(sorted_pcs, 3)
    
     mean_syn = mean(sorted_pcs(:,:,syn), 2, 'omitnan');
     clean_syns =  sorted_pcs(:,all(~isnan(sorted_pcs(:,:,syn))));
     dist  = pdist2(clean_syns', mean_syn', 'cosine');
+    eucl = pdist2(clean_syns', mean_syn', 'euclidean');
     synergy_variances{syn} = 1 - abs(1-dist);
     mean_syn_var(syn) = mean(synergy_variances{syn});
+    mean_eucl(syn) = mean(eucl);
 
 end
 
@@ -47,8 +50,9 @@ min_dat = min(data_to_plot);
 figure;
 plot(mean_syn_var, 'r');
 hold on;
+plot(mean_eucl, 'g');
 patch([x fliplr(x)], [max_dat  fliplr(min_dat)], [0.3010 0.7450 0.9330],'FaceAlpha',.25)
-legend('Mean Cosine Distance', 'Cosine Distance Range', 'Location', 'best');
+legend('Mean Cosine Distance', 'Mean Euclidean Distance', 'Cosine Distance Range', 'Location', 'best');
 title('Cosine Distance for each Synergy');
 
 end

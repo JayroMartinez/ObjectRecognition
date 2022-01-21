@@ -18,7 +18,7 @@ function [out_data] = load_subject(subject_to_load)
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          18/11/21
-% LAST MODIFIED:    30/11/21
+% LAST MODIFIED:    05/01/22
 
   
 file = [pwd,'/Data/', 'Cut_Data_', subject_to_load, '.mat'];
@@ -28,8 +28,8 @@ out_data = [];
 
 for i = 1:numel(aux_data.haptic_exploration_data.subjects.tasks)
 
-    glove_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(4).data;
-    vicon_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(7).data;
+    glove_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(5).data;
+    vicon_trial = aux_data.haptic_exploration_data.subjects.tasks(i).data(8).data;
     
     % CLEAN TRIALS
     fields_to_remove = {'ThumbAb', 'MiddleIndexAb', 'RingMiddleAb', 'PinkieRingAb'};
