@@ -43,7 +43,7 @@ for suj = 1:size(selected_pcs,2)
             0];           % Pinkie DIP      [EMPTY]
         
         synergy_activation = zeros(size(coeffs,1),1);
-        synergy_activation(synergy_to_plot) = 1;
+        synergy_activation(synergy_to_plot) = 1.5;
         
         ha = SGparadigmatic; % Define and create hand
         ha.S = hand_syn;

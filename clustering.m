@@ -28,10 +28,11 @@ function synergies = clustering(pcs, number_of_subjects)
 
 number_of_synergies = size(pcs,1) / (number_of_subjects);
 
-[idx_means,C,sumd,D] = kmeans(pcs,number_of_synergies, 'Distance', 'sqEuclidean','EmptyAction','error','OnlinePhase','on','Replicates',250);
+% [idx_means,C,sumd,D] = kmeans(pcs,number_of_synergies, 'Distance', 'sqEuclidean','EmptyAction','error','OnlinePhase','on','Replicates',250);
+[idx_means,C,sumd,D] = kmeans(pcs,number_of_synergies, 'Distance', 'cosine','EmptyAction','error','OnlinePhase','on','Replicates',250);
 aux_kmean = reshape(idx_means, [number_of_synergies, number_of_subjects]);
 
-[silh3,h] = silhouette(pcs,idx_means,'sqEuclidean');
+[silh3,h] = silhouette(pcs,idx_means,'cosine');
 xlabel('Silhouette Value');
 ylabel('Cluster');
 close all;

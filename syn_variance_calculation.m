@@ -24,7 +24,7 @@ for syn = 1:size(sorted_pcs, 3)
     mean_syn = mean(sorted_pcs(:,:,syn), 2, 'omitnan');
     clean_syns =  sorted_pcs(:,all(~isnan(sorted_pcs(:,:,syn))));
     dist  = pdist2(clean_syns', mean_syn', 'cosine');
-    eucl = pdist2(clean_syns', mean_syn', 'euclidean');
+    eucl = pdist2(clean_syns', mean_syn', 'seuclidean');
     synergy_variances{syn} = 1 - abs(1-dist);
     mean_syn_var(syn) = mean(synergy_variances{syn});
     mean_eucl(syn) = mean(eucl);
@@ -50,9 +50,9 @@ min_dat = min(data_to_plot);
 figure;
 plot(mean_syn_var, 'r');
 hold on;
-plot(mean_eucl, 'g');
+plot(mean_eucl, 'k');
 patch([x fliplr(x)], [max_dat  fliplr(min_dat)], [0.3010 0.7450 0.9330],'FaceAlpha',.25)
-legend('Mean Cosine Distance', 'Mean Euclidean Distance', 'Cosine Distance Range', 'Location', 'best');
+legend('Mean Cosine Distance', 'Mean Mahalanobis Distance', 'Cosine Distance Range', 'Location', 'best');
 title('Cosine Distance for each Synergy');
 
 end

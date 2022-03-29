@@ -1,12 +1,12 @@
 function ObjectRecognition
 
 % OBJECTRECOGNITION This is the main function for the Object Recognition
-% Project. 
+%                   Project. 
 %
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    20/01/22
+% LAST MODIFIED:    15/03/22
 
 clear all;
 close all;
@@ -14,7 +14,8 @@ clc;
 
 %% DATA LOADING
 
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_14'};
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12'};
+% subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12';'Subject_14'};
 % subjects_to_load = {'Subject_3';'Subject_4';'Subject_5'};
 % subjects_to_load = {'Subject_5'};
 
@@ -25,6 +26,11 @@ for i = 1:numel(subjects_to_load)
     all_data{i} = load_subject(subjects_to_load{i});
    
 end
+
+
+%% AUXILIAR CODE FOR EP SELECTION
+
+all_data = filter_ep(all_data, 'enclosure');
 
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 
@@ -59,19 +65,19 @@ end
 
 %% PCA CALCULATION FOR ALL SUBJECTS
 
-all_subjects = [];
-
-for k = 1:numel(pca_values(:,1))
-
-    [all_subjects] = [all_subjects; all_data{k}];
-
-end
-
-[all_subjects_coeff, all_subjects_scores, all_subjects_explained] = pca_calculation(all_subjects);
+% all_subjects = [];
+% 
+% for k = 1:numel(pca_values(:,1))
+% 
+%     [all_subjects] = [all_subjects; all_data{k}];
+% 
+% end
+% 
+% [all_subjects_coeff, all_subjects_scores, all_subjects_explained] = pca_calculation(all_subjects);
 
 %% VARIANCE PLOTS
 
-% variance_plots(subjects_to_load, pca_values(:,3), all_subjects_explained);
+% variance_plots(subjects_to_load, pca_values(:,3), []);
 
 %% CLUSTERING AND SYNERGY CALCULATION
 
@@ -144,11 +150,14 @@ mean_trad = mean(qual_trad);
 
 sorted_pcs = sort_data_synergies(sorted_syn, pca_values);
 
-synergy_to_plot = 2;
+synergy_to_plot = 1;
 handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
 
 %% SYNERGY VARIANCE CALCULATION
 
 % synergy_variances = syn_variance_calculation(sorted_pcs);
+synergy_variances = syn_variance_calculation_oneTOone(sorted_pcs);
+
+a=1;
 
 end

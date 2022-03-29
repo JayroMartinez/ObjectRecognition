@@ -24,25 +24,25 @@ for i = 1:numel(subjects_to_load)
     
 end
 
-data_to_plot = [data_to_plot, all_subjects_explained];
+% data_to_plot = [data_to_plot, all_subjects_explained];
 
-subjects_to_load(end+1) = {'All Subjects'};
+% subjects_to_load(end+1) = {'All Subjects'};
 
 figure;
 hold on;
-subplot(1,2,1);
-b = bar(data_to_plot);
-set(b, {'DisplayName'}, subjects_to_load);
+% subplot(1,2,1);
+b = bar(mean(data_to_plot'),'b');
+% set(b, {'DisplayName'}, subjects_to_load);
 ylim([0 100]);
-legend('Location', 'best', 'Interpreter', 'none');
-title('Variance explained for each PC');
+% legend('Location', 'best', 'Interpreter', 'none');
+title('Variance explained for each PC and Cumulative Variance');
 
-subplot(1,2,2);
-p = plot(cumsum(data_to_plot));
-set(p, {'DisplayName'}, subjects_to_load);
+% subplot(1,2,2);
+p = plot(cumsum(mean(data_to_plot')),'r');
+% set(p, {'DisplayName'}, subjects_to_load);
 yline(90, 'k', 'DisplayName', '90% Variance', 'LineWidth',2);
 ylim([0 100]);
-legend('Location', 'best', 'Interpreter', 'none');
-title('Cumulative variance');
+% legend('Location', 'best', 'Interpreter', 'none');
+% title('Cumulative variance');
 
 end

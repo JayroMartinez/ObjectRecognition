@@ -5,3 +5,9 @@ Pycode/venv
 .idea/
 trashscript.m
 old_handplot_synergies.m
+aux_results/
+first.csv
+second.csv
+third.csv
+*.R
+data_visualization.m
