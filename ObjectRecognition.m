@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    15/03/22
+% LAST MODIFIED:    14/04/22
 
 clear all;
 close all;
@@ -27,10 +27,9 @@ for i = 1:numel(subjects_to_load)
    
 end
 
-
 %% AUXILIAR CODE FOR EP SELECTION
 
-all_data = filter_ep(all_data, 'enclosure');
+[filtered_data, ep_labels, task_labels, time] = filter_ep(all_data, '');
 
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 
@@ -38,12 +37,12 @@ pca_values = {};
 means = [];
 % stdevs = [];
 
-for j = 1:numel(all_data)
+for j = 1:numel(filtered_data)
     
 %     aux_mean = [];
 %     aux_stdev = [];
     
-    subject_data = all_data{j};
+    subject_data = filtered_data{j};
    
     [coeff, scores, explained] = pca_calculation(subject_data);
     
@@ -148,16 +147,17 @@ mean_trad = mean(qual_trad);
 % barplot_synergies(sorted_syn, joint_names, subjects_to_load, coeffs);
 % barplot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
-sorted_pcs = sort_data_synergies(sorted_syn, pca_values);
+[sorted_pcs, sorted_scores, sorted_variances] = sort_data_synergies(sorted_syn, pca_values);
 
-synergy_to_plot = 1;
-handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
+% synergy_to_plot = 1;
+% handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
 
 %% SYNERGY VARIANCE CALCULATION
 
 % synergy_variances = syn_variance_calculation(sorted_pcs);
-synergy_variances = syn_variance_calculation_oneTOone(sorted_pcs);
+% synergy_variances = syn_variance_calculation_oneTOone(sorted_pcs);
 
-a=1;
+%% SYNERGY EVOLUTION
+evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load);
 
 end

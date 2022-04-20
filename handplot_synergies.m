@@ -1,5 +1,6 @@
 function handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load)
 
+
 close all; 
 
 selected_pcs = sorted_pcs(:,:,synergy_to_plot);
@@ -24,7 +25,7 @@ for suj = 1:size(selected_pcs,2)
             coeffs(19),   % Thumb Ab
             coeffs(1),    % Thumb Rot
             coeffs(2),    % Thumb MPJ Flex
-            -coeffs(3),   % Thumb Thumb Ij
+            -coeffs(3),   % Thumb  Ij
             coeffs(15),   % Index MPJ Ab
             coeffs(4),    % Index MPJ Flex
             coeffs(5),    % Index PIJ

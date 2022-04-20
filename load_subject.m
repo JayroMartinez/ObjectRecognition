@@ -18,7 +18,7 @@ function [out_data] = load_subject(subject_to_load)
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          18/11/21
-% LAST MODIFIED:    05/01/22
+% LAST MODIFIED:    12/04/22
 
 % {'CeramicMug_CeramicMug';'CeramicMug_Glass';'CeramicMug_MetalMug';
 %'CeramicPlate_CeramicPlate';'CeramicPlate_MetalPlate';'CeramicPlate_PlasticPlate';
@@ -44,7 +44,7 @@ out_data = [];
 for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
 
     % Condition to select trials
-    if contains(aux_data.haptic_exploration_data_cut.tasks(i).experiment_name, {'CeramicPlate_','MetalPlate_','PlasticPlate_'})
+%     if contains(aux_data.haptic_exploration_data_cut.tasks(i).experiment_name, {'CeramicPlate_','MetalPlate_','PlasticPlate_'})
         
         glove_trial = aux_data.haptic_exploration_data_cut.tasks(i).data(5).data;
         vicon_trial = aux_data.haptic_exploration_data_cut.tasks(i).data(8).data;
@@ -60,38 +60,42 @@ for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
         new_glove_trial = glove_clean(new_glove_time, :);
         new_vicon_trial = vicon_clean(new_vicon_time, :);
 
-    %         close all;
-    %         figure_name = [subject_to_load ' Trial: ' aux_data.haptic_exploration_data.subjects.tasks(i).experiment_name];
-    %         figure('Name', figure_name);
-    %         subplot(2,1,1);
-    %         plot(glove_clean(:,1), 'b');
-    %         hold on;
-    %         plot(vicon_clean(:,1), 'r');
-    %         legend('Glove', 'Vicon', 'Location', 'best');
-    % 
-    %         subplot(2,1,2);
-    %         plot(new_glove_trial(:,1), 'b');
-    %         hold on;
-    %         plot(new_vicon_trial(:,1), 'r');
-    %         legend('Glove', 'Vicon', 'Location', 'best');
-    % 
-    %         figure('Name', figure_name);
-    %         plot(vicon_clean(:,1), vicon_clean(:,2), '.b');
-    %         hold on;
-    %         plot(new_glove_trial(:,1), new_vicon_trial(:,2), 'r');
-    %         legend('Old Vicon', 'New Vicon', 'Location', 'best');
+%             close all;
+%             figure_name = [subject_to_load ' Trial: ' aux_data.haptic_exploration_data.subjects.tasks(i).experiment_name];
+%             figure('Name', figure_name);
+%             subplot(2,1,1);
+%             plot(glove_clean(:,1), 'b');
+%             hold on;
+%             plot(vicon_clean(:,1), 'r');
+%             legend('Glove', 'Vicon', 'Location', 'best');
+%     
+%             subplot(2,1,2);
+%             close all;
+%             plot(new_glove_trial(:,1), 'b');
+%             hold on;
+%             plot(new_vicon_trial(:,1), 'r');
+%             legend('Glove', 'Vicon', 'Location', 'best');
+    
+%             figure('Name', figure_name);
+%             plot(vicon_clean(:,1), vicon_clean(:,2), '.b');
+%             hold on;
+%             plot(new_glove_trial(:,1), new_vicon_trial(:,2), 'r');
+%             legend('Old Vicon', 'New Vicon', 'Location', 'best');
 
         % MERGE DATA
         labels = aux_data.haptic_exploration_data_cut.tasks(i).data(3).data;
+        task = repmat(aux_data.haptic_exploration_data_cut.tasks(i).experiment_name, size(new_glove_trial(:,2:end),1),1);
+        time = new_vicon_trial(:,1);
         if size(labels,1) ~= size(new_glove_trial(:,2:end),1)
     %        disp(['Size doesnt match ' subject_to_load ' i = ' num2str(i) ' (' num2str(size(labels,1)) ',' num2str(size(new_glove_trial(:,2:end),1)) ')']); 
             labels(end+1) = labels(end);
         end
-        new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end)];
-        new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end) labels];
+%         new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end)];
+%         assert(isequal(size(new_glove_trial,1), size(new_vicon_trial,1), size(labels,1), size(task,1), size(time,1)));
+        new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end) labels task time];
         out_data = [out_data; new_trial];
     
-    end % END for selecting condition
+%     end % END for selecting condition
     
 end
 

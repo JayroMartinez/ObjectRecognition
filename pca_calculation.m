@@ -9,7 +9,7 @@ function [coeff, score, explained] = pca_calculation(data)
 % coeff:            PCA coefficients (eigenvectors). Columns represent PCs
 %                   and rows represent the old variables.
 % score:            PCA scores (coordinates of each point in PC space).
-%                   Columns represent PCs and rows rpresents observations.
+%                   Columns represent PCs and rows represents observations.
 % explained:        Explained variance for each component.
 %
 % AUTHOR:           Jayro Martinez-Cervero
