@@ -45,5 +45,6 @@ eva = evalclusters(pcs, clusters, 'silhouette');
 figure;
 [silh3,h] = silhouette(pcs,clusters,'sqEuclidean');
 quality = eva.ClusterSilhouettes{1,1};
+close all;
 
 end

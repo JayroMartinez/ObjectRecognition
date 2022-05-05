@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    14/04/22
+% LAST MODIFIED:    05/05/22
 
 clear all;
 close all;
@@ -14,8 +14,8 @@ clc;
 
 %% DATA LOADING
 
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12'};
-% subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12';'Subject_14'};
+% subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12'};
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12';'Subject_14'};
 % subjects_to_load = {'Subject_3';'Subject_4';'Subject_5'};
 % subjects_to_load = {'Subject_5'};
 
@@ -27,6 +27,8 @@ for i = 1:numel(subjects_to_load)
    
 end
 
+clear i;
+
 %% AUXILIAR CODE FOR EP SELECTION
 
 [filtered_data, ep_labels, task_labels, time] = filter_ep(all_data, '');
@@ -34,6 +36,7 @@ end
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 
 pca_values = {};
+pca_notnorm = {};
 means = [];
 % stdevs = [];
 
@@ -44,11 +47,16 @@ for j = 1:numel(filtered_data)
     
     subject_data = filtered_data{j};
    
-    [coeff, scores, explained] = pca_calculation(subject_data);
+%     [coeff, scores, explained] = pca_calculation(subject_data);
+    [norm_coeff, norm_score, norm_explained,notnorm_coeff,notnorm_score,notnorm_explained] = pca_calculation(subject_data);
     
-    pca_values{j,1} = coeff;
-    pca_values{j,2} = scores;
-    pca_values{j,3} = explained;
+    pca_values{j,1} = norm_coeff;
+    pca_values{j,2} = norm_score;
+    pca_values{j,3} = norm_explained;
+    
+    pca_notnorm{j,1} = notnorm_coeff;
+    pca_notnorm{j,2} = notnorm_score;
+    pca_notnorm{j,3} = notnorm_explained;
     
     aux_mean = mean(subject_data, 'omitnan');
 %     aux_stdev = std(subject_data);
@@ -56,10 +64,14 @@ for j = 1:numel(filtered_data)
     means = [means; aux_mean];
 %     stdevs = [stdevs; aux_stdev];
     
-    clear coeff scores explained aux_mean;
+%     clear coeff scores explained aux_mean;
+    clear norm_coeff norm_score norm_explained aux_mean;
+    clear notnorm_coeff notnorm_score notnorm_explained;
 %     clear aux_mean aux_stdev;
     
 end
+
+clear j;
 
 
 %% PCA CALCULATION FOR ALL SUBJECTS
@@ -84,10 +96,12 @@ end
 % columns) and we want PCs x Joints (note that PC1 from a subject comes the
 % row after last PC of previous subject.
 pcs = [];
+notnorm_pcs = [];
 
 for l = 1:numel(subjects_to_load)
    
     pcs = [pcs; cell2mat(pca_values(l,1))'];
+    notnorm_pcs = [notnorm_pcs; cell2mat(pca_notnorm(l,1))'];
     
 end
 
@@ -109,14 +123,20 @@ if include_all_subjects
     subjects_to_load = [subjects_to_load;{'All'}];
 else
     number_of_subjects = numel(subjects_to_load);
+    
     expl_var = cell2mat(pca_values(:,3)');
     coeffs = pca_values(:,1);
+    
+    notnorm_expl_var = cell2mat(pca_notnorm(:,3)');
+    notnorm_coeffs = pca_notnorm(:,1);
 end
 
 synergies = clustering(pcs, number_of_subjects);
+notnorm_synergies = clustering(notnorm_pcs, number_of_subjects);
 
 %% SORT SYNERGIES
 [sorted_syn,sorted_var] = sort_synergies(synergies,expl_var);
+[nn_sorted_syn,nn_sorted_var] = sort_synergies(notnorm_synergies,notnorm_expl_var);
 
 % % Because clustering is not giving good results for two subjects + both
 % % subjects together, we want to perform a recursive clustering.
@@ -126,10 +146,12 @@ synergies = clustering(pcs, number_of_subjects);
 % 
 % % SORT SYNERGIES
 % [sorted_r_syn,sorted_r_var] = sort_synergies(r_synergies,expl_var);
-
+% 
 % % CLUSTER EVALUATION
-qual_trad = cluster_evaluation(sorted_syn, pcs);
-mean_trad = mean(qual_trad);
+% 
+% qual_trad = cluster_evaluation(sorted_syn, pcs);
+% mean_trad = mean(qual_trad);
+% 
 % qual_rec = cluster_evaluation(sorted_r_syn, pcs);
 % mean_rec = mean(qual_rec);
 % 
@@ -148,9 +170,11 @@ mean_trad = mean(qual_trad);
 % barplot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
 [sorted_pcs, sorted_scores, sorted_variances] = sort_data_synergies(sorted_syn, pca_values);
+[nn_sorted_pcs, nn_sorted_scores, nn_sorted_variances] = sort_data_synergies(nn_sorted_syn, pca_notnorm);
 
 % synergy_to_plot = 1;
 % handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);
+
 
 %% SYNERGY VARIANCE CALCULATION
 
@@ -158,6 +182,7 @@ mean_trad = mean(qual_trad);
 % synergy_variances = syn_variance_calculation_oneTOone(sorted_pcs);
 
 %% SYNERGY EVOLUTION
-evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load);
+evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
+% evolution_comparison(nn_sorted_scores, nn_sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
 
 end

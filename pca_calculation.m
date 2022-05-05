@@ -1,4 +1,4 @@
-function [coeff, score, explained] = pca_calculation(data)
+function [norm_coeff, norm_score, norm_explained,notnorm_coeff,notnorm_score,notnorm_explained] = pca_calculation(data)
 
 % PCA_CALCULATION Function to load data corresponding to a single subject.
 %
@@ -12,15 +12,20 @@ function [coeff, score, explained] = pca_calculation(data)
 %                   Columns represent PCs and rows represents observations.
 % explained:        Explained variance for each component.
 %
+% THIS FINCTION HAS BEEN UPDATED TO RETURN TWO GROUPS OF VALUES: PCA WITH
+% AND WIHOUT NORMALIZATION
+%
+%
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          19/07/21
-% LAST MODIFIED:    03/11/21
+% LAST MODIFIED:    04/05/21
 
+% NORMALIZED PCA
 norm_data = normalize(data);
-[coeff,score,~, ~, explained, ~] = pca(norm_data, 'Centered', false); % Calculate the PCA for the data
+[norm_coeff,norm_score,~, ~, norm_explained, ~] = pca(norm_data, 'Centered', false); % Calculate the normalized PCA for the data
 
-% JUST FOR TESTING PURPOSES
-% [coeff,score,~, ~, explained, mu] = pca(data, 'Centered', true); % Calculate the PCA for the data
+% NOT NORMALIZED PCA
+[notnorm_coeff,notnorm_score,~, ~, notnorm_explained, ~] = pca(data, 'Centered', true); % Calculate the PCA for the data
 
 
 end

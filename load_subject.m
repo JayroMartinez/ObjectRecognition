@@ -92,7 +92,9 @@ for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
         end
 %         new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end)];
 %         assert(isequal(size(new_glove_trial,1), size(new_vicon_trial,1), size(labels,1), size(task,1), size(time,1)));
+
         new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end) labels task time];
+%         new_trial = [new_glove_trial(:,2:end) labels task time];
         out_data = [out_data; new_trial];
     
 %     end % END for selecting condition
