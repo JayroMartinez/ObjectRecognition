@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    05/05/22
+% LAST MODIFIED:    09/05/22
 
 clear all;
 close all;
@@ -36,7 +36,7 @@ clear i;
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 
 pca_values = {};
-pca_notnorm = {};
+% pca_notnorm = {};
 means = [];
 % stdevs = [];
 
@@ -48,15 +48,19 @@ for j = 1:numel(filtered_data)
     subject_data = filtered_data{j};
    
 %     [coeff, scores, explained] = pca_calculation(subject_data);
-    [norm_coeff, norm_score, norm_explained,notnorm_coeff,notnorm_score,notnorm_explained] = pca_calculation(subject_data);
+%     [norm_coeff, norm_score, norm_explained,notnorm_coeff,notnorm_score,notnorm_explained] = pca_calculation(subject_data);
+    [norm_coeff, norm_score, norm_explained,~,~,~] = pca_calculation(subject_data);
+    
+%     disp('Number of NaNs BEFORE PCA for ' + string(subjects_to_load(j)) + ': ' + num2str(unique(sum(isnan(subject_data)))));
+%     disp('Number of NaNs AFTER PCA for '+ string(subjects_to_load(j)) + ': ' + num2str(unique(sum(isnan(norm_score)))) + newline);
     
     pca_values{j,1} = norm_coeff;
     pca_values{j,2} = norm_score;
     pca_values{j,3} = norm_explained;
     
-    pca_notnorm{j,1} = notnorm_coeff;
-    pca_notnorm{j,2} = notnorm_score;
-    pca_notnorm{j,3} = notnorm_explained;
+%     pca_notnorm{j,1} = notnorm_coeff;
+%     pca_notnorm{j,2} = notnorm_score;
+%     pca_notnorm{j,3} = notnorm_explained;
     
     aux_mean = mean(subject_data, 'omitnan');
 %     aux_stdev = std(subject_data);
@@ -96,12 +100,12 @@ clear j;
 % columns) and we want PCs x Joints (note that PC1 from a subject comes the
 % row after last PC of previous subject.
 pcs = [];
-notnorm_pcs = [];
+% notnorm_pcs = [];
 
 for l = 1:numel(subjects_to_load)
    
     pcs = [pcs; cell2mat(pca_values(l,1))'];
-    notnorm_pcs = [notnorm_pcs; cell2mat(pca_notnorm(l,1))'];
+%     notnorm_pcs = [notnorm_pcs; cell2mat(pca_notnorm(l,1))'];
     
 end
 
@@ -127,16 +131,16 @@ else
     expl_var = cell2mat(pca_values(:,3)');
     coeffs = pca_values(:,1);
     
-    notnorm_expl_var = cell2mat(pca_notnorm(:,3)');
-    notnorm_coeffs = pca_notnorm(:,1);
+%     notnorm_expl_var = cell2mat(pca_notnorm(:,3)');
+%     notnorm_coeffs = pca_notnorm(:,1);
 end
 
 synergies = clustering(pcs, number_of_subjects);
-notnorm_synergies = clustering(notnorm_pcs, number_of_subjects);
+% notnorm_synergies = clustering(notnorm_pcs, number_of_subjects);
 
 %% SORT SYNERGIES
 [sorted_syn,sorted_var] = sort_synergies(synergies,expl_var);
-[nn_sorted_syn,nn_sorted_var] = sort_synergies(notnorm_synergies,notnorm_expl_var);
+% [nn_sorted_syn,nn_sorted_var] = sort_synergies(notnorm_synergies,notnorm_expl_var);
 
 % % Because clustering is not giving good results for two subjects + both
 % % subjects together, we want to perform a recursive clustering.
@@ -170,7 +174,7 @@ notnorm_synergies = clustering(notnorm_pcs, number_of_subjects);
 % barplot_synergies(sorted_r_syn, joint_names, subjects_to_load, coeffs);
 
 [sorted_pcs, sorted_scores, sorted_variances] = sort_data_synergies(sorted_syn, pca_values);
-[nn_sorted_pcs, nn_sorted_scores, nn_sorted_variances] = sort_data_synergies(nn_sorted_syn, pca_notnorm);
+% [nn_sorted_pcs, nn_sorted_scores, nn_sorted_variances] = sort_data_synergies(nn_sorted_syn, pca_notnorm);
 
 % synergy_to_plot = 1;
 % handplot_synergies(sorted_pcs, means, synergy_to_plot, subjects_to_load);

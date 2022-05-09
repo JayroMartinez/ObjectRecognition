@@ -44,6 +44,7 @@ for subj = 1:numel(subjects_to_load)
     %    end
        
        mat = cell2mat(sorted_scores(:,subj)'); % Cast to matrix
+%        disp(strcat('Number of NaNs for ', subjects_to_load(subj), ': ', newline, num2str(unique(sum(isnan(mat) ) ) ) ) );
        vari = var(mat, 'omitnan'); % Variance calculation
        [m,i] = sort(vari, 'descend', 'MissingPlacement', 'last'); % Sort by variance
        csum = cumsum(m);
@@ -112,7 +113,7 @@ for subj = 1:numel(subjects_to_load)
 % %            disp(['Size "trial" to plot: ' num2str(size(split{x}))]);
 %            legend(leg, 'Location', 'best');
 %            title([subject ', Task: ' task_name  ', Number of synergies: ' num2str(needed_synergies) newline ' EP: ' ep_to_select ', Episode: ' num2str(x)]);
-% 
+
            subject = strrep(subjects_to_load{subj}, '_', ' ');
            task_name = strrep(task_to_select, '_', ' ');
            info = [subject ', Task: ' task_name  ', EP: ' ep_to_select ', Episode: ' num2str(x) newline 'Number of synergies: ' num2str(needed_synergies) ', Variance Explained: ' num2str(round(var_expl,3)*100) '%'];

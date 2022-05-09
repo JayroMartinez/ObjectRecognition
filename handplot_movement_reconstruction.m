@@ -89,30 +89,60 @@ selected_raw = reordered_raw(timepoints_to_plot,:);
 ha = SGparadigmatic; % Define and create hand
 ha.S = hand_syn;
 
+to_plot = [];
+
 % figure;
 % hand = SGmoveHand(ha, starting_conf');
 % SGplotHand(hand);
-figure('Name',info);
+% figure('Name',info);
 for it = 1:numel(timepoints_to_plot)
     
     hand = SGmoveHand(ha, starting_conf' + ha.S * selected_activations(it,:)');
-    subplot(1, numel(timepoints_to_plot), it);
-    SGplotHand(hand);
+%     subplot(1, numel(timepoints_to_plot), it);
+%     SGplotHand(hand);
+    to_plot = [to_plot hand];
     
 end
-sgtitle(info);
+% sgtitle(info);
 
 new_info = [info(1:strfind(info, 'Number')-2) newline 'RAW DATA'];
+if sum(isnan(selected_raw),'all') > 0
+    new_info = strcat(new_info, [newline 'INCLUDES MISSING VALUES']);
+end
+selected_raw(isnan(selected_raw)) = 0;
+
+
 ha_raw = SGparadigmatic;
-figure('Name',new_info);
+% figure('Name',new_info);
+new_hands = [];
 for it2 = 1:numel(timepoints_to_plot)
     
     movement = deg2rad(selected_raw(it2,:));
     hand_raw = SGmoveHand(ha_raw, movement);
-    subplot(1, numel(timepoints_to_plot), it2);
-    SGplotHand(hand_raw);
-    
+%     subplot(1, numel(timepoints_to_plot), it2);
+%     SGplotHand(hand_raw);
+    new_hands = [new_hands hand_raw];
 end
-sgtitle(new_info);
 
+to_plot = [to_plot;new_hands];
+a=1;
+% sgtitle(new_info);
+
+figure('Name',info);
+for pl_1 = 1:size(to_plot,1)
+    for pl_2 = 1:size(to_plot,2)
+   
+        subplot(2, size(to_plot,2), (pl_1-1)*size(to_plot,2)+pl_2);
+        SGplotHand(to_plot(pl_1, pl_2));
+    
+        if pl_1 == 1 && pl_2 == ceil(size(to_plot,2)/2) 
+            title(info);
+        elseif pl_1 == 2 && pl_2 == ceil(size(to_plot,2)/2) 
+            title(new_info);
+        end
+    
+    end 
+end
+% sgtitle(info);
+    
 end
