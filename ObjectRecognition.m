@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    09/05/22
+% LAST MODIFIED:    12/05/22
 
 clear all;
 close all;

@@ -6,8 +6,8 @@ function evo_weight_ep_task(sorted_scores, sorted_pcs, means, ep_labels, task_la
 colors = [[1 0 0]; [0 1 0]; [0 0 1]; [0.3010 0.7450 0.9330]; [1 0 1]; [1 1 0]; [0 0 0]; [0 0.4470 0.7410]; [0.8500 0.3250 0.0980]; [0.9290 0.6940 0.1250]; [0.4940 0.1840 0.5560]; [0.4660 0.6740 0.1880]; [0 1 1]; [0.6350 0.0780 0.1840]; [0.47 0.25 0.80]; [0.25 0.80 0.54]; [1.00 0.54 0.00]; [0.83 0.14 0.14]; [0.5 0.5 0.5]];
 
 close all;
-task_to_select ='Ball';
-ep_to_select ='rotation';
+task_to_select ='Fork_';
+ep_to_select ='translation';
 % number_synergies = 5;
 
 resampled_scores = cell(size(sorted_scores,1),size(sorted_scores,2));
@@ -116,11 +116,14 @@ for subj = 1:numel(subjects_to_load)
 
            subject = strrep(subjects_to_load{subj}, '_', ' ');
            task_name = strrep(task_to_select, '_', ' ');
-           info = [subject ', Task: ' task_name  ', EP: ' ep_to_select ', Episode: ' num2str(x) newline 'Number of synergies: ' num2str(needed_synergies) ', Variance Explained: ' num2str(round(var_expl,3)*100) '%'];
-           handplot_movement_reconstruction(means(subj,:), sorted_pcs(:, subj, :), resampled_split{x}, syns_to_select, info, raw_split{x});
+           info = [subject newline 'Task: ' task_name  ', EP: ' ep_to_select ', Episode: ' num2str(x) newline 'Number of synergies: ' num2str(needed_synergies) ', Variance Explained: ' num2str(round(var_expl,3)*100) '%'];
+%            handplot_movement_reconstruction(means(subj,:), sorted_pcs(:, subj, :), resampled_split{x}, syns_to_select, info, raw_split{x});
+            if contains(info, 'Subject 9') && x == 3
+                handplot_movie(means(subj,:), sorted_pcs(:, subj, :), resampled_split{x}, syns_to_select, info, raw_split{x});
+            end
            
        end
-    end
+   end
 end
 
 end

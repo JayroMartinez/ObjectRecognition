@@ -14,56 +14,57 @@ function handplot_movement_reconstruction(mean_pos, synergies, scores, selected_
 
 number_of_plots = 5;
 synergies = squeeze(synergies);
-starting_conf = deg2rad(cat(2,mean_pos(19)-45, -mean_pos(1)+45, -mean_pos(2), -mean_pos(3), mean_pos(15), mean_pos(4), mean_pos(5), 0, mean_pos(18), mean_pos(6), mean_pos(7), 0, mean_pos(17), mean_pos(8), mean_pos(9), 0, mean_pos(16), mean_pos(10), mean_pos(11), 0));
+starting_conf = deg2rad(cat(2,mean_pos(19)-45, -mean_pos(1)+90, -mean_pos(2), -mean_pos(3), mean_pos(15), mean_pos(4), mean_pos(5), mean_pos(5), mean_pos(18), mean_pos(6), mean_pos(7), mean_pos(7), mean_pos(17), mean_pos(8), mean_pos(9), mean_pos(9), mean_pos(16), mean_pos(10), mean_pos(11), mean_pos(11)));
+% starting_conf = deg2rad(cat(2,mean_pos(19)-45, -mean_pos(1)+90, -mean_pos(2), -mean_pos(3), mean_pos(15), mean_pos(4), mean_pos(5), 0, mean_pos(18), mean_pos(6), mean_pos(7), 0, mean_pos(17), mean_pos(8), mean_pos(9), 0, mean_pos(16), mean_pos(10), mean_pos(11), 0));
 empty = zeros(1, size(synergies,1));
-
-hand_syn = [
-            synergies(19,:),   % Thumb Ab
-            -synergies(1,:),    % Thumb Rot
-            -synergies(2,:),    % Thumb MPJ Flex
-            -synergies(3,:),   % Thumb  Ij
-            synergies(15,:),   % Index MPJ Ab
-            synergies(4,:),    % Index MPJ Flex
-            synergies(5,:),    % Index PIJ
-            empty,             % Index DIP       [EMPTY]
-            synergies(18,:),   % Middle MPJ Ab
-            synergies(6,:),    % Middle MPJ Flex
-            synergies(7,:),    % Middle PIJ
-            empty,             % Middle DIP      [EMPTY]
-            synergies(17,:),   % Ring MPJ Ab
-            synergies(8,:),    % Ring MPJ Flex
-            synergies(9,:),    % Ring PIJ
-            empty,             % Ring DIP        [EMPTY]
-            synergies(16,:),   % Pinkie MPJ Ab
-            synergies(10,:),   % Pinkie MPJ Flex
-            synergies(11,:),   % Pinkie PIJ
-            empty];            % Pinkie DIP      [EMPTY]
-
-n_empty = zeros(size(raw_data,1),1);        
-reordered_raw = horzcat(raw_data(:,19)-45,-raw_data(:,1)+45,-raw_data(:,2),-raw_data(:,3),raw_data(:,15),raw_data(:,4),raw_data(:,5),n_empty,raw_data(:,18),raw_data(:,6),raw_data(:,7),n_empty,raw_data(:,17),raw_data(:,8),raw_data(:,9),n_empty,raw_data(:,16),raw_data(:,10),raw_data(:,11),n_empty);            
 
 % hand_syn = [
 %             synergies(19,:),   % Thumb Ab
 %             -synergies(1,:),    % Thumb Rot
 %             -synergies(2,:),    % Thumb MPJ Flex
 %             -synergies(3,:),   % Thumb  Ij
-%             empty,   % Index MPJ Ab
+%             synergies(15,:),   % Index MPJ Ab
 %             synergies(4,:),    % Index MPJ Flex
 %             synergies(5,:),    % Index PIJ
-%             synergies(5,:),             % Index DIP       [EMPTY]
-%             empty,   % Middle MPJ Ab
+%             -synergies(5,:),             % Index DIP       [EMPTY]
+%             synergies(18,:),   % Middle MPJ Ab
 %             synergies(6,:),    % Middle MPJ Flex
 %             synergies(7,:),    % Middle PIJ
-%             synergies(7,:),             % Middle DIP      [EMPTY]
-%             empty,   % Ring MPJ Ab
+%             -synergies(7,:),             % Middle DIP      [EMPTY]
+%             synergies(17,:),   % Ring MPJ Ab
 %             synergies(8,:),    % Ring MPJ Flex
 %             synergies(9,:),    % Ring PIJ
-%             synergies(9,:),             % Ring DIP        [EMPTY]
-%             empty,   % Pinkie MPJ Ab
+%             -synergies(9,:),             % Ring DIP        [EMPTY]
+%             synergies(16,:),   % Pinkie MPJ Ab
 %             synergies(10,:),   % Pinkie MPJ Flex
 %             synergies(11,:),   % Pinkie PIJ
-%             synergies(11,:)];            % Pinkie DIP      [EMPTY]
+%             -synergies(11,:)];            % Pinkie DIP      [EMPTY]
 
+hand_syn = [
+            synergies(19,:),   % Thumb Ab
+            -synergies(1,:),    % Thumb Rot
+            -synergies(2,:),    % Thumb MPJ Flex
+            -synergies(3,:),   % Thumb  Ij
+            empty,   % Index MPJ Ab
+            synergies(4,:),    % Index MPJ Flex
+            synergies(5,:),    % Index PIJ
+            synergies(5,:),             % Index DIP       [EMPTY]
+            empty,   % Middle MPJ Ab
+            synergies(6,:),    % Middle MPJ Flex
+            synergies(7,:),    % Middle PIJ
+            synergies(7,:),             % Middle DIP      [EMPTY]
+            empty,   % Ring MPJ Ab
+            synergies(8,:),    % Ring MPJ Flex
+            synergies(9,:),    % Ring PIJ
+            synergies(9,:),             % Ring DIP        [EMPTY]
+            empty,   % Pinkie MPJ Ab
+            synergies(10,:),   % Pinkie MPJ Flex
+            synergies(11,:),   % Pinkie PIJ
+            synergies(11,:)];            % Pinkie DIP      [EMPTY]
+
+n_empty = zeros(size(raw_data,1),1);        
+reordered_raw = horzcat(raw_data(:,19)-45,-raw_data(:,1)+90,-raw_data(:,2),-raw_data(:,3),raw_data(:,15),raw_data(:,4),raw_data(:,5),raw_data(:,5),raw_data(:,18),raw_data(:,6),raw_data(:,7),raw_data(:,7),raw_data(:,17),raw_data(:,8),raw_data(:,9),raw_data(:,9),raw_data(:,16),raw_data(:,10),raw_data(:,11),raw_data(:,11));            
+% reordered_raw = horzcat(raw_data(:,19)-45,-raw_data(:,1)+90,-raw_data(:,2),-raw_data(:,3),raw_data(:,15),raw_data(:,4),raw_data(:,5),n_empty,raw_data(:,18),raw_data(:,6),raw_data(:,7),n_empty,raw_data(:,17),raw_data(:,8),raw_data(:,9),n_empty,raw_data(:,16),raw_data(:,10),raw_data(:,11),n_empty);            
 
 hand_syn(isnan(hand_syn)) = 0;
         
