@@ -67,7 +67,7 @@ for syn = 1:size(sorted_pcs, 3)
 
 end
 
-mat = NaN(19,45);
+mat = NaN(size(sorted_pcs,3),nchoosek(size(sorted_pcs,2),2));
 
 for iter1=1:19
    
@@ -82,7 +82,8 @@ end
 
 % boxplot(mat');
 close all;
-boxchart(mat');
+% boxchart(mat', 'whisker', 2);
+boxplot(mat', 'whisker', 500);
 xlabel('Synergies');
 ylabel('Cosine Distance');
 

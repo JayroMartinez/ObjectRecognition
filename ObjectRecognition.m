@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    12/05/22
+% LAST MODIFIED:    18/05/22
 
 clear all;
 close all;
@@ -82,13 +82,15 @@ clear j;
 
 % all_subjects = [];
 % 
-% for k = 1:numel(pca_values(:,1))
+% for k = 1:numel(subjects_to_load)
 % 
-%     [all_subjects] = [all_subjects; all_data{k}];
+%     [all_subjects] = [all_subjects; str2double(all_data{k}(:,1:end-3))];
 % 
 % end
 % 
-% [all_subjects_coeff, all_subjects_scores, all_subjects_explained] = pca_calculation(all_subjects);
+% [all_subjects_coeff, all_subjects_scores, all_subjects_explained, ~, ~, ~] = pca_calculation(all_subjects);
+% 
+% clean k;
 
 %% VARIANCE PLOTS
 
@@ -121,9 +123,9 @@ if include_all_subjects
     subjects_to_load = [subjects_to_load;{'All Subjects'}];
     means = [means; mean(all_subjects, 'omitnan')];
 %     stdevs = [stdevs; std(all_subjects)];
-    pca_values{3,1} = all_subjects_coeff;
-    pca_values{3,2} = all_subjects_scores;
-    pca_values{3,3} = all_subjects_explained;
+    pca_values{end+1,1} = all_subjects_coeff;
+    pca_values{end,2} = all_subjects_scores;
+    pca_values{end,3} = all_subjects_explained;
     subjects_to_load = [subjects_to_load;{'All'}];
 else
     number_of_subjects = numel(subjects_to_load);
@@ -188,5 +190,9 @@ synergies = clustering(pcs, number_of_subjects);
 %% SYNERGY EVOLUTION
 evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
 % evolution_comparison(nn_sorted_scores, nn_sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
+
+%% CLASSIFICATION
+
+classification_function(filtered_data, ep_labels, task_labels);
 
 end
