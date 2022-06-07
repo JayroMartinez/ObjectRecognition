@@ -89,8 +89,6 @@ clear j;
 % end
 % 
 % [all_subjects_coeff, all_subjects_scores, all_subjects_explained, ~, ~, ~] = pca_calculation(all_subjects);
-% 
-% clean k;
 
 %% VARIANCE PLOTS
 
