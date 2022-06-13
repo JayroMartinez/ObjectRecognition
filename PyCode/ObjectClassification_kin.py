@@ -25,10 +25,10 @@ def main():
     cv = 3
 
     # READING FILES AND CREATING DATASET
-    file_data = "../Data/filtered_data.json"
-    file_eps = "../Data/ep_labels.json"
-    file_task = "../Data/task_labels.json"
-    file_allSyn = "../Data/all_subjects_scores.json"
+    file_data = "./PyData/filtered_data.json"
+    file_eps = "./PyData/ep_labels.json"
+    file_task = "./PyData/task_labels.json"
+    file_allSyn = "./PyData/all_subjects_scores.json"
 
     with open(file_data, "r") as f:
         data = json.load(f)  # data[subjects][trials][joints]
