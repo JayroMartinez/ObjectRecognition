@@ -3,12 +3,12 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 # import glmnet_python
-from glmnet_python import glmnet
-from glmnet_python import glmnetPredict
-from glmnet_python import glmnetPlot
-from glmnet_python import cvglmnet
-from glmnet_python import cvglmnetPredict
-from glmnet_python import cvglmnetPlot
+# from glmnet_python import glmnet
+# from glmnet_python import glmnetPredict
+# from glmnet_python import glmnetPlot
+# from glmnet_python import cvglmnet
+# from glmnet_python import cvglmnetPredict
+# from glmnet_python import cvglmnetPlot
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn import svm
