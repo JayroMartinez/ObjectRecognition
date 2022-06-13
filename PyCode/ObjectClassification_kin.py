@@ -21,7 +21,7 @@ def main():
     # VARIABLES TO ADJUST
     # 'Mugs', 'Plates', 'Geometric', 'Cutlery', 'Ball'
     family_to_select = 'Ball'
-    num_bins = 50
+    num_bins = 5
     cv = 3
 
     # READING FILES AND CREATING DATASET
