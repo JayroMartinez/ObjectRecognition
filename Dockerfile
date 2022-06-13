@@ -6,4 +6,4 @@ ADD /PyCode .
 
 RUN pip install numpy scikit-learn pandas jupyterlab
 
-CMD ["python", "./ObjectClassification_kin.py"]
+# CMD ["python", "./ObjectClassification_kin.py"]
