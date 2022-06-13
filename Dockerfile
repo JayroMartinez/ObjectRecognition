@@ -6,5 +6,7 @@ ADD /PyCode .
 
 RUN pip3 install numpy scikit-learn pandas jupyterlab
 
-# CMD ["python3", "./ObjectClassification_kin.py"]
-CMD ["python3"]
+EXPOSE 8888
+
+CMD ["/bin/bash", "-c", "jupyter lab --ip='0.0.0.0' --no-browser --allow-root"]
+
