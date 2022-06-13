@@ -2,8 +2,8 @@
 
 FROM python:3.8-slim-bullseye
 
-ADD . . 
+ADD /PyCode . 
 
 RUN pip install json numpy scikit-learn pandas
 
-CMD ["python", "./PyCode/ObjectClassification_kin.py"]
+CMD ["python", "./ObjectClassification_kin.py"]
