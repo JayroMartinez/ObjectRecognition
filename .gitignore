@@ -2,6 +2,7 @@ Data/
 *.asv
 dummyCode.m
 Pycode/venv
+Pycode/PyData
 .idea/
 trashscript.m
 old_handplot_synergies.m
