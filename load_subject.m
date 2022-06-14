@@ -1,24 +1,27 @@
-function [out_data] = load_subject(subject_to_load)
+function [out_data, emg_data] = load_subject(subject_to_load)
 
 %%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
 % TO DO: Include Thorax, Elbow and Shoulder data from Vicon %
+% TO DO: Adapt code so EMG works with condition selection   %
 %%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
 
 % LOAD_SUBJECT      Function to load data corresponding to a single subject.
 %                   Because each sorce has a different number of datapoints
 %                   per trial, we have to load each trial and perform
 %                   Dynamic Time Warping on both signals. After that, both
-%                   signals are merged into a single variable.
+%                   signals are merged into a single variable. 
+%                   UPDATED: Now also loads the EMG data.
 %
 % INPUT
 % subject_to_load:  String with the subject's name.
 %
 % OUTPUT
-% out_data:         Data from the corresponding subject.
+% out_data:         Kinematic data from the corresponding subject.
+% emg_data:         EMG data from the corresponding subject.
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          18/11/21
-% LAST MODIFIED:    12/04/22
+% LAST MODIFIED:    14/06/22
 
 % {'CeramicMug_CeramicMug';'CeramicMug_Glass';'CeramicMug_MetalMug';
 %'CeramicPlate_CeramicPlate';'CeramicPlate_MetalPlate';'CeramicPlate_PlasticPlate';
@@ -40,6 +43,7 @@ file = [pwd,'/Data/', 'Cut_Data_', subject_to_load, '.mat'];
 aux_data = load(file);
 
 out_data = [];
+emg_data = [];
 
 for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
 
@@ -48,6 +52,8 @@ for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
         
         glove_trial = aux_data.haptic_exploration_data_cut.tasks(i).data(5).data;
         vicon_trial = aux_data.haptic_exploration_data_cut.tasks(i).data(8).data;
+        
+        emg_trial = aux_data.haptic_exploration_data_cut.tasks(i).data(6).data; % Only includes the 64 HD EMG
 
         % CLEAN TRIALS
         fields_to_remove = {'ThumbAb', 'MiddleIndexAb', 'RingMiddleAb', 'PinkieRingAb'};
@@ -59,6 +65,19 @@ for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
         [~, new_glove_time, new_vicon_time] = dtw(glove_clean(:,1), vicon_clean(:,1));
         new_glove_trial = glove_clean(new_glove_time, :);
         new_vicon_trial = vicon_clean(new_vicon_time, :);
+        
+        % EMG downsample
+        if ~isempty(emg_trial)
+            downsampled_emg = interp1( 1:size(emg_trial, 1), table2array(emg_trial(:,2:end)), linspace(1, size(emg_trial, 1), size(new_vicon_trial, 1)), 'spline');
+        else
+            a=1; %Some trials in some subjects are empty for the EMG. This is a temporary NO solution.
+        end
+        
+%         close all
+%         plot(abs(table2array(emg_trial(:,2))))
+%         figure
+%         plot(abs(downsampled_emg(:,1)))
+        
 
 %             close all;
 %             figure_name = [subject_to_load ' Trial: ' aux_data.haptic_exploration_data.subjects.tasks(i).experiment_name];
@@ -96,6 +115,7 @@ for i = 1:numel(aux_data.haptic_exploration_data_cut.tasks)
         new_trial = [new_glove_trial(:,2:end) new_vicon_trial(:,2:end) labels task time];
 %         new_trial = [new_glove_trial(:,2:end) labels task time];
         out_data = [out_data; new_trial];
+        emg_data = [emg_data; downsampled_emg];
     
 %     end % END for selecting condition
     

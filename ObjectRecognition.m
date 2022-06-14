@@ -6,7 +6,7 @@ function ObjectRecognition
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          17/06/21
-% LAST MODIFIED:    18/05/22
+% LAST MODIFIED:    14/06/22
 
 clear all;
 close all;
@@ -15,15 +15,17 @@ clc;
 %% DATA LOADING
 
 % subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12'};
-subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12';'Subject_14'};
+% subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_11';'Subject_12';'Subject_14'};
+subjects_to_load = {'Subject_3';'Subject_4';'Subject_5';'Subject_6';'Subject_7';'Subject_8';'Subject_9';'Subject_10';'Subject_14'};
 % subjects_to_load = {'Subject_3';'Subject_4';'Subject_5'};
 % subjects_to_load = {'Subject_5'};
 
 all_data = {};
+emg_data = {};
 
 for i = 1:numel(subjects_to_load)
     
-    all_data{i} = load_subject(subjects_to_load{i});
+    [all_data{i}, emg_data{i}] = load_subject(subjects_to_load{i});
    
 end
 
@@ -31,7 +33,7 @@ clear i;
 
 %% AUXILIAR CODE FOR EP SELECTION
 
-[filtered_data, ep_labels, task_labels, time] = filter_ep(all_data, '');
+[filtered_data, ep_labels, task_labels, time, emg_fil] = filter_ep(all_data, emg_data, '');
 
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 

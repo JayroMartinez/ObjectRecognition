@@ -1,8 +1,11 @@
-function [filtered_data, ep_labels, task_labels, time] = filter_ep(in_data, ep)
+function [filtered_data, ep_labels, task_labels, time, emg_data] = filter_ep(kin_data, emg_in, ep)
 % FILTER_EP Function filter the data by a particular EP.
+%%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
+% TO DO: Include the code to select also EMG data by EP     %
+%%%%%%%%%%%%%%%%%%%%                     %%%%%%%%%%%%%%%%%%%%
 %
 % INPUT
-% in_data:          Cell array. Each position corresponds to the data for a
+% kin_data:         Cell array. Each position corresponds to the data for a
 %                   particular subject in a MxN string array. Rows
 %                   represent timepoints while columns represent joints,
 %                   except last column which contains the EP. All columns
@@ -24,11 +27,13 @@ function [filtered_data, ep_labels, task_labels, time] = filter_ep(in_data, ep)
 %
 % AUTHOR:           Jayro Martinez-Cervero
 % CREATED:          29/03/22
-% LAST MODIFIED:    12/04/22
+% LAST MODIFIED:    14/06/22
 
 filtered_data = {};
 task_labels = {};
 time = {};
+
+emg_data = {};
 
 if ~isempty(ep)
     ep_labels = string(ep);
@@ -36,9 +41,10 @@ else
     ep_labels= {};
 end
 
-for iter = 1:numel(in_data)
+for iter = 1:numel(kin_data)
    
-    subj_data = in_data{iter}; 
+    subj_data = kin_data{iter}; 
+    subj_emg = emg_in{iter};
     
     if ~isempty(ep)
         idx = matches(subj_data(:,end),ep);
@@ -46,11 +52,14 @@ for iter = 1:numel(in_data)
     else
         selected_data = subj_data(:,1:end-3);
         ep_labels{end+1} = subj_data(:,end-2);
+        selected_emg = subj_emg(:, 2:end);
     end
         
     filtered_data{end+1} = str2double(selected_data);
     task_labels{end+1} = subj_data(:,end-1);
     time{end+1} = str2double(subj_data(:,end));
+    
+    emg_data{end+1} = selected_emg;
 
 end
 
