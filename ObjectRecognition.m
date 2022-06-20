@@ -33,7 +33,35 @@ clear i;
 
 %% AUXILIAR CODE FOR EP SELECTION
 
-[filtered_data, ep_labels, task_labels, time, emg_fil] = filter_ep(all_data, emg_data, '');
+[kinem_fil, ep_labels, task_labels, time, emg_fil] = filter_ep(all_data, emg_data, '');
+
+%% SAVE DATA AS JSON (to be read by python)
+
+path = [pwd '/PyCode/PyData'];
+
+dat_kin_filtered = jsonencode(kinem_fil);
+kin_path = fullfile(path, 'filtered_data.json');
+kin_file = fopen(kin_path, 'w');
+fprintf(kin_file, dat_kin_filtered);
+clear data_kin_filtered kin_path kin_file;
+
+dat_emg_filtered = jsonencode(emg_fil);
+emg_path = fullfile(path, 'emg_data.json');
+emg_file = fopen(emg_path, 'w');
+fprintf(emg_file, dat_emg_filtered);
+clear data_emg_filtered emg_path emg_file;
+
+dat_ep = jsonencode(ep_labels);
+ep_path = fullfile(path, 'ep_labels.json');
+ep_file = fopen(ep_path, 'w');
+fprintf(ep_file, dat_ep);
+clear dat_ep ep_path ep_file;
+
+dat_task = jsonencode(task_labels);
+task_path = fullfile(path, 'task_labels.json');
+task_file = fopen(task_path, 'w');
+fprintf(task_file, dat_task);
+clear dat_task task_path task_file;
 
 %% PCA CALCULATION FOR EACH SUBJECT (also means and standard deviations)
 
@@ -42,12 +70,12 @@ pca_values = {};
 means = [];
 % stdevs = [];
 
-for j = 1:numel(filtered_data)
+for j = 1:numel(kinem_fil)
     
 %     aux_mean = [];
 %     aux_stdev = [];
     
-    subject_data = filtered_data{j};
+    subject_data = kinem_fil{j};
    
 %     [coeff, scores, explained] = pca_calculation(subject_data);
 %     [norm_coeff, norm_score, norm_explained,notnorm_coeff,notnorm_score,notnorm_explained] = pca_calculation(subject_data);
@@ -193,6 +221,6 @@ evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, t
 
 %% CLASSIFICATION
 
-classification_function(filtered_data, ep_labels, task_labels);
+classification_function(kinem_fil, ep_labels, task_labels);
 
 end
