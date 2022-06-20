@@ -49,10 +49,11 @@ for iter = 1:numel(kin_data)
     if ~isempty(ep)
         idx = matches(subj_data(:,end),ep);
         selected_data = subj_data(idx,1:end-3);
+        selected_emg = subj_emg(idx, :);
     else
         selected_data = subj_data(:,1:end-3);
         ep_labels{end+1} = subj_data(:,end-2);
-        selected_emg = subj_emg(:, 2:end);
+        selected_emg = subj_emg;
     end
         
     filtered_data{end+1} = str2double(selected_data);
