@@ -60,7 +60,7 @@ for iter = 1:numel(kin_data)
     task_labels{end+1} = subj_data(:,end-1);
     time{end+1} = str2double(subj_data(:,end));
     
-    emg_data{end+1} = selected_emg;
+    emg_data{end+1} = abs(selected_emg);
 
 end
 
