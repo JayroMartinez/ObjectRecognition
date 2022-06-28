@@ -1,7 +1,7 @@
 Data/
 *.asv
 dummyCode.m
-Pycode/venv
+PyCode/venv
 PyCode/PyData
 .idea/
 trashscript.m
