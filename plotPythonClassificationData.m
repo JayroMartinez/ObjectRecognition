@@ -7,10 +7,15 @@ glm_load = load('./aux_results/glm.mat');
 logisticRegression_load = load('./aux_results/logisticRegression.mat');
 svm_load = load('./aux_results/svm.mat');
 
+emg_load = load('./aux_results/emg.mat');
+kin_emg_load = load('./aux_results/kin_emg.mat');
+
 ann = ann_load.ann;
 glm = glm_load.glm;
 logisticRegression = logisticRegression_load.logisticRegression;
 svm = svm_load.svm;
+emg = emg_load.emg;
+kin_emg = kin_emg_load.kin_emg;
 
 clear *_load
 
@@ -29,6 +34,12 @@ log_sd = std(logisticRegression);
 
 svm_mean = mean(svm);
 svm_sd = std(svm);
+
+emg_mean = mean(emg);
+emg_sd = std(emg);
+
+kin_emg_mean = mean(kin_emg);
+kin_emg_sd = std(kin_emg);
 
 %% ANN PLOT
 figure;
@@ -58,7 +69,7 @@ legend('Mugs', 'Plates', 'Geometric', 'Cutlery', 'Ball', 'Chance Level');
 xlabel('Number of Bins');
 ylabel('Accuracy %');
 ylim([0 100]);
-title('Logistic Regression');
+title('Raw Kinematics Logistic Regression');
 
 %% Support Vector Machine PLOT
 figure;
@@ -70,19 +81,38 @@ ylabel('Accuracy %');
 ylim([0 100]);
 title('Support Vector Machine');
 
-%% Means & Stds
+%% EMG PLOT
 figure;
-plot(bins, ann_mean, 'b', 'LineWidth', 2);
-hold on;
-plot(bins, svm_mean, 'r', 'LineWidth', 2);
-plot(bins, log_mean, 'g', 'LineWidth', 2);
-plot(bins, glm_mean, 'm', 'LineWidth', 2);
-
+plot(bins, emg, 'LineWidth', 2);
 yline(33.33, '--k', 'LineWidth', 2);
-legend('ANN', 'SVM', 'LogRegr', 'GLM', 'Chance Level');
+legend('Mugs', 'Plates', 'Geometric', 'Cutlery', 'Ball', 'Chance Level');
 xlabel('Number of Bins');
 ylabel('Accuracy %');
 ylim([0 100]);
-title('Algorithm Comparison');
+title('EMG Logistic Regression');
+
+%% EMG + KIN PLOT
+figure;
+plot(bins, kin_emg, 'LineWidth', 2);
+yline(33.33, '--k', 'LineWidth', 2);
+legend('Mugs', 'Plates', 'Geometric', 'Cutlery', 'Ball', 'Chance Level');
+xlabel('Number of Bins');
+ylabel('Accuracy %');
+ylim([0 100]);
+title('Raw Kinematics + EMG Logistic Regression');
+
+%% Means & Stds
+figure;
+plot(bins, log_mean, 'b', 'LineWidth', 2);
+hold on;
+plot(bins, emg_mean, 'r', 'LineWidth', 2);
+plot(bins, kin_emg_mean, 'g', 'LineWidth', 2);
+
+yline(33.33, '--k', 'LineWidth', 2);
+legend('Raw Kin', 'EMG', 'Raw Kin + EMG', 'Chance Level');
+xlabel('Number of Bins');
+ylabel('Accuracy %');
+ylim([0 100]);
+title('Source Comparison');
 
 end

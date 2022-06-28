@@ -2,7 +2,7 @@ Data/
 *.asv
 dummyCode.m
 Pycode/venv
-Pycode/PyData
+PyCode/PyData
 .idea/
 trashscript.m
 old_handplot_synergies.m
@@ -12,3 +12,4 @@ second.csv
 third.csv
 *.R
 data_visualization.m
+PyCode/PyData/.ipynb_checkpoints/*.json
