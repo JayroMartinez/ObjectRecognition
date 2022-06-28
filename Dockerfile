@@ -4,7 +4,7 @@ FROM python:3.8-slim-bullseye
 
 # COPY /PyCode . 
 
-RUN pip3 install numpy scikit-learn pandas jupyterlab
+RUN pip3 install numpy scikit-learn pandas jupyterlab matplotlib
 
 EXPOSE 8888
 
