@@ -107,6 +107,10 @@ end
 
 clear j;
 
+%% NON-NEGATIVE MATRIX FACTORIZATION FOR EMG DATA
+
+emg_nmf(emg_fil);
+
 
 %% PCA CALCULATION FOR ALL SUBJECTS
 
@@ -117,7 +121,6 @@ clear j;
 %     [all_subjects] = [all_subjects; str2double(all_data{k}(:,1:end-3))];
 % 
 % end
-% 
 % [all_subjects_coeff, all_subjects_scores, all_subjects_explained, ~, ~, ~] = pca_calculation(all_subjects);
 
 %% VARIANCE PLOTS
@@ -216,11 +219,11 @@ synergies = clustering(pcs, number_of_subjects);
 % synergy_variances = syn_variance_calculation_oneTOone(sorted_pcs);
 
 %% SYNERGY EVOLUTION
-evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
+% evolution_comparison(sorted_scores, sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
 % evolution_comparison(nn_sorted_scores, nn_sorted_pcs, means, ep_labels, task_labels, time, subjects_to_load, all_data);
 
 %% CLASSIFICATION
 
-classification_function(kinem_fil, ep_labels, task_labels);
+% classification_function(kinem_fil, ep_labels, task_labels);
 
 end

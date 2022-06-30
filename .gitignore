@@ -13,3 +13,4 @@ third.csv
 *.R
 data_visualization.m
 PyCode/PyData/.ipynb_checkpoints/*.json
+.bash_profile
