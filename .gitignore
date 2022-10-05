@@ -13,4 +13,5 @@ third.csv
 *.R
 data_visualization.m
 PyCode/PyData/.ipynb_checkpoints/
+PyCode/.ipynb_checkpoints/
 .bash_profile
