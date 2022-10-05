@@ -4,7 +4,7 @@ FROM python:3.8-slim-bullseye
 
 # COPY /PyCode . 
 
-RUN pip3 install numpy scikit-learn pandas jupyterlab matplotlib
+RUN pip3 install numpy scikit-learn pandas jupyterlab matplotlib seaborn pingouin
 
 EXPOSE 8888
 
