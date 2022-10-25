@@ -30,11 +30,15 @@ def load(subject):
     cyberglove_list = list()
     vicon_list = list()
     emg_list = list()
+    task_label = list()
+    ep_label = list()
+
     for task in tasks:
 
         cyberglove_open_file =  os.path.join(os.getcwd(), 'BIDSData', subject, 'cyberglove', subject + '_' + task + '_cyberglove.csv')
         vicon_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'vicon', subject + '_' + task + '_vicon.csv')
         emg_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'sessantaquattro', subject + '_' + task + '_sessantaquattro.csv')
+        ep_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'labels', subject + '_' + task + '_labels.csv')
 
         with open(cyberglove_open_file) as cyberglove_o_f:
             op_cg = csv.reader(cyberglove_o_f)
@@ -42,6 +46,8 @@ def load(subject):
             rows_cg = []
             for row_cg in op_cg:
                 rows_cg.append(row_cg)
+            if subject == 'sub-02' and task == 'MetalMug_CeramicMug':  # this is terrible
+                rows_cg.pop()
         cyberglove_list.extend(rows_cg)
 
         with open(vicon_open_file) as vicon_o_f:
@@ -50,10 +56,9 @@ def load(subject):
             rows_vc = []
             for row_vc in op_vc:
                 rows_vc.append(row_vc)
-        if len(rows_vc) > len(rows_cg): # vicon sometimes has more datapoints than cyberglove, sometimes has the same
-            rows_vc = rows_vc[0:len(rows_cg)] # discard last datapoint
+        if len(rows_vc) > len(rows_cg):  # vicon sometimes has more datapoints than cyberglove, sometimes has the same
+            rows_vc = rows_vc[0:len(rows_cg)]  # discard last datapoint
         vicon_list.extend(rows_vc)
-
 
         with open(emg_open_file) as emg_o_f:
             op_emg = csv.reader(emg_o_f)
@@ -61,20 +66,45 @@ def load(subject):
             rows_emg = []
             for row_emg in op_emg:
                 rows_emg.append(row_emg)
-        emg_idx = np.linspace(0, len(rows_emg) - 1, len(rows_vc)).astype(int) # downsample emg
+        emg_idx = np.linspace(0, len(rows_emg) - 1, len(rows_vc)).astype(int)  # downsample emg
         sel_emg_datapoints = [rows_emg[idx] for idx in emg_idx]
         emg_list.extend(sel_emg_datapoints)
 
-    print("Shape for cyberglove dataframe:", len(cyberglove_list))
-    print("Shape for vicon dataframe:", len(vicon_list))
-    print("Shape for emg dataframe:", len(emg_list))
-    print("******************************************************\n")
+        with open(ep_open_file) as ep_o_f:
+            op_ep = csv.reader(ep_o_f)
+            rows_ep = []
+            for row_ep in op_ep:
+                rows_ep.append(row_ep[0])
+        if len(rows_ep) > len(rows_cg):  # EP labels sometimes has more datapoints than cyberglove
+            rows_ep = rows_ep[0:len(rows_cg)]  # discard last datapoints
+        elif len(rows_ep) < len(rows_cg):
+            rows_ep.extend(rows_ep[-1] * (len(rows_cg) - len(rows_ep)))
+        ep_label.extend(rows_ep)
 
-    # check why subject 2 has one more cyberglove elements that vicon
-    # add labels (EPs)
-    # rectify emg
-    # select kinematic variables
-    # append everything into a pandas dataframe
-    # return dataframe
+        task_label.extend([task] * len(rows_cg))
+
+    all_sources = np.hstack((cyberglove_list, vicon_list, emg_list))
+    source_labels = np.hstack((head_cg, head_vc, head_emg))
+    all_sources_df = pd.DataFrame(all_sources, columns=source_labels, dtype='float')
+
+    # Drop columns we don't want
+    # We keep 14 cyberglove variables, 5 vicon variables and 64 emg variables
+    columns_to_drop = ['UNIX_time', 'ThumbAb', 'MiddleIndexAb', 'RingMiddleAb', 'PinkieRingAb', 'L_Thorax_X', 'L_Thorax_Y', 'L_Thorax_Z', 'Elbow_X', 'Elbow_Y', 'Elbow_Z', 'Shoulder_X', 'Shoulder_Y', 'Shoulder_Z', 'R_Thorax_X', 'R_Thorax_Y', 'R_Thorax_Z', 'Wrist_X', 'Wrist_Y', 'Wrist_Z', 'Index_Abs_J1_X', 'Index_Proj_J1_Y', 'Pinkie_Abs_J1_X', 'Pinkie_Proj_J1_Y', 'Ring_Abs_J1_X', 'Ring_Proj_J1_Y', 'Middle_Abs_J1_X', 'Middle_Proj_J1_Y', 'Thumb_Abs_J1_X', 'Thumb_Proj_J1_Y', 'Thumb_Abs_J2_X']
+    all_sources_df.drop(columns_to_drop, axis=1, inplace=True)
+
+    # Add task labels
+    all_sources_df['Task'] = task_label
+
+    # Add EP labels
+    all_sources_df['EP'] = ep_label
+
+    # Add Subject
+    all_sources_df['Subject'] = [subject] * all_sources_df.shape[0]
+
+    # Rectify EMG
+    emg_cols = [col for col in all_sources_df.columns if ('flexion' in col or 'extension' in col)]
+    all_sources_df[emg_cols] = all_sources_df[emg_cols].abs()
+
+    return all_sources_df
 
 
