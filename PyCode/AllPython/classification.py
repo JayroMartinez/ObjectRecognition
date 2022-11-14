@@ -137,15 +137,15 @@ def emg_classification(data):
                         # cl = log_model.classes_
                         # print("Predictions:", pred)
                         sc = round(log_model.score(X=test_data, y=test_labels)*100, 2)
-                        print("Score: ", sc)
+                        # print("Score: ", sc)
                         total_score.append(sc)
                         # print("Num", cl[0], train_labels.count(cl[0]))
                         # print("Num", cl[1], train_labels.count(cl[1]))
                         # print("Num", cl[2], train_labels.count(cl[2]))
-                        print("========================================\n")
-                        a=1
+                        # print("========================================\n")
+                        # a=1
 
-                    print("EMG Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and', num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
+                    # print("EMG Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and', num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)
                     results_to_write = ['EMG', family, num_bin, l1_param, c_par, total_score, round(np.mean(total_score), 2)]
@@ -292,15 +292,15 @@ def kinematic_classification(data):
                         # cl = log_model.classes_
                         # print("Predictions:", pred)
                         sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-                        print("Score: ", sc)
+                        # print("Score: ", sc)
                         total_score.append(sc)
                         # print("Num", cl[0], train_labels.count(cl[0]))
                         # print("Num", cl[1], train_labels.count(cl[1]))
                         # print("Num", cl[2], train_labels.count(cl[2]))
-                        print("========================================\n")
-                        a = 1
+                        # print("========================================\n")
+                        # a = 1
 
-                    print("Kin Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and', num_bin,
+                    # print("Kin Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and', num_bin,
                           'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)
@@ -314,8 +314,10 @@ def kinematic_classification(data):
 def multiple_source_classification(data):
 
     # print("Multimodal")
-    families = np.unique(data['Family'])
-    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # families = np.unique(data['Family'])
+    families = ['Cutlery']
+    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    bins = [45, 50]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
@@ -410,7 +412,7 @@ def multiple_source_classification(data):
                                     test_data.append(flat_ep_mean)
                                     test_labels.append(np.unique(test_ep['Given Object'])[0])
                                 except RuntimeWarning:
-                                    print("Dropped EP", tst_iter, "from family ", family)
+                                    # print("Dropped EP", tst_iter, "from family ", family)
                                     # dropped += 1
 
                         # Z-Score normalization for Train and Test data
@@ -447,14 +449,14 @@ def multiple_source_classification(data):
                         # cl = log_model.classes_
                         # print("Predictions:", pred)
                         sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
-                        print("Score: ", sc)
+                        # print("Score: ", sc)
                         total_score.append(sc)
                         # print("Num", cl[0], train_labels.count(cl[0]))
                         # print("Num", cl[1], train_labels.count(cl[1]))
                         # print("Num", cl[2], train_labels.count(cl[2]))
-                        print("========================================\n")
+                        # print("========================================\n")
 
-                    print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
+                    # print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
                           num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)

@@ -25,8 +25,8 @@ def main():
     split_df['Trial num'] = split_df['Trial num'].astype('str')
     split_df['EP num'] = split_df['EP num'].astype('str')
 
-    emg_classification(split_df)
-    kinematic_classification(split_df)
+    # emg_classification(split_df)
+    # kinematic_classification(split_df)
     multiple_source_classification(split_df)
 
 
