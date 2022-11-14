@@ -313,11 +313,11 @@ def kinematic_classification(data):
 
 def multiple_source_classification(data):
 
-    # print("Multimodal")
+    print("Multimodal")
     # families = np.unique(data['Family'])
-    families = ['Cutlery']
-    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    bins = [45, 50]
+    families = ['Geometric', 'Mugs', 'Plates']
+    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # bins = [45, 50]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
@@ -344,10 +344,10 @@ def multiple_source_classification(data):
                     # empty_rows = selected_df[selected_df[emg_cols].isnull().any(axis=1)]
                     # selected_df.drop(index=empty_rows.index, axis=0, inplace=True)  # drop rows containing empty values
                     after_drop_size = selected_df.shape[0]
-                    print("FAMILY:", family)
-                    print("Multimodal datapoints dropped because of NaNs:", orig_size - after_drop_size)
-                    print("% of Multimodal datapoints dropped because of NaNs:",
-                          round(((orig_size - after_drop_size) / orig_size) * 100, 2), "%")
+                    # print("FAMILY:", family)
+                    # print("Multimodal datapoints dropped because of NaNs:", orig_size - after_drop_size)
+                    # print("% of Multimodal datapoints dropped because of NaNs:",
+                    #       round(((orig_size - after_drop_size) / orig_size) * 100, 2), "%")
                     # print("-------------------------------------------------------------\n")
                     # print("\nNumber of EPs: ", len(np.unique(selected_df['EP total'])))
 
@@ -375,7 +375,7 @@ def multiple_source_classification(data):
                         train_data = []
                         train_labels = []
 
-                        # dropped = 0  # Number of dropped EPs
+                        dropped = 0  # Number of dropped EPs
 
                         # take each ep, create bins & compute mean
                         for trn_iter in train_eps:
@@ -392,8 +392,8 @@ def multiple_source_classification(data):
                                     train_data.append(flat_ep_mean)
                                     train_labels.append(np.unique(train_ep['Given Object'])[0])
                                 except RuntimeWarning:
-                                    print("Dropped EP", trn_iter, "from family ", family)
-                                    # dropped += 1
+                                    # print("Dropped EP", trn_iter, "from family ", family)
+                                    dropped += 1
 
                         test_data = []
                         test_labels = []
@@ -411,8 +411,8 @@ def multiple_source_classification(data):
                                     test_data.append(flat_ep_mean)
                                     test_labels.append(np.unique(test_ep['Given Object'])[0])
                                 except RuntimeWarning:
-                                    print("Dropped EP", tst_iter, "from family ", family)
-                                    # dropped += 1
+                                    # print("Dropped EP", tst_iter, "from family ", family)
+                                    dropped += 1
 
                         # Z-Score normalization for Train and Test data
                         train_df = pd.DataFrame(train_data)
@@ -459,8 +459,8 @@ def multiple_source_classification(data):
                             sc = -1
                             total_score.append(sc)
 
-                    print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
-                          num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
+                    # print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
+                    #       num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)
                     results_to_write = ['Multimodal', family, num_bin, l1_param, c_par, total_score,
