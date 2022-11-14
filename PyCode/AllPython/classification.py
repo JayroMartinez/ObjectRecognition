@@ -189,9 +189,9 @@ def kinematic_classification(data):
                     # empty_rows = selected_df[selected_df[emg_cols].isnull().any(axis=1)]
                     # selected_df.drop(index=empty_rows.index, axis=0, inplace=True)  # drop rows containing empty values
                     after_drop_size = selected_df.shape[0]
-                    print("FAMILY:", family)
-                    print("Kin datapoints dropped because of NaNs:", orig_size - after_drop_size)
-                    print("% of Kin datapoints dropped because of NaNs:", round(((orig_size - after_drop_size) / orig_size) * 100, 2), "%")
+                    # print("FAMILY:", family)
+                    # print("Kin datapoints dropped because of NaNs:", orig_size - after_drop_size)
+                    # print("% of Kin datapoints dropped because of NaNs:", round(((orig_size - after_drop_size) / orig_size) * 100, 2), "%")
                     # print("-------------------------------------------------------------\n")
                     # print("\nNumber of EPs: ", len(np.unique(selected_df['EP total'])))
 
@@ -301,7 +301,7 @@ def kinematic_classification(data):
                         # a = 1
 
                     # print("Kin Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and', num_bin,
-                          'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
+                    #       'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)
                     results_to_write = ['Kin', family, num_bin, l1_param, c_par, total_score,
@@ -401,7 +401,6 @@ def multiple_source_classification(data):
                         for tst_iter in test_eps:
 
                             test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
-                            # ep_numeric_data =
                             ep_in_bins = np.array_split(ep_numeric_data, num_bin)
 
                             with warnings.catch_warnings():
@@ -412,7 +411,7 @@ def multiple_source_classification(data):
                                     test_data.append(flat_ep_mean)
                                     test_labels.append(np.unique(test_ep['Given Object'])[0])
                                 except RuntimeWarning:
-                                    # print("Dropped EP", tst_iter, "from family ", family)
+                                    print("Dropped EP", tst_iter, "from family ", family)
                                     # dropped += 1
 
                         # Z-Score normalization for Train and Test data
@@ -421,42 +420,46 @@ def multiple_source_classification(data):
                         test_df = pd.DataFrame(test_data)
                         test_df.apply(zscore)
 
-                        train_counter = Counter(train_labels)
+                        # train_counter = Counter(train_labels)
                         # test_counter = Counter(test_labels)
                         # print("Train Labels count: ", train_counter)
                         # print("Test Labels count: ", test_counter)
                         # print("Dropped ", dropped, " EPs out of ", len(train_eps) + len(test_eps), ", ", round((dropped / (len(train_eps) + len(test_eps))) * 100, 2), "%")
                         # print("------------------------------------------------\n")
 
-                        # build model
-                        # log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=42, solver='saga', max_iter=25000, multi_class='multinomial', n_jobs=-1, l1_ratio=l1_param)
-                        log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced',
-                                                       random_state=42, solver='saga', max_iter=5000, multi_class='ovr',
-                                                       n_jobs=-1, l1_ratio=l1_param)
-                        # compute weights (because unbalanced dataset)
-                        weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-                        # lab_w = [[train_labels[it], weights[it]] for it in range(len(weights))]
-                        # train model
-                        log_model.fit(X=train_df, y=train_labels, sample_weight=weights)
-                        # log_model.fit(X=train_data, y=train_labels)
-                        # get predictions
-                        # pred = log_model.predict_proba(test_data)
-                        pred = log_model.predict(test_df)
-                        test_counter = Counter(test_labels)
-                        pred_counter = Counter(pred)
-                        # print("Test Labels count: ", test_counter)
-                        # print("Prediction Labels count: ", pred_counter)
-                        # cl = log_model.classes_
-                        # print("Predictions:", pred)
-                        sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
-                        # print("Score: ", sc)
-                        total_score.append(sc)
-                        # print("Num", cl[0], train_labels.count(cl[0]))
-                        # print("Num", cl[1], train_labels.count(cl[1]))
-                        # print("Num", cl[2], train_labels.count(cl[2]))
-                        # print("========================================\n")
+                        if test_df.shape[0] > 0:
+                            # build model
+                            # log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=42, solver='saga', max_iter=25000, multi_class='multinomial', n_jobs=-1, l1_ratio=l1_param)
+                            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced',
+                                                           random_state=42, solver='saga', max_iter=5000, multi_class='ovr',
+                                                           n_jobs=-1, l1_ratio=l1_param)
+                            # compute weights (because unbalanced dataset)
+                            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+                            # lab_w = [[train_labels[it], weights[it]] for it in range(len(weights))]
+                            # train model
+                            log_model.fit(X=train_df, y=train_labels, sample_weight=weights)
+                            # log_model.fit(X=train_data, y=train_labels)
+                            # get predictions
+                            # pred = log_model.predict_proba(test_data)
+                            pred = log_model.predict(test_df)
+                            # test_counter = Counter(test_labels)
+                            # pred_counter = Counter(pred)
+                            # print("Test Labels count: ", test_counter)
+                            # print("Prediction Labels count: ", pred_counter)
+                            # cl = log_model.classes_
+                            # print("Predictions:", pred)
+                            sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
+                            # print("Score: ", sc)
+                            total_score.append(sc)
+                            # print("Num", cl[0], train_labels.count(cl[0]))
+                            # print("Num", cl[1], train_labels.count(cl[1]))
+                            # print("Num", cl[2], train_labels.count(cl[2]))
+                            # print("========================================\n")
+                        else:
+                            sc = -1
+                            total_score.append(sc)
 
-                    # print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
+                    print("Multimodal Mean score after", cv, 'folds with C =', c_par, ', L1Ratio =', l1_param, 'and',
                           num_bin, 'bins for family', family, ':', round(np.mean(total_score), 2), "%\n")
 
                     wr = csv.writer(result_file)
