@@ -114,7 +114,6 @@ def kin_aux_classif(input_data):
     total_score = []
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
-    selected_df = data.loc[data['Family'] == family]  # select particular family
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
                 'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
                 'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
@@ -388,3 +387,169 @@ def multiple_source_classification(data):
             wr.writerow(res)
 
     result_file.close()
+
+
+def hierarchical_classification(data):
+
+    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    wr = csv.writer(result_file)
+
+    families = np.unique(data['Family'])
+    emg_bins = 25
+    kin_bins = 30
+    emg_l1 = 0
+    kin_l1 = 0
+    c_param = 1.5
+    cv = 3
+
+
+
+    for family in families:
+
+        kin_total_score = []
+        emg_total_score = []
+        total_score = []
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                    'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                    'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                    'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                    'Thumb_Proj_J1_Z']
+        emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
+
+        selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
+
+        to_kfold = selected_df.drop_duplicates(
+            subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+
+            train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
+            test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+
+            kin_train_data = []
+            emg_train_data = []
+            train_labels = []
+
+            dropped = 0  # Number of dropped EPs
+
+            for trn_iter in train_eps:
+
+                train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
+
+                ep_kin_data = train_ep[kin_cols]
+                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+
+                ep_emg_data = train_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+
+                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        flat_kin_mean = list(
+                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        kin_train_data.append(flat_kin_mean)
+
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        emg_train_data.append(flat_emg_mean)
+
+                        train_labels.append(np.unique(train_ep['Given Object'])[0])
+
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
+
+            kin_test_data = []
+            emg_test_data = []
+
+            test_labels = []
+
+            for tst_iter in test_eps:
+
+                test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
+
+                ep_kin_data = test_ep[kin_cols]
+                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+
+                ep_emg_data = test_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+
+                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        flat_kin_mean = list(
+                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        kin_test_data.append(flat_kin_mean)
+
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        emg_test_data.append(flat_emg_mean)
+
+                        test_labels.append(np.unique(test_ep['Given Object'])[0])
+
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
+
+            # build kinematic model
+            kin_log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
+                                           random_state=42,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           l1_ratio=kin_l1)
+            # compute weights (because unbalanced dataset)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # train kinematic model
+            kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
+            # kin_total_score.append(sc)
+
+            # build EMG model
+            emg_log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
+                                               random_state=42,
+                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               l1_ratio=emg_l1)
+
+            # train EMG model
+            emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
+            # emg_total_score.append(sc)
+
+            # get prediction probabilities from first layer to train second layer
+            kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
+            emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
+
+            pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba], axis=1)
+
+            # build & train top layer classifier
+            top_log_model = LogisticRegression(class_weight='balanced', random_state=42, solver='saga', max_iter=25000,
+                                               multi_class='ovr', n_jobs=-1)
+            top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
+
+            # get probabilities from first layer on test set to feed the second layer
+            kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
+            emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
+            test_proba = np.concatenate([kin_test_pred, emg_test_pred], axis=1)
+
+            # get prediction accuracy from second layer
+            sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
+            total_score.append(sc)
+
+        result = ['Hierarchical']
+        result.extend([family, '*', '*', '*'])
+        result.append(total_score)
+        result.append(round(np.mean(total_score), 2))
+        wr.writerow(result)
+
+    result_file.close()
+

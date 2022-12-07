@@ -48,8 +48,9 @@ def load(subject):
             rows_cg = []
             for row_cg in op_cg:
                 rows_cg.append(row_cg)
-            if subject == 'sub-02' and task == 'MetalMug_CeramicMug':  # this is terrible
-                rows_cg.pop()
+            # if subject == 'sub-02' and task == 'MetalMug_CeramicMug':  # this is terrible
+            #     # rows_cg.pop()
+            #     a=1
         cyberglove_list.extend(rows_cg)
 
         with open(vicon_open_file) as vicon_o_f:
