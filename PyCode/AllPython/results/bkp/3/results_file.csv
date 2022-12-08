@@ -5998,3 +5998,8 @@ Multimodal,Plates,50,1,0.75,"[55.56, 60.0, 56.25]",57.27
 Multimodal,Plates,50,1,1,"[55.56, 60.0, 56.25]",57.27
 Multimodal,Plates,50,1,1.25,"[55.56, 60.0, 56.25]",57.27
 Multimodal,Plates,50,1,1.5,"[55.56, 60.0, 56.25]",57.27
+Hierarchical,Ball,*,*,*,"[65.12, 62.07, 57.83]",61.67
+Hierarchical,Cutlery,*,*,*,"[33.65, 43.69, 43.14]",40.16
+Hierarchical,Geometric,*,*,*,"[34.25, 49.33, 41.89]",41.82
+Hierarchical,Mugs,*,*,*,"[47.78, 49.44, 48.91]",48.71
+Hierarchical,Plates,*,*,*,"[64.62, 64.18, 58.46]",62.42
