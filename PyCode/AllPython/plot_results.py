@@ -9,7 +9,7 @@ def main():
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
-    plt.close('all')  # to clen the screen
+    plt.close('all')  # to clean the screen
 
     result_file = open('./results/results_file.csv', 'r')  # Open file in append mode
 
@@ -18,10 +18,14 @@ def main():
     c_str = [str(x) for x in res_df['C']]
     res_df['C'] = c_str
     res_df['C'] = res_df['C'].astype('category')
+    res_df['Bins'] = res_df['Bins'].astype('int')
+    res_df['L1'] = res_df['L1'].astype('float')
+
 
     emg_df = res_df.loc[res_df['Source'] == 'EMG']
     kin_df = res_df.loc[res_df['Source'] == 'Kin']
     multi_df = res_df.loc[res_df['Source'] == 'Multimodal']
+    hierarchical_df = res_df.loc[res_df['Source'] == 'Hierarchical']
 
     ###############
     # BEST ACC
@@ -63,7 +67,7 @@ def main():
     print("Best accuracy for EMG data: ", round(emg_max_acc, 2), "% with", emg_max_param[0], "bins, L1 =",
           emg_max_param[1], "and C =", emg_max_param[2])
     print("Best accuracy for Kinematic data: ", round(kin_max_acc, 2), "% with", kin_max_param[0], "bins, L1 =",
-          kin_max_param[1], "and C =", emg_max_param[2])
+          kin_max_param[1], "and C =", kin_max_param[2])
     print("Best accuracy for Multisource data: ", round(multi_max_acc, 2), "% with", multi_max_param[0], "bins, L1 =",
           multi_max_param[1], "and C =", multi_max_param[2])
 
@@ -150,6 +154,16 @@ def main():
     plt.savefig('./results/MULTI_l1.png', dpi=600)
     # plt.show()
 
+    ###############
+    # HIERARCHICAL PLOTS
+    ###############
+    # Over C
+    plt.figure()
+    sns.lineplot(data=multi_df, x='C', y='Mean Score', hue='Family').set(title='Hierarchical score over C param')
+    plt.axhline(33.33, color='k', linestyle='--')
+    plt.ylabel('Score (95% Confidence Interval)')
+    plt.savefig('./results/HIER_c.png', dpi=600)
+    # plt.show()
 
 if __name__ == "__main__":
     main()

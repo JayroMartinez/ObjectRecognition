@@ -1,0 +1,19 @@
+Backup 1:
+******************************
+- First output
+- Some problems with multinomial + bin > 40
+- Max number of iterations when creating the model is very low
+
+Backup 2:
+******************************
+- First parallel execution
+- No problem with multimodal with bin > 40
+- Max iterations fixed
+
+Backup 3:
+******************************
+- Multimodal hyperparameters improved??
+
+Backup 4:
+******************************
+- Built hierarchical model using binary (one vs. rest) models

@@ -204,6 +204,12 @@ def multiple_source_aux_classif(input_data):
     l1_param = params[2]
     c_par = params[3]
 
+    # # for test and develop
+    # family = 'Balls'
+    # num_bin = 20
+    # l1_param = 1
+    # c_par = 0.1
+
     total_score = []
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
@@ -302,12 +308,6 @@ def emg_classification(data):
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
-    # for test and develop
-    # family = 'Plates'
-    # num_bin = 10
-    # l1_param = 0.5
-    # c_par = 2
-
     # we need to build the object to be iterated in the multiprocessing pool
     all_param = list(itertools.product(families, bins, l1VSl2, c_param))
     data_and_iter = [[data, x, cv] for x in all_param]
@@ -333,12 +333,6 @@ def kinematic_classification(data):
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
-
-    # for test and develop
-    # family = 'Plates'
-    # num_bin = 10
-    # l1_param = 0.5
-    # c_par = 2
 
     # we need to build the object to be iterated in the multiprocessing pool
     all_param = list(itertools.product(families, bins, l1VSl2, c_param))
@@ -366,12 +360,6 @@ def multiple_source_classification(data):
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
-    # for test and develop
-    # family = 'Plates'
-    # num_bin = 10
-    # l1_param = 0.5
-    # c_par = 2
-
     # we need to build the object to be iterated in the multiprocessing pool
     all_param = list(itertools.product(families, bins, l1VSl2, c_param))
     data_and_iter = [[data, x, cv] for x in all_param]
@@ -395,19 +383,23 @@ def hierarchical_classification(data):
     wr = csv.writer(result_file)
 
     families = np.unique(data['Family'])
-    emg_bins = 25
-    kin_bins = 30
+    emg_bins = 40
+    kin_bins = 20
     emg_l1 = 0
-    kin_l1 = 0
-    c_param = 1.5
+    kin_l1 = 1
+    emg_c = 1.25
+    kin_c = 0.1
+    top_C = 0.75
     cv = 3
 
-
+    # for develop and test
+    kir = []
+    kir_2 = []
 
     for family in families:
 
-        kin_total_score = []
-        emg_total_score = []
+        # kin_total_score = []
+        # emg_total_score = []
         total_score = []
 
         selected_df = data.loc[data['Family'] == family]  # select particular family
@@ -421,8 +413,7 @@ def hierarchical_classification(data):
 
         selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
 
-        to_kfold = selected_df.drop_duplicates(
-            subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+        to_kfold = selected_df.drop_duplicates(subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
         # WARNING: the skf.split returns the indexes
@@ -435,7 +426,8 @@ def hierarchical_classification(data):
             emg_train_data = []
             train_labels = []
 
-            dropped = 0  # Number of dropped EPs
+            trn_dropped = 0  # Number of dropped EPs in training dataset
+            tst_dropped = 0  # Number of dropped EPs in test dataset
 
             for trn_iter in train_eps:
 
@@ -452,20 +444,18 @@ def hierarchical_classification(data):
                     try:
 
                         kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                        flat_kin_mean = list(
-                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                        kin_train_data.append(flat_kin_mean)
+                        flat_kin_mean = list(itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                        flat_emg_mean = list(
-                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                        emg_train_data.append(flat_emg_mean)
+                        flat_emg_mean = list(itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
+                        kin_train_data.append(flat_kin_mean)
+                        emg_train_data.append(flat_emg_mean)
                         train_labels.append(np.unique(train_ep['Given Object'])[0])
 
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
-                        dropped += 1
+                        trn_dropped += 1
 
             kin_test_data = []
             emg_test_data = []
@@ -487,23 +477,21 @@ def hierarchical_classification(data):
                     try:
 
                         kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                        flat_kin_mean = list(
-                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                        kin_test_data.append(flat_kin_mean)
+                        flat_kin_mean = list(itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                        flat_emg_mean = list(
-                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                        emg_test_data.append(flat_emg_mean)
+                        flat_emg_mean = list(itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
+                        kin_test_data.append(flat_kin_mean)
+                        emg_test_data.append(flat_emg_mean)
                         test_labels.append(np.unique(test_ep['Given Object'])[0])
 
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
-                        dropped += 1
+                        tst_dropped += 1
 
             # build kinematic model
-            kin_log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
+            kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
                                            random_state=42,
                                            solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=kin_l1)
@@ -511,11 +499,11 @@ def hierarchical_classification(data):
             weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             # train kinematic model
             kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
-            # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
+            sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
             # kin_total_score.append(sc)
 
             # build EMG model
-            emg_log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
+            emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
                                                random_state=42,
                                                solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                                l1_ratio=emg_l1)
@@ -532,7 +520,7 @@ def hierarchical_classification(data):
             pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba], axis=1)
 
             # build & train top layer classifier
-            top_log_model = LogisticRegression(class_weight='balanced', random_state=42, solver='saga', max_iter=25000,
+            top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=42, solver='saga', max_iter=25000,
                                                multi_class='ovr', n_jobs=-1)
             top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
 
@@ -546,10 +534,16 @@ def hierarchical_classification(data):
             total_score.append(sc)
 
         result = ['Hierarchical']
-        result.extend([family, '*', '*', '*'])
+        result.extend([family, '0', '0', top_C])
         result.append(total_score)
         result.append(round(np.mean(total_score), 2))
         wr.writerow(result)
 
+        # test
+        # kir.append(round(np.mean(total_score), 2))
+        # kir_2.append(round(np.mean(kin_total_score), 2))
+
+    print("Mean for C=", top_C, round(np.mean(kir), 2))
+    # print("Mean for Kinematics", round(np.mean(kir_2), 2))
     result_file.close()
 
