@@ -26,6 +26,11 @@ def emg_aux_classif(input_data):
 
     total_score = []
 
+    # model weights
+    weight_filename = './results/weights_EMG_' + family + '.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
+
     selected_df = data.loc[data['Family'] == family]  # select particular family
     emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
     selected_df.dropna(subset=emg_cols, axis=0, inplace=True)  # drop rows containing NaN values
@@ -91,10 +96,18 @@ def emg_aux_classif(input_data):
         sc = round(log_model.score(X=test_data, y=test_labels)*100, 2)
         total_score.append(sc)
 
+        # model weight extraction and saving
+        [weight_wr.writerow(x) for x in log_model.coef_]
+    # model weight file close
+    weight_file.close()
+    # print(log_model.classes_)
+
+
     result = ['EMG']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
+    print("RESULT:", result)
 
     return result
 
@@ -112,6 +125,11 @@ def kin_aux_classif(input_data):
     c_par = params[3]
 
     total_score = []
+
+    # model weights
+    weight_filename = './results/weights_Kin_' + family + '.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
@@ -185,10 +203,16 @@ def kin_aux_classif(input_data):
         sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
         total_score.append(sc)
 
+        # model weight extraction and saving
+        [weight_wr.writerow(x) for x in log_model.coef_]
+    # model weight file close
+    weight_file.close()
+
     result = ['Kin']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
+    print("RESULT:", result)
 
     return result
 
@@ -303,14 +327,20 @@ def multiple_source_aux_classif(input_data):
 def emg_classification(data):
 
     families = np.unique(data['Family'])
-    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
+    # for testing
+    bins = 40
+    l1VSl2 = 0
+    c_param = 1.25
+    data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
+
     # we need to build the object to be iterated in the multiprocessing pool
-    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    data_and_iter = [[data, x, cv] for x in all_param]
+    # all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    # data_and_iter = [[data, x, cv] for x in all_param]
 
     result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
@@ -321,7 +351,8 @@ def emg_classification(data):
         result = pool.map_async(emg_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res)
+            # wr.writerow(res)
+            a=1
 
     result_file.close()
 
@@ -329,14 +360,20 @@ def emg_classification(data):
 def kinematic_classification(data):
 
     families = np.unique(data['Family'])
-    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
+    # for testing
+    bins = 20
+    l1VSl2 = 1
+    c_param = 0.1
+    data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
+
     # we need to build the object to be iterated in the multiprocessing pool
-    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    data_and_iter = [[data, x, cv] for x in all_param]
+    # all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    # data_and_iter = [[data, x, cv] for x in all_param]
 
     result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
@@ -347,7 +384,8 @@ def kinematic_classification(data):
         result = pool.map_async(kin_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res)
+            # wr.writerow(res)
+            a=1
 
     result_file.close()
 
@@ -547,3 +585,52 @@ def hierarchical_classification(data):
     # print("Mean for Kinematics", round(np.mean(kir_2), 2))
     result_file.close()
 
+
+def eq_seq_classification(data):
+
+    all_eps = np.unique(data['EP'])
+
+    families = np.unique(data['Family'])
+
+    coincidences = []
+    object = []
+
+    for family in families:
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+        eps_in_fam = np.unique(selected_df['EP'])
+
+        trials_to_iter = np.unique(selected_df['Trial num'].values)
+
+        ep_seq = []
+        objects = []
+        for tr in trials_to_iter:
+            trial_df = selected_df.loc[selected_df['Trial num'] == str(tr)]
+            eps_in_trial = np.unique(trial_df['EP'])
+
+            coincidences = []
+            for x in all_eps:
+                check = x in eps_in_trial
+                coincidences.append(int(check))
+
+            ep_seq.append(coincidences)
+            objects.append(np.unique(selected_df.loc[selected_df['Trial num'] == str(tr)]['Given Object'])[0])
+
+        ep_df = pd.DataFrame(data=ep_seq, columns=all_eps)
+        ep_df['Given Object'] = objects
+
+        acc = []
+
+        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(ep_df.drop('Given Object', axis=1), ep_df['Given Object'].astype(str)):
+
+            model = LogisticRegression(random_state=42).fit(ep_df.iloc[train].drop('Given Object', axis=1), ep_df.iloc[train]['Given Object'])
+
+            predicted = model.predict(ep_df.iloc[test].drop('Given Object', axis=1))
+            labels = ep_df.iloc[test]['Given Object']
+
+            hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+            acc.append(round(np.sum(hits)*100/len(predicted), 2))
+
+        print("Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%")
+        a=1

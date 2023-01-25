@@ -11,6 +11,8 @@ from classification import emg_classification
 from classification import kinematic_classification
 from classification import multiple_source_classification
 from classification import hierarchical_classification
+from classification import eq_seq_classification
+from stat_analysis import variance
 
 def main():
 
@@ -27,21 +29,27 @@ def main():
     split_df['Trial num'] = split_df['Trial num'].astype('str')
     split_df['EP num'] = split_df['EP num'].astype('str')
 
-    init_time = time.time()
-    emg_classification(split_df)
-    emg_time = time.time()
-    print("EMG elapsed time: ", round(emg_time - init_time))
-    kinematic_classification(split_df)
-    kinematic_time = time.time()
-    print("Kinematic elapsed time: ", round(kinematic_time - emg_time))
-    multiple_source_classification(split_df)
-    multimodal_time = time.time()
-    print("Kinematic elapsed time: ", round(multimodal_time - kinematic_time))
-    print("###########################################")
-    print("TOTAL elapsed time: ", round(multimodal_time - init_time))
+    # VARIANCE STUDY
+    # variance(split_df)
+
+    # CLASSIFICATION BY EP 'SEQUENCE'
+    eq_seq_classification(split_df)
+
+    # init_time = time.time()
+    # emg_classification(split_df)
+    # emg_time = time.time()
+    # print("EMG elapsed time: ", round(emg_time - init_time))
+    # kinematic_classification(split_df)
+    # kinematic_time = time.time()
+    # print("Kinematic elapsed time: ", round(kinematic_time - emg_time))
+    # multiple_source_classification(split_df)
+    # multimodal_time = time.time()
+    # print("Kinematic elapsed time: ", round(multimodal_time - kinematic_time))
+    # print("###########################################")
+    # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFIER
-    hierarchical_classification(split_df)
+    # hierarchical_classification(split_df)
 
 
 if __name__ == "__main__":

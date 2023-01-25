@@ -11,7 +11,7 @@ def main():
 
     plt.close('all')  # to clean the screen
 
-    result_file = open('./results/results_file.csv', 'r')  # Open file in append mode
+    result_file = open('./results/results_file.csv', 'r')
 
     res_cols = ['Source', 'Family', 'Bins', 'L1', 'C', 'Scores', 'Mean Score']
     res_df = pd.read_csv(result_file, names=res_cols)
