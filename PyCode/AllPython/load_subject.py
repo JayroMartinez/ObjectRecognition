@@ -18,6 +18,11 @@ def load(subject):
     emg_folder = os.path.join(os.getcwd(), 'BIDSData', subject, 'sessantaquattro')
     emg_files = [f.name for f in os.scandir(emg_folder) if f.is_file()]
 
+    tactile_folder = os.path.join(os.getcwd(), 'BIDSData', subject, 'tactileglove')
+    tactile_files = [f.name for f in os.scandir(tactile_folder) if f.is_file()]
+
+    # we are skipping the following checks for the tactile data
+
     clean_name_cyberglove = sorted([cy.replace('_cyberglove', '') for cy in cyberglove_files])
     clean_name_vicon = sorted([cy.replace('_vicon', '') for cy in vicon_files])
     clean_name_emg = sorted([cy.replace('_sessantaquattro', '') for cy in emg_files])
@@ -32,6 +37,7 @@ def load(subject):
     cyberglove_list = list()
     vicon_list = list()
     emg_list = list()
+    tactile_list = list()
     task_label = list()
     ep_label = list()
 
@@ -40,6 +46,7 @@ def load(subject):
         cyberglove_open_file =  os.path.join(os.getcwd(), 'BIDSData', subject, 'cyberglove', subject + '_' + task + '_cyberglove.csv')
         vicon_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'vicon', subject + '_' + task + '_vicon.csv')
         emg_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'sessantaquattro', subject + '_' + task + '_sessantaquattro.csv')
+        tactile_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'tactileglove', subject + '_' + task + '_tactileglove.csv')
         ep_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'labels', subject + '_' + task + '_labels.csv')
 
         with open(cyberglove_open_file) as cyberglove_o_f:
@@ -73,6 +80,14 @@ def load(subject):
         sel_emg_datapoints = [rows_emg[idx] for idx in emg_idx]
         emg_list.extend(sel_emg_datapoints)
 
+        with open(tactile_open_file) as tactile_o_f:
+            op_tactile = csv.reader(tactile_o_f)
+            head_tactile = next(op_tactile)
+            rows_tactile = []
+            for row_tactile in op_tactile:
+                rows_tactile.append(row_tactile)
+        tactile_list.extend(rows_tactile)
+
         with open(ep_open_file) as ep_o_f:
             op_ep = csv.reader(ep_o_f)
             rows_ep = []
@@ -86,8 +101,8 @@ def load(subject):
 
         task_label.extend([task] * len(rows_cg))
 
-    all_sources = np.hstack((cyberglove_list, vicon_list, emg_list))
-    source_labels = np.hstack((head_cg, head_vc, head_emg))
+    all_sources = np.hstack((cyberglove_list, vicon_list, emg_list, tactile_list))
+    source_labels = np.hstack((head_cg, head_vc, head_emg, head_tactile))
     all_sources_df = pd.DataFrame(all_sources, columns=source_labels, dtype='float')
 
     # Drop columns we don't want

@@ -18,3 +18,8 @@ Backup 4:
 ******************************
 - Built hierarchical model using binary (one vs. rest) models
 
+Backup 5:
+******************************
+- Added Weight analysis
+- Added Weight vs. Variable p-val analysis
+- Added classification by "EP sequence"
