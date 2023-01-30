@@ -49,7 +49,7 @@ def main():
     # CLASSIFICATION BY EP 'SEQUENCE'
     # eq_seq_classification(split_df)
 
-    init_time = time.time()
+    # init_time = time.time()
     # emg_classification(split_df)
     # emg_time = time.time()
     # print("EMG elapsed time: ", round(emg_time - init_time))
@@ -59,11 +59,11 @@ def main():
     tactile_classification(split_df)
     tactile_time = time.time()
     print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
-    multiple_source_classification(split_df)
+    # multiple_source_classification(split_df)
     multimodal_time = time.time()
-    print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
-    print("###########################################")
-    print("TOTAL elapsed time: ", round(multimodal_time - init_time))
+    # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
+    # print("###########################################")
+    # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFIER
     # hierarchical_classification(split_df)

@@ -232,9 +232,9 @@ def tact_aux_classif(input_data):
     total_score = []
 
     # model weights
-    weight_filename = './results/weights_Tact_' + family + '.csv'
-    weight_file = open(weight_filename, 'a')  # Open file in append mode
-    weight_wr = csv.writer(weight_file)
+    # weight_filename = './results/weights_Tact_' + family + '.csv'
+    # weight_file = open(weight_filename, 'a')  # Open file in append mode
+    # weight_wr = csv.writer(weight_file)
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -305,9 +305,9 @@ def tact_aux_classif(input_data):
         total_score.append(sc)
 
         # model weight extraction and saving
-        [weight_wr.writerow(x) for x in log_model.coef_]
+        # [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
-    weight_file.close()
+    # weight_file.close()
 
     result = ['Tactile']
     result.extend(params)
@@ -517,7 +517,7 @@ def tactile_classification(data):
         result = pool.map_async(tact_aux_classif, data_and_iter)
 
         for res in result.get():
-            # wr.writerow(res)
+            wr.writerow(res)
             a=1
 
     result_file.close()

@@ -24,3 +24,8 @@ AllPython/BIDSData/
 .DS_Store
 PyCode/.DS_Store
 PyCode/AllPython/BIDSData
+PyCode/AllPython/results/weights_Tact_Ball.csv
+PyCode/AllPython/results/weights_Tact_Cutlery.csv
+PyCode/AllPython/results/weights_Tact_Geometric.csv
+PyCode/AllPython/results/weights_Tact_Mugs.csv
+PyCode/AllPython/results/weights_Tact_Plates.csv
