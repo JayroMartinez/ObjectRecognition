@@ -54,19 +54,19 @@ def main():
     # emg_time = time.time()
     # print("EMG elapsed time: ", round(emg_time - init_time))
     # kinematic_classification(split_df)
-    kinematic_time = time.time()
+    # kinematic_time = time.time()
     # print("Kinematic elapsed time: ", round(kinematic_time - emg_time))
-    tactile_classification(split_df)
-    tactile_time = time.time()
-    print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
+    # tactile_classification(split_df)
+    # tactile_time = time.time()
+    # print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
     # multiple_source_classification(split_df)
-    multimodal_time = time.time()
+    # multimodal_time = time.time()
     # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
     # print("###########################################")
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFIER
-    # hierarchical_classification(split_df)
+    hierarchical_classification(split_df)
 
 
 if __name__ == "__main__":
