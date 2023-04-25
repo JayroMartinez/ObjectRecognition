@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import datetime
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -43,7 +44,7 @@ def load(subject):
 
     for task in tasks:
 
-        cyberglove_open_file =  os.path.join(os.getcwd(), 'BIDSData', subject, 'cyberglove', subject + '_' + task + '_cyberglove.csv')
+        cyberglove_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'cyberglove', subject + '_' + task + '_cyberglove.csv')
         vicon_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'vicon', subject + '_' + task + '_vicon.csv')
         emg_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'sessantaquattro', subject + '_' + task + '_sessantaquattro.csv')
         tactile_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'tactileglove', subject + '_' + task + '_tactileglove.csv')
@@ -125,4 +126,103 @@ def load(subject):
 
     return all_sources_df
 
+
+def load_ep_duration(subject):
+
+    ep_labs_cols = ['contour following', 'contour following + enclosure part',
+                    'edge following', 'enclosure', 'enclosure part',
+                    'enclosure part + function test', 'function test', 'pressure',
+                    'rotation', 'translation', 'weighting',
+                    'weighting + contour following']
+
+    obj_fam = dict(CeramicMug='Mugs',
+                   Glass='Mugs',
+                   MetalMug='Mugs',
+                   CeramicPlate='Plates',
+                   MetalPlate='Plates',
+                   PlasticPlate='Plates',
+                   Cube='Geometric',
+                   Cylinder='Geometric',
+                   Triangle='Geometric',
+                   Fork='Cutlery',
+                   Knife='Cutlery',
+                   Spoon='Cutlery',
+                   PingPongBall='Ball',
+                   SquashBall='Ball',
+                   TennisBall='Ball',
+                   )
+
+    dataframe_columns = np.hstack((ep_labs_cols, 'Object', 'Family'))
+    ep_df = pd.DataFrame(columns=dataframe_columns)
+
+    label_folder = os.path.join(os.getcwd(), 'BIDSData', subject, 'sep_labels')
+    label_files = [f.name for f in os.scandir(label_folder) if f.is_file()]
+
+    trial_result = []
+
+    for file in label_files:
+
+        ep_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'sep_labels', file)
+        cyb_file = file.replace('labels', 'cyberglove')
+        cyb_open_file = os.path.join(os.getcwd(), 'BIDSData', subject, 'cyberglove', cyb_file)
+
+        with open(ep_open_file) as ep_open_read:
+            op_ep = csv.reader(ep_open_read)
+            rows_ep = []
+            # print("File:", ep_open_file)
+            for row_ep in op_ep:
+                rows_ep.append(row_ep)
+
+        del rows_ep[0]  # delete file header
+        if 'prestart' in rows_ep[0]:
+            del rows_ep[0]
+        if 'postend' in rows_ep[-1]:
+            del rows_ep[-1]
+
+        # with this we get the last timestamp from the trial (postend is already removed)
+        with open(cyb_open_file) as cyb_open_read:
+            op_cyb = csv.reader(cyb_open_read)
+            rows_cyb = []
+            for row_cyb in op_cyb:
+                rows_cyb.append(row_cyb)
+
+        elapsed_time = float(rows_cyb[-1][0]) - float(rows_cyb[1][0])
+        date_time = datetime.datetime.fromtimestamp(elapsed_time/1000000000)
+        aux_elapsed = date_time.second + date_time.microsecond / 1000000
+        last_timestamp = float(rows_ep[0][0]) + float(aux_elapsed)
+        rows_ep[-1][1] = last_timestamp
+
+        ep_duration = []
+        ep_label = []
+        given_object = []
+        for iter in rows_ep:
+            ep_duration.append(round(float(iter[1]) - float(iter[0]), 2))
+            ep_label.append(iter[2].strip())
+            # given_object.append(file.split('_')[1])
+
+        ep_aux_df = pd.DataFrame({"Label": ep_label, "Duration": ep_duration})
+        ep_dur_df = ep_aux_df.groupby('Label').sum('Duration')
+        ep_dur_df['Label'] = ep_aux_df['Label'].unique()
+
+        trial_vec = np.zeros((1, len(ep_labs_cols)))
+
+        for ep in list(ep_dur_df['Label'].values):
+            trial_vec[0, ep_labs_cols.index(ep)] = float(ep_dur_df.loc[ep_dur_df['Label'] == ep]['Duration'])
+            # print(ep_dur_df.loc[ep_aux_df['Label'] == ep]['Duration'])
+
+        family = obj_fam[file.split('_')[1]]
+
+        aux_dat = np.append(trial_vec, file.split('_')[1])
+        aux_dat2 = np.append(aux_dat, family)
+
+        new_row = pd.DataFrame([aux_dat2], columns=dataframe_columns)
+        ep_df = pd.concat([ep_df, new_row], ignore_index=True)
+
+    dtype_list = list(['float64'] * len(ep_labs_cols))
+    dtype_list.append('object')
+    dtype_list.append('object')
+
+    trial_df = ep_df.astype(dict(zip(ep_df.columns, dtype_list)))
+
+    return trial_df
 

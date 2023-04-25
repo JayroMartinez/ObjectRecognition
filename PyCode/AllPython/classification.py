@@ -232,9 +232,9 @@ def tact_aux_classif(input_data):
     total_score = []
 
     # model weights
-    # weight_filename = './results/weights_Tact_' + family + '.csv'
-    # weight_file = open(weight_filename, 'a')  # Open file in append mode
-    # weight_wr = csv.writer(weight_file)
+    weight_filename = './results/weights_Tact_' + family + '.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -305,9 +305,9 @@ def tact_aux_classif(input_data):
         total_score.append(sc)
 
         # model weight extraction and saving
-        # [weight_wr.writerow(x) for x in log_model.coef_]
+        [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
-    # weight_file.close()
+    weight_file.close()
 
     result = ['Tactile']
     result.extend(params)
@@ -706,20 +706,20 @@ def kinematic_classification(data):
 def tactile_classification(data):
 
     families = np.unique(data['Family'])
-    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
     # for testing
-    # bins = 20
-    # l1VSl2 = 1
-    # c_param = 0.1
-    # data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
+    bins = 20
+    l1VSl2 = 0
+    c_param = 0.01
+    data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
 
     # we need to build the object to be iterated in the multiprocessing pool
-    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    data_and_iter = [[data, x, cv] for x in all_param]
+    # all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    # data_and_iter = [[data, x, cv] for x in all_param]
 
     result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
@@ -784,8 +784,7 @@ def hierarchical_classification(data):
     result_file.close()
 
 
-
-def eq_seq_classification(data):
+def ep_seq_classification(data):
 
     all_eps = np.unique(data['EP'])
 
@@ -797,6 +796,10 @@ def eq_seq_classification(data):
     for family in families:
         selected_df = data.loc[data['Family'] == family]  # select particular family
         eps_in_fam = np.unique(selected_df['EP'])
+
+        weight_filename = './results/weights_EP_Labs_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
 
         trials_to_iter = np.unique(selected_df['Trial num'].values)
 
@@ -831,5 +834,45 @@ def eq_seq_classification(data):
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits)*100/len(predicted), 2))
 
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
+
         print("Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%")
-        a=1
+
+        # model weight file close
+        weight_file.close()
+
+
+def ep_dur_classification(data):
+
+    families = np.unique(data['Family'])
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/weights_EP_Dur_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(selected_df.drop(['Object', 'Family'], axis=1), selected_df['Object'].astype(str)):
+
+            model = LogisticRegression(random_state=42).fit(selected_df.iloc[train].drop(['Object', 'Family'], axis=1), selected_df.iloc[train]['Object'])
+
+            predicted = model.predict(selected_df.iloc[test].drop(['Object', 'Family'], axis=1))
+            labels = selected_df.iloc[test]['Object']
+
+            hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+            acc.append(round(np.sum(hits)*100/len(predicted), 2))
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
+
+        print("Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%")
+
+        # model weight file close
+        weight_file.close()

@@ -22,4 +22,15 @@ Backup 5:
 ******************************
 - Added Weight analysis
 - Added Weight vs. Variable p-val analysis
-- Added classification by "EP sequence"
+- Added object classification by EP presence/absence
+[EMG RAW BOXPLOT IS WRONG SOMEHOW]
+
+Backup 6:
+******************************
+- Added Tactile Data
+- Added Tactile Data to Multimodal
+- Added Tactile Data to Hierarchical
+
+Backup 7:
+******************************
+- Added object classification by EP duration

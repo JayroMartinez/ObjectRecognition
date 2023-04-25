@@ -8,13 +8,15 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 pd.options.mode.chained_assignment = None
 
 from load_subject import load
+from load_subject import load_ep_duration
 from split_data import split
 from classification import emg_classification
 from classification import kinematic_classification
 from classification import tactile_classification
 from classification import multiple_source_classification
 from classification import hierarchical_classification
-from classification import eq_seq_classification
+from classification import ep_seq_classification
+from classification import ep_dur_classification
 from stat_analysis import variance
 
 
@@ -24,14 +26,23 @@ def main():
     subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
 
     data_df = pd.DataFrame()
+    ep_dur_df = pd.DataFrame()
 
     for subject in subject_folders:  # load data for each subject
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+        # LOAD RAW DATA
+        # subject_df = load(subject)
+        # data_df = pd.concat([data_df, subject_df], ignore_index=True)
 
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
+        # LOAD EP DURATION
+        subject_ep_dur = load_ep_duration(subject)
+        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+
+    # a=1
+
+    # RAW DATA
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
 
     # check tactile distribution
     # tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -41,13 +52,13 @@ def main():
     # # plt.show()
     # plt.savefig('./results/raw_boxplot_tactile.png', dpi=600)
 
-    a = 1
-
     # VARIANCE STUDY
     # variance(split_df)
 
     # CLASSIFICATION BY EP 'SEQUENCE'
-    # eq_seq_classification(split_df)
+    # ep_seq_classification(split_df)
+    # CLASSIFICATION BY EP DURATION
+    ep_dur_classification(ep_dur_df)
 
     # init_time = time.time()
     # emg_classification(split_df)
@@ -66,7 +77,7 @@ def main():
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFIER
-    hierarchical_classification(split_df)
+    # hierarchical_classification(split_df)
 
 
 if __name__ == "__main__":
