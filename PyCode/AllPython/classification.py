@@ -8,6 +8,7 @@ import csv
 from scipy.stats import zscore
 import pandas as pd
 from multiprocessing.pool import Pool
+import random
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -25,9 +26,10 @@ def emg_aux_classif(input_data):
     c_par = params[3]
 
     total_score = []
+    random_score = []
 
     # model weights
-    weight_filename = './results/weights_EMG_' + family + '.csv'
+    weight_filename = './results/Raw/weights/w_EMG_' + family + '.csv'
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
@@ -35,69 +37,81 @@ def emg_aux_classif(input_data):
     emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
     selected_df.dropna(subset=emg_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
-    # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+    random_states = [42, 43, 44]
 
-        train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
-        test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+    for rnd_st in random_states:
 
-        train_data = []
-        train_labels = []
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
-        dropped = 0  # Number of dropped EPs
+            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
 
-        # take each ep, create bins & compute mean
-        for trn_iter in train_eps:
+            train_data = []
+            train_labels = []
 
-            train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
-            ep_emg_data = train_ep[emg_cols]
-            ep_in_bins = np.array_split(ep_emg_data, num_bin)
+            dropped = 0  # Number of dropped EPs
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    train_data.append(flat_ep_mean)
-                    train_labels.append(np.unique(train_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", trn_iter, "from family ", family)
-                    dropped += 1
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
 
-        test_data = []
-        test_labels = []
+                train_tri = selected_df.loc[selected_df['Trial num'] == trn_iter]
+                tr_emg_data = train_tri[emg_cols]
+                tr_in_bins = np.array_split(tr_emg_data, num_bin)
 
-        for tst_iter in test_eps:
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        train_data.append(flat_tr_mean)
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
 
-            test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
-            ep_emg_data = test_ep[emg_cols]
-            ep_in_bins = np.array_split(ep_emg_data, num_bin)
+            test_data = []
+            test_labels = []
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    test_data.append(flat_ep_mean)
-                    test_labels.append(np.unique(test_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", tst_iter, "from family ", family)
-                    dropped += 1
+            for tst_iter in test_trials:
 
-        # build model
-        log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=42, solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
-        # compute weights (because unbalanced dataset)
-        weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-        # train model
-        log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-        sc = round(log_model.score(X=test_data, y=test_labels)*100, 2)
-        total_score.append(sc)
+                test_tri = selected_df.loc[selected_df['Trial num'] == tst_iter]
+                tst_emg_data = test_tri[emg_cols]
+                tst_in_bins = np.array_split(tst_emg_data, num_bin)
 
-        # model weight extraction and saving
-        [weight_wr.writerow(x) for x in log_model.coef_]
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
+                        flat_tst_mean = list(itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        test_data.append(flat_tst_mean)
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
+
+            # build model
+            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st, solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+            # compute weights (because unbalanced dataset)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # train model
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            sc = round(log_model.score(X=test_data, y=test_labels)*100, 2)
+            total_score.append(sc)
+
+            # random shuffle model
+            random.shuffle(train_labels)
+            random.shuffle(test_labels)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            random_score.append(rnd_sc)
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
     # print(log_model.classes_)
@@ -107,9 +121,13 @@ def emg_aux_classif(input_data):
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
-    print("RESULT:", result)
+    # print("RESULT:", result)
+    random_result = ['EMG_Rand']
+    random_result.extend(params)
+    random_result.append(random_score)
+    random_result.append(round(np.mean(random_score), 2))
 
-    return result
+    return [result, random_result]
 
 
 def kin_aux_classif(input_data):
@@ -125,9 +143,10 @@ def kin_aux_classif(input_data):
     c_par = params[3]
 
     total_score = []
+    random_score = []
 
     # model weights
-    weight_filename = './results/weights_Kin_' + family + '.csv'
+    weight_filename = './results/Raw/weights/w_Kin_' + family + '.csv'
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
@@ -139,72 +158,83 @@ def kin_aux_classif(input_data):
                 'Thumb_Proj_J1_Z']
     selected_df.dropna(subset=kin_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
-    # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+    random_states = [42, 43, 44]
+    for rnd_st in random_states:
 
-        train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
-        test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
-        train_data = []
-        train_labels = []
+            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
 
-        dropped = 0  # Number of dropped EPs
+            train_data = []
+            train_labels = []
 
-        # take each ep, create bins & compute mean
-        for trn_iter in train_eps:
+            dropped = 0  # Number of dropped EPs
 
-            train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
-            ep_kin_data = train_ep[kin_cols]
-            ep_in_bins = np.array_split(ep_kin_data, num_bin)
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    train_data.append(flat_ep_mean)
-                    train_labels.append(np.unique(train_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", trn_iter, "from family ", family)
-                    dropped += 1
+                train_tri = selected_df.loc[selected_df['Trial num'] == trn_iter]
+                tr_kin_data = train_tri[kin_cols]
+                tr_in_bins = np.array_split(tr_kin_data, num_bin)
 
-        test_data = []
-        test_labels = []
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(
+                            itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        train_data.append(flat_tr_mean)
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
 
-        for tst_iter in test_eps:
+            test_data = []
+            test_labels = []
 
-            test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
-            ep_kin_data = test_ep[kin_cols]
-            ep_in_bins = np.array_split(ep_kin_data, num_bin)
+            for tst_iter in test_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    test_data.append(flat_ep_mean)
-                    test_labels.append(np.unique(test_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", tst_iter, "from family ", family)
-                    dropped += 1
+                test_tri = selected_df.loc[selected_df['Trial num'] == tst_iter]
+                tst_kin_data = test_tri[kin_cols]
+                tst_in_bins = np.array_split(tst_kin_data, num_bin)
 
-        # build model
-        log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=42,
-                                       solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
-        # compute weights (because unbalanced dataset)
-        weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-        # train model
-        log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-        sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-        total_score.append(sc)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
+                        flat_tst_mean = list(
+                            itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        test_data.append(flat_tst_mean)
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
 
-        # model weight extraction and saving
-        [weight_wr.writerow(x) for x in log_model.coef_]
+            # build model
+            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+            # compute weights (because unbalanced dataset)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # train model
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            total_score.append(sc)
+
+            # random shuffle model
+            random.shuffle(train_labels)
+            random.shuffle(test_labels)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            random_score.append(rnd_sc)
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
 
@@ -212,9 +242,13 @@ def kin_aux_classif(input_data):
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
-    print("RESULT:", result)
+    # print("RESULT:", result)
+    random_result = ['Kin_Rand']
+    random_result.extend(params)
+    random_result.append(random_score)
+    random_result.append(round(np.mean(random_score), 2))
 
-    return result
+    return [result, random_result]
 
 
 def tact_aux_classif(input_data):
@@ -230,9 +264,10 @@ def tact_aux_classif(input_data):
     c_par = params[3]
 
     total_score = []
+    random_score = []
 
     # model weights
-    weight_filename = './results/weights_Tact_' + family + '.csv'
+    weight_filename = './results/Raw/weights/w_Tact_' + family + '.csv'
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
@@ -240,72 +275,83 @@ def tact_aux_classif(input_data):
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
     selected_df.dropna(subset=tact_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
-    # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+    random_states = [42, 43, 44]
+    for rnd_st in random_states:
 
-        train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
-        test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
-        train_data = []
-        train_labels = []
+            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
 
-        dropped = 0  # Number of dropped EPs
+            train_data = []
+            train_labels = []
 
-        # take each ep, create bins & compute mean
-        for trn_iter in train_eps:
+            dropped = 0  # Number of dropped EPs
 
-            train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
-            ep_tact_data = train_ep[tact_cols]
-            ep_in_bins = np.array_split(ep_tact_data, num_bin)
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    train_data.append(flat_ep_mean)
-                    train_labels.append(np.unique(train_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", trn_iter, "from family ", family)
-                    dropped += 1
+                train_tri = selected_df.loc[selected_df['Trial num'] == trn_iter]
+                tr_tact_data = train_tri[tact_cols]
+                tr_in_bins = np.array_split(tr_tact_data, num_bin)
 
-        test_data = []
-        test_labels = []
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(
+                            itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        train_data.append(flat_tr_mean)
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
 
-        for tst_iter in test_eps:
+            test_data = []
+            test_labels = []
 
-            test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
-            ep_tact_data = test_ep[tact_cols]
-            ep_in_bins = np.array_split(ep_tact_data, num_bin)
+            for tst_iter in test_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [num_sensors]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X num_sensors] (unidimensional)
-                    test_data.append(flat_ep_mean)
-                    test_labels.append(np.unique(test_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", tst_iter, "from family ", family)
-                    dropped += 1
+                test_tri = selected_df.loc[selected_df['Trial num'] == tst_iter]
+                tst_tact_data = test_tri[tact_cols]
+                tst_in_bins = np.array_split(tst_tact_data, num_bin)
 
-        # build model
-        log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=42,
-                                       solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
-        # compute weights (because unbalanced dataset)
-        weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-        # train model
-        log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-        sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-        total_score.append(sc)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [num_sensors]
+                        flat_tst_mean = list(
+                            itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X num_sensors] (unidimensional)
+                        test_data.append(flat_tst_mean)
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
 
-        # model weight extraction and saving
-        [weight_wr.writerow(x) for x in log_model.coef_]
+            # build model
+            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+            # compute weights (because unbalanced dataset)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # train model
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            total_score.append(sc)
+
+            # random shuffle model
+            random.shuffle(train_labels)
+            random.shuffle(test_labels)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            random_score.append(rnd_sc)
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
 
@@ -313,9 +359,13 @@ def tact_aux_classif(input_data):
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
-    print("RESULT:", result)
+    # print("RESULT:", result)
+    random_result = ['Tact_Rand']
+    random_result.extend(params)
+    random_result.append(random_score)
+    random_result.append(round(np.mean(random_score), 2))
 
-    return result
+    return [result, random_result]
 
 
 def multiple_source_aux_classif(input_data):
@@ -330,99 +380,116 @@ def multiple_source_aux_classif(input_data):
     c_par = params[3]
 
     # # for test and develop
-    # family = 'Balls'
+    # family = 'Ball'
     # num_bin = 20
     # l1_param = 1
     # c_par = 0.1
 
     total_score = []
+    random_score = []
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
     selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
-    # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+    random_states = [42, 43, 44]
+    for rnd_st in random_states:
 
-        train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
-        test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
-        train_data = []
-        train_labels = []
+            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
 
-        dropped = 0  # Number of dropped EPs
+            train_data = []
+            train_labels = []
 
-        # take each ep, create bins & compute mean
-        for trn_iter in train_eps:
+            dropped = 0  # Number of dropped EPs
 
-            train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
-            ep_numeric_data = train_ep.select_dtypes(include='float64')
-            ep_in_bins = np.array_split(ep_numeric_data, num_bin)
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]  # size = [num_bins] X [64]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))  # size = [num_bins X 64] (unidimensional)
-                    train_data.append(flat_ep_mean)
-                    train_labels.append(np.unique(train_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", trn_iter, "from family ", family)
-                    dropped += 1
+                train_tri = selected_df.loc[selected_df['Trial num'] == trn_iter]
+                tr_numeric_data = train_tri.select_dtypes(include='float64')
+                tr_in_bins = np.array_split(tr_numeric_data, num_bin)
 
-        test_data = []
-        test_labels = []
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(
+                            itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        train_data.append(flat_tr_mean)
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
 
-        for tst_iter in test_eps:
+            test_data = []
+            test_labels = []
 
-            test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
-            ep_numeric_data = test_ep.select_dtypes(include='float64')
-            ep_in_bins = np.array_split(ep_numeric_data, num_bin)
+            for tst_iter in test_trials:
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    ep_bin_mean = [np.nanmean(x, axis=0) for x in ep_in_bins]
-                    flat_ep_mean = list(
-                        itertools.chain.from_iterable(ep_bin_mean))
-                    test_data.append(flat_ep_mean)
-                    test_labels.append(np.unique(test_ep['Given Object'])[0])
-                except RuntimeWarning:
-                    # print("Dropped EP", tst_iter, "from family ", family)
-                    dropped += 1
+                test_tri = selected_df.loc[selected_df['Trial num'] == tst_iter]
+                tst_numeric_data = test_tri.select_dtypes(include='float64')
+                tst_in_bins = np.array_split(tst_numeric_data, num_bin)
 
-        # Z-Score normalization for Train and Test data
-        train_df = pd.DataFrame(train_data)
-        train_df.apply(zscore)
-        test_df = pd.DataFrame(test_data)
-        test_df.apply(zscore)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]
+                        flat_tst_mean = list(
+                            itertools.chain.from_iterable(tst_bin_mean))
+                        test_data.append(flat_tst_mean)
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
 
-        if test_df.shape[0] > 0:
-            # build model
-            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced',
-                                           random_state=42, solver='saga', max_iter=25000,
-                                           multi_class='ovr',
-                                           n_jobs=-1, l1_ratio=l1_param)
-            # compute weights (because unbalanced dataset)
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            # train model
-            log_model.fit(X=train_df, y=train_labels, sample_weight=weights)
-            sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
-            total_score.append(sc)
+            # Z-Score normalization for Train and Test data
+            train_df = pd.DataFrame(train_data)
+            train_df.apply(zscore)
+            test_df = pd.DataFrame(test_data)
+            test_df.apply(zscore)
 
-        else:
-            sc = 0
-            total_score.append(sc)
+            if test_df.shape[0] > 0:
+                # build model
+                log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced',
+                                               random_state=rnd_st, solver='saga', max_iter=25000,
+                                               multi_class='ovr',
+                                               n_jobs=-1, l1_ratio=l1_param)
+                # compute weights (because unbalanced dataset)
+                weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+                # train model
+                log_model.fit(X=train_df, y=train_labels, sample_weight=weights)
+                sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
+                total_score.append(sc)
+
+                # random shuffle model
+                random.shuffle(train_labels)
+                random.shuffle(test_labels)
+                weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+                log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+                rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+                random_score.append(rnd_sc)
+
+            else:
+                sc = 0
+                total_score.append(sc)
+                random_score.append(sc)
 
     result = ['Multimodal']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
+    random_result = ['Multimodal_Rand']
+    random_result.extend(params)
+    random_result.append(random_score)
+    random_result.append(round(np.mean(random_score), 2))
 
-    return result
+    return [result, random_result]
 
 
 def hierarchical_aux_classif(input_data):
@@ -640,10 +707,14 @@ def hierarchical_aux_classif(input_data):
 def emg_classification(data):
 
     families = np.unique(data['Family'])
+    cv = 3
+
     bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
-    cv = 3
+    # we need to build the object to be iterated in the multiprocessing pool
+    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    data_and_iter = [[data, x, cv] for x in all_param]
 
     # for testing
     # bins = 40
@@ -651,11 +722,7 @@ def emg_classification(data):
     # c_param = 1.25
     # data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
 
-    # we need to build the object to be iterated in the multiprocessing pool
-    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    data_and_iter = [[data, x, cv] for x in all_param]
-
-    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Raw/accuracy/raw_results.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
 
     # multiprocessing
@@ -664,8 +731,9 @@ def emg_classification(data):
         result = pool.map_async(emg_aux_classif, data_and_iter)
 
         for res in result.get():
-            # wr.writerow(res)
-            a=1
+            wr.writerow(res[0])
+            wr.writerow(res[1])
+            # a=1
 
     result_file.close()
 
@@ -673,10 +741,14 @@ def emg_classification(data):
 def kinematic_classification(data):
 
     families = np.unique(data['Family'])
+    cv = 3
+
     bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
-    cv = 3
+    # we need to build the object to be iterated in the multiprocessing pool
+    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    data_and_iter = [[data, x, cv] for x in all_param]
 
     # for testing
     # bins = 20
@@ -684,11 +756,7 @@ def kinematic_classification(data):
     # c_param = 0.1
     # data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
 
-    # we need to build the object to be iterated in the multiprocessing pool
-    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    data_and_iter = [[data, x, cv] for x in all_param]
-
-    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Raw/accuracy/raw_results.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
 
     # multiprocessing
@@ -697,8 +765,9 @@ def kinematic_classification(data):
         result = pool.map_async(kin_aux_classif, data_and_iter)
 
         for res in result.get():
-            # wr.writerow(res)
-            a=1
+            wr.writerow(res[0])
+            wr.writerow(res[1])
+            # a=1
 
     result_file.close()
 
@@ -706,22 +775,22 @@ def kinematic_classification(data):
 def tactile_classification(data):
 
     families = np.unique(data['Family'])
-    # bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    # l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     cv = 3
 
-    # for testing
-    bins = 20
-    l1VSl2 = 0
-    c_param = 0.01
-    data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
-
+    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     # we need to build the object to be iterated in the multiprocessing pool
-    # all_param = list(itertools.product(families, bins, l1VSl2, c_param))
-    # data_and_iter = [[data, x, cv] for x in all_param]
+    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    data_and_iter = [[data, x, cv] for x in all_param]
 
-    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    # for testing
+    # bins = 20
+    # l1VSl2 = 0
+    # c_param = 0.01
+    # data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
+
+    result_file = open('./results/Raw/accuracy/raw_results.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
 
     # multiprocessing
@@ -730,8 +799,9 @@ def tactile_classification(data):
         result = pool.map_async(tact_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res)
-            a=1
+            wr.writerow(res[0])
+            wr.writerow(res[1])
+            # a=1
 
     result_file.close()
 
@@ -739,24 +809,27 @@ def tactile_classification(data):
 def multiple_source_classification(data):
 
     families = np.unique(data['Family'])
+    cv = 3
+
     bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
-    cv = 3
-
     # we need to build the object to be iterated in the multiprocessing pool
     all_param = list(itertools.product(families, bins, l1VSl2, c_param))
     data_and_iter = [[data, x, cv] for x in all_param]
 
-    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Raw/accuracy/raw_results.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
 
     # multiprocessing
     with Pool() as pool:
+
         result = pool.map_async(multiple_source_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res)
+            wr.writerow(res[0])
+            wr.writerow(res[1])
+            # a=1
 
     result_file.close()
 
@@ -771,7 +844,7 @@ def hierarchical_classification(data):
     all_param = list(itertools.product(families, c_param))
     data_and_iter = [[data, x, cv] for x in all_param]
 
-    result_file = open('./results/results_file.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Raw/accuracy/raw_results.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
 
     # multiprocessing
@@ -784,95 +857,400 @@ def hierarchical_classification(data):
     result_file.close()
 
 
-def ep_seq_classification(data):
+def ask_ep_presabs_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
 
-    all_eps = np.unique(data['EP'])
-
-    families = np.unique(data['Family'])
-
-    coincidences = []
-    object = []
-
-    for family in families:
-        selected_df = data.loc[data['Family'] == family]  # select particular family
-        eps_in_fam = np.unique(selected_df['EP'])
-
-        weight_filename = './results/weights_EP_Labs_' + family + '.csv'
-        weight_file = open(weight_filename, 'a')  # Open file in append mode
-        weight_wr = csv.writer(weight_file)
-
-        trials_to_iter = np.unique(selected_df['Trial num'].values)
-
-        ep_seq = []
-        objects = []
-        for tr in trials_to_iter:
-            trial_df = selected_df.loc[selected_df['Trial num'] == str(tr)]
-            eps_in_trial = np.unique(trial_df['EP'])
-
-            coincidences = []
-            for x in all_eps:
-                check = x in eps_in_trial
-                coincidences.append(int(check))
-
-            ep_seq.append(coincidences)
-            objects.append(np.unique(selected_df.loc[selected_df['Trial num'] == str(tr)]['Given Object'])[0])
-
-        ep_df = pd.DataFrame(data=ep_seq, columns=all_eps)
-        ep_df['Given Object'] = objects
-
-        acc = []
-
-        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
-        # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(ep_df.drop('Given Object', axis=1), ep_df['Given Object'].astype(str)):
-
-            model = LogisticRegression(random_state=42).fit(ep_df.iloc[train].drop('Given Object', axis=1), ep_df.iloc[train]['Given Object'])
-
-            predicted = model.predict(ep_df.iloc[test].drop('Given Object', axis=1))
-            labels = ep_df.iloc[test]['Given Object']
-
-            hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
-            acc.append(round(np.sum(hits)*100/len(predicted), 2))
-
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in model.coef_]
-
-        print("Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%")
-
-        # model weight file close
-        weight_file.close()
-
-
-def ep_dur_classification(data):
+    result_file = open('./results/EP/accuracy/ep_presabs_ask_results_file.csv', 'a')  # Open file in append mode
 
     families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
 
     for family in families:
 
         selected_df = data.loc[data['Family'] == family]  # select particular family
 
-        weight_filename = './results/weights_EP_Dur_' + family + '.csv'
+        weight_filename = './results/EP/weights/w_ask_EP_PresAbs_' + family + '.csv'
         weight_file = open(weight_filename, 'a')  # Open file in append mode
         weight_wr = csv.writer(weight_file)
 
         acc = []
 
-        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1),
+                                         selected_df['Asked'].astype(str)):
+                model = LogisticRegression(random_state=rnd_st).fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Asked'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Asked']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(ASKED) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+              [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def ask_ep_dur_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
+    result_file = open('./results/EP/accuracy/ep_dur_ask_results_file.csv', 'a')  # Open file in append mode
+
+    families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/EP/weights/w_ask_EP_Dur_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1), selected_df['Asked'].astype(str)):
+
+                model = LogisticRegression(random_state=rnd_st).fit(selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Asked'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Asked']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits)*100/len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(ASKED) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def ask_ep_count_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_count_ask_results_file.csv', 'a')  # Open file in append mode
+
+    families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/EP/weights/w_ask_EP_Count_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1),
+                                         selected_df['Asked'].astype(str)):
+                model = LogisticRegression(random_state=rnd_st).fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Asked'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Asked']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(ASKED) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+              [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def giv_ep_presabs_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_presabs_giv_results_file.csv', 'a')  # Open file in append mode
+
+    families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/EP/weights/w_giv_EP_PresAbs_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1),
+                                         selected_df['Given'].astype(str)):
+                model = LogisticRegression(random_state=rnd_st).fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Given'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Given']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(GIVEN) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+              [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def giv_ep_dur_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
+    result_file = open('./results/EP/accuracy/ep_dur_giv_results_file.csv', 'a')  # Open file in append mode
+
+    families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/EP/weights/w_giv_EP_Dur_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1), selected_df['Given'].astype(str)):
+
+                model = LogisticRegression(random_state=rnd_st).fit(selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Given'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Given']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits)*100/len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(GIVEN) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def giv_ep_count_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_count_giv_results_file.csv', 'a')  # Open file in append mode
+
+    families = np.unique(data['Family'])
+
+    random_states = [42, 43, 44]
+
+    for family in families:
+
+        selected_df = data.loc[data['Family'] == family]  # select particular family
+
+        weight_filename = './results/EP/weights/w_giv_EP_Count_' + family + '.csv'
+        weight_file = open(weight_filename, 'a')  # Open file in append mode
+        weight_wr = csv.writer(weight_file)
+
+        acc = []
+
+        for rnd_st in random_states:
+
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+            # WARNING: the skf.split returns the indexes
+            for train, test in skf.split(selected_df.drop(['Given', 'Asked', 'Family'], axis=1),
+                                         selected_df['Given'].astype(str)):
+                model = LogisticRegression(random_state=rnd_st).fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), selected_df.iloc[train]['Given'])
+
+                predicted = model.predict(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+                labels = selected_df.iloc[test]['Given']
+
+                hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+                acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
+
+        print("(GIVEN) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+              [round(x, 2) for x in acc])
+        wr = csv.writer(result_file)
+        wr.writerow([acc, family])
+
+        # model weight file close
+        weight_file.close()
+    result_file.close()
+
+
+def fam_ep_presabs_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECT FAMILY BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_presabs_fam_results_file.csv', 'a')  # Open file in append mode
+
+    random_states = [42, 43, 44]
+
+    weight_filename = './results/EP/weights/w_fam_EP_PresAbs.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
+
+    acc = []
+
+    for rnd_st in random_states:
+
+        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(selected_df.drop(['Object', 'Family'], axis=1), selected_df['Object'].astype(str)):
+        for train, test in skf.split(data.drop(['Given', 'Asked', 'Family'], axis=1),
+                                     data['Family'].astype(str)):
+            model = LogisticRegression(random_state=rnd_st).fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), data.iloc[train]['Family'])
 
-            model = LogisticRegression(random_state=42).fit(selected_df.iloc[train].drop(['Object', 'Family'], axis=1), selected_df.iloc[train]['Object'])
-
-            predicted = model.predict(selected_df.iloc[test].drop(['Object', 'Family'], axis=1))
-            labels = selected_df.iloc[test]['Object']
+            predicted = model.predict(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+            labels = data.iloc[test]['Family']
 
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
-            acc.append(round(np.sum(hits)*100/len(predicted), 2))
+            acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
             # model weight extraction and saving
             [weight_wr.writerow(x) for x in model.coef_]
 
-        print("Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%")
+    print("Pre/Abs Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+          [round(x, 2) for x in acc])
+    wr = csv.writer(result_file)
+    wr.writerow([acc, 'Family'])
 
-        # model weight file close
-        weight_file.close()
+    # model weight file close
+    weight_file.close()
+    result_file.close()
+
+
+def fam_ep_dur_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECT FAMILY BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_dur_fam_results_file.csv', 'a')  # Open file in append mode
+
+    random_states = [42, 43, 44]
+
+    weight_filename = './results/EP/weights/w_fam_EP_Dur.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
+
+    acc = []
+
+    for rnd_st in random_states:
+
+        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(data.drop(['Given', 'Asked', 'Family'], axis=1),
+                                     data['Family'].astype(str)):
+            model = LogisticRegression(random_state=rnd_st).fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), data.iloc[train]['Family'])
+
+            predicted = model.predict(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+            labels = data.iloc[test]['Family']
+
+            hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+            acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
+
+    print("Dur Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+          [round(x, 2) for x in acc])
+    wr = csv.writer(result_file)
+    wr.writerow([acc, 'Family'])
+
+    # model weight file close
+    weight_file.close()
+    result_file.close()
+
+
+def fam_ep_count_classification(data):
+    ## THIS FUNCTION IS TO CLASSIFY OBJECT FAMILY BASED ON EPs
+
+    result_file = open('./results/EP/accuracy/ep_count_fam_results_file.csv', 'a')  # Open file in append mode
+
+    random_states = [42, 43, 44]
+
+    weight_filename = './results/EP/weights/w_fam_EP_Count.csv'
+    weight_file = open(weight_filename, 'a')  # Open file in append mode
+    weight_wr = csv.writer(weight_file)
+
+    acc = []
+
+    for rnd_st in random_states:
+
+        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(data.drop(['Given', 'Asked', 'Family'], axis=1),
+                                     data['Family'].astype(str)):
+            model = LogisticRegression(random_state=rnd_st).fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1), data.iloc[train]['Family'])
+
+            predicted = model.predict(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1))
+            labels = data.iloc[test]['Family']
+
+            hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
+            acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
+
+    print("Count Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+          [round(x, 2) for x in acc])
+    wr = csv.writer(result_file)
+    wr.writerow([acc, 'Family'])
+
+    # model weight file close
+    weight_file.close()
+    result_file.close()

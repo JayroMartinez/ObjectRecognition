@@ -37,7 +37,9 @@ def split(data):
     data['EP total'] = ep_total_list  # global EP id
 
     given = [item.split("_")[0] for item in tasks]
+    asked = [item.split("_")[1] for item in tasks]
     data['Given Object'] = given
+    data['Asked Object'] = asked
 
     obj_fam = dict( CeramicMug = 'Mugs',
                     Glass = 'Mugs',

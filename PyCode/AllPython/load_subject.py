@@ -127,7 +127,7 @@ def load(subject):
     return all_sources_df
 
 
-def load_ep_duration(subject):
+def load_eps(subject):
 
     ep_labs_cols = ['contour following', 'contour following + enclosure part',
                     'edge following', 'enclosure', 'enclosure part',
@@ -152,8 +152,9 @@ def load_ep_duration(subject):
                    TennisBall='Ball',
                    )
 
-    dataframe_columns = np.hstack((ep_labs_cols, 'Object', 'Family'))
-    ep_df = pd.DataFrame(columns=dataframe_columns)
+    dataframe_columns = np.hstack((ep_labs_cols, 'Given', 'Asked', 'Family'))
+    ep_dur = pd.DataFrame(columns=dataframe_columns)
+    ep_count = pd.DataFrame(columns=dataframe_columns)
 
     label_folder = os.path.join(os.getcwd(), 'BIDSData', subject, 'sep_labels')
     label_files = [f.name for f in os.scandir(label_folder) if f.is_file()]
@@ -204,25 +205,51 @@ def load_ep_duration(subject):
         ep_dur_df = ep_aux_df.groupby('Label').sum('Duration')
         ep_dur_df['Label'] = ep_aux_df['Label'].unique()
 
-        trial_vec = np.zeros((1, len(ep_labs_cols)))
+        ep_count_df = ep_aux_df.groupby('Label').count()
+        ep_count_df.rename(columns={"Duration":"Count"}, inplace=True)
+
+        dur_vec = np.zeros((1, len(ep_labs_cols)))
+        count_vec = np.zeros((1, len(ep_labs_cols)))
 
         for ep in list(ep_dur_df['Label'].values):
-            trial_vec[0, ep_labs_cols.index(ep)] = float(ep_dur_df.loc[ep_dur_df['Label'] == ep]['Duration'])
+            dur_vec[0, ep_labs_cols.index(ep)] = float(ep_dur_df.loc[ep_dur_df['Label'] == ep]['Duration'])
+            if ep in ep_count_df.index:
+                count_vec[0, ep_labs_cols.index(ep)] = ep_count_df.loc[ep].values
+
             # print(ep_dur_df.loc[ep_aux_df['Label'] == ep]['Duration'])
 
-        family = obj_fam[file.split('_')[1]]
+        given_obj = file.split('_')[1]
+        asked_obj = file.split('_')[2]
+        family = obj_fam[given_obj]
 
-        aux_dat = np.append(trial_vec, file.split('_')[1])
-        aux_dat2 = np.append(aux_dat, family)
+        aux_dat_dur = np.append(dur_vec, given_obj)
+        aux_dat2_dur = np.append(aux_dat_dur, asked_obj)
+        aux_dat3_dur = np.append(aux_dat2_dur, family)
 
-        new_row = pd.DataFrame([aux_dat2], columns=dataframe_columns)
-        ep_df = pd.concat([ep_df, new_row], ignore_index=True)
+        new_row_dur = pd.DataFrame([aux_dat3_dur], columns=dataframe_columns)
+        ep_dur = pd.concat([ep_dur, new_row_dur], ignore_index=True)
 
-    dtype_list = list(['float64'] * len(ep_labs_cols))
-    dtype_list.append('object')
-    dtype_list.append('object')
+        aux_dat_count = np.append(count_vec.astype(int), given_obj)
+        aux_dat2_count = np.append(aux_dat_count, asked_obj)
+        aux_dat3_count = np.append(aux_dat2_count, family)
 
-    trial_df = ep_df.astype(dict(zip(ep_df.columns, dtype_list)))
+        new_row_count = pd.DataFrame([aux_dat3_count], columns=dataframe_columns)
+        ep_count = pd.concat([ep_count, new_row_count], ignore_index=True)
 
-    return trial_df
+    dtype_list_dur = list(['float64'] * len(ep_labs_cols))
+    dtype_list_dur.append('object')  # for given object
+    dtype_list_dur.append('object')  # for asked object
+    dtype_list_dur.append('object')  # for family
+
+    dtype_list_count = list(['int64'] * len(ep_labs_cols))
+    dtype_list_count.append('object')  # for given object
+    dtype_list_count.append('object')  # for asked object
+    dtype_list_count.append('object')  # for family
+
+    trial_dur = ep_dur.astype(dict(zip(ep_dur.columns, dtype_list_dur)))
+    trial_count = ep_count.astype(dict(zip(ep_count.columns, dtype_list_count)))
+    trial_presabs = trial_count.copy()
+    [trial_presabs[x].mask(trial_presabs[x] > 0, 1, inplace=True) for x in ep_labs_cols]
+
+    return [trial_presabs, trial_dur, trial_count]
 
