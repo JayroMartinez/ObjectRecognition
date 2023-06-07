@@ -501,17 +501,17 @@ def hierarchical_aux_classif(input_data):
     family = params[0]
     top_C = params[1]
 
-    kin_bins = 20
-    kin_l1 = 1
+    kin_bins = 40
+    kin_l1 = 0.25
     kin_c = 0.1
 
-    emg_bins = 40
+    emg_bins = 10
     emg_l1 = 0
-    emg_c = 1.25
+    emg_c = 1.5
 
-    tact_bins = 20
-    tact_l1 = 0
-    tact_c = 0.01
+    tact_bins = 5
+    tact_l1 = 0.5
+    tact_c = 0.25
 
     # for develop and test
     kir = []
@@ -538,163 +538,167 @@ def hierarchical_aux_classif(input_data):
     selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
 
     to_kfold = selected_df.drop_duplicates(
-        subset=['EP total', 'Given Object'])  # only way I found to avoid overlapping
+        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
-    # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['Given Object'].astype(str)):
+    random_states = [42, 43, 44]
 
-        train_eps = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
-        test_eps = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+    for rnd_st in random_states:
 
-        kin_train_data = []
-        emg_train_data = []
-        tact_train_data = []
-        train_labels = []
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
-        trn_dropped = 0  # Number of dropped EPs in training dataset
-        tst_dropped = 0  # Number of dropped EPs in test dataset
+            train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
 
-        for trn_iter in train_eps:
+            kin_train_data = []
+            emg_train_data = []
+            tact_train_data = []
+            train_labels = []
 
-            train_ep = selected_df.loc[selected_df['EP total'] == trn_iter]
+            trn_dropped = 0  # Number of dropped EPs in training dataset
+            tst_dropped = 0  # Number of dropped EPs in test dataset
 
-            ep_kin_data = train_ep[kin_cols]
-            kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+            for trn_iter in train_eps:
 
-            ep_emg_data = train_ep[emg_cols]
-            emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+                train_ep = selected_df.loc[selected_df['Trial num'] == trn_iter]
 
-            ep_tact_data = train_ep[tact_cols]
-            tact_in_bins = np.array_split(ep_tact_data, tact_bins)
+                ep_kin_data = train_ep[kin_cols]
+                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+                ep_emg_data = train_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
-                    kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                    flat_kin_mean = list(
-                        itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                ep_tact_data = train_ep[tact_cols]
+                tact_in_bins = np.array_split(ep_tact_data, tact_bins)
 
-                    emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                    flat_emg_mean = list(
-                        itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
 
-                    tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
-                    flat_tact_mean = list(
-                        itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        flat_kin_mean = list(
+                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                    kin_train_data.append(flat_kin_mean)
-                    emg_train_data.append(flat_emg_mean)
-                    tact_train_data.append(flat_tact_mean)
-                    train_labels.append(np.unique(train_ep['Given Object'])[0])
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                except RuntimeWarning:
-                    # print("Dropped EP", trn_iter, "from family ", family)
-                    trn_dropped += 1
+                        tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
+                        flat_tact_mean = list(
+                            itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-        kin_test_data = []
-        emg_test_data = []
-        tact_test_data = []
+                        kin_train_data.append(flat_kin_mean)
+                        emg_train_data.append(flat_emg_mean)
+                        tact_train_data.append(flat_tact_mean)
+                        train_labels.append(np.unique(train_ep['Given Object'])[0])
 
-        test_labels = []
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        trn_dropped += 1
 
-        for tst_iter in test_eps:
+            kin_test_data = []
+            emg_test_data = []
+            tact_test_data = []
 
-            test_ep = selected_df.loc[selected_df['EP total'] == tst_iter]
+            test_labels = []
 
-            ep_kin_data = test_ep[kin_cols]
-            kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+            for tst_iter in test_eps:
 
-            ep_emg_data = test_ep[emg_cols]
-            emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+                test_ep = selected_df.loc[selected_df['Trial num'] == tst_iter]
 
-            ep_tact_data = test_ep[tact_cols]
-            tact_in_bins = np.array_split(ep_tact_data, tact_bins)
+                ep_kin_data = test_ep[kin_cols]
+                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
 
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
+                ep_emg_data = test_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
-                    kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                    flat_kin_mean = list(
-                        itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                ep_tact_data = test_ep[tact_cols]
+                tact_in_bins = np.array_split(ep_tact_data, tact_bins)
 
-                    emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                    flat_emg_mean = list(
-                        itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
 
-                    tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
-                    flat_tact_mean = list(
-                        itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        flat_kin_mean = list(
+                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                    kin_test_data.append(flat_kin_mean)
-                    emg_test_data.append(flat_emg_mean)
-                    tact_test_data.append(flat_tact_mean)
-                    test_labels.append(np.unique(test_ep['Given Object'])[0])
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                except RuntimeWarning:
-                    # print("Dropped EP", tst_iter, "from family ", family)
-                    tst_dropped += 1
+                        tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
+                        flat_tact_mean = list(
+                            itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-        # compute weights (because unbalanced dataset)
-        weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+                        kin_test_data.append(flat_kin_mean)
+                        emg_test_data.append(flat_emg_mean)
+                        tact_test_data.append(flat_tact_mean)
+                        test_labels.append(np.unique(test_ep['Given Object'])[0])
 
-        # build kinematic model
-        kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
-                                           random_state=42,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-                                           l1_ratio=kin_l1)
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        tst_dropped += 1
 
-        # train kinematic model
-        kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
-        # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
-        # kin_total_score.append(sc)
+            # compute weights (because unbalanced dataset)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
 
-        # build EMG model
-        emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
-                                           random_state=42,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-                                           l1_ratio=emg_l1)
+            # build kinematic model
+            kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
+                                               random_state=rnd_st,
+                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               l1_ratio=kin_l1)
 
-        # train EMG model
-        emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
-        # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
-        # emg_total_score.append(sc)
+            # train kinematic model
+            kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
+            # kin_total_score.append(sc)
 
-        # build Tactile model
-        tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
-                                            random_state=42,
-                                            solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-                                            l1_ratio=tact_l1)
+            # build EMG model
+            emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
+                                               random_state=rnd_st,
+                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               l1_ratio=emg_l1)
 
-        # train EMG model
-        tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
-        # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
-        # emg_total_score.append(sc)
+            # train EMG model
+            emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
+            # emg_total_score.append(sc)
 
-        # get prediction probabilities from first layer to train second layer
-        kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
-        emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
-        tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
+            # build Tactile model
+            tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
+                                                random_state=rnd_st,
+                                                solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                                l1_ratio=tact_l1)
 
-        pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
+            # train EMG model
+            tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
+            # emg_total_score.append(sc)
 
-        # build & train top layer classifier
-        top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=42, solver='saga',
-                                           max_iter=25000,
-                                           multi_class='ovr', n_jobs=-1)
-        top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
+            # get prediction probabilities from first layer to train second layer
+            kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
+            emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
+            tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
 
-        # get probabilities from first layer on test set to feed the second layer
-        kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
-        emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
-        tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
-        test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+            pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
 
-        # get prediction accuracy from second layer
-        sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
-        total_score.append(sc)
+            # build & train top layer classifier
+            top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=rnd_st, solver='saga',
+                                               max_iter=25000,
+                                               multi_class='ovr', n_jobs=-1)
+            top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
+
+            # get probabilities from first layer on test set to feed the second layer
+            kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
+            emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
+            tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
+            test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+
+            # get prediction accuracy from second layer
+            sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
+            total_score.append(sc)
 
     result = ['Hierarchical']
     result.extend([family, '0', '0', top_C])
@@ -875,6 +879,7 @@ def ask_ep_presabs_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -891,6 +896,14 @@ def ask_ep_presabs_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Asked'].sample(frac = 1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Asked'].sample(frac = 1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
@@ -898,6 +911,7 @@ def ask_ep_presabs_classification(data):
               [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -905,6 +919,7 @@ def ask_ep_presabs_classification(data):
 
 
 def ask_ep_dur_classification(data):
+
     ## THIS FUNCTION IS TO CLASSIFY OBJECTS BASED ON EPs
     result_file = open('./results/EP/accuracy/ep_dur_ask_results_file.csv', 'a')  # Open file in append mode
 
@@ -921,6 +936,7 @@ def ask_ep_dur_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -936,12 +952,21 @@ def ask_ep_dur_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits)*100/len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Asked'].sample(frac=1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
         print("(ASKED) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -966,6 +991,7 @@ def ask_ep_count_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -982,6 +1008,14 @@ def ask_ep_count_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Asked'].sample(frac=1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
@@ -989,6 +1023,7 @@ def ask_ep_count_classification(data):
               [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -1013,6 +1048,7 @@ def giv_ep_presabs_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -1029,6 +1065,14 @@ def giv_ep_presabs_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Given'].sample(frac=1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
@@ -1036,6 +1080,7 @@ def giv_ep_presabs_classification(data):
               [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -1059,6 +1104,7 @@ def giv_ep_dur_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -1074,12 +1120,21 @@ def giv_ep_dur_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits)*100/len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Given'].sample(frac=1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
         print("(GIVEN) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -1104,6 +1159,7 @@ def giv_ep_count_classification(data):
         weight_wr = csv.writer(weight_file)
 
         acc = []
+        rand_acc = []
 
         for rnd_st in random_states:
 
@@ -1120,6 +1176,14 @@ def giv_ep_count_classification(data):
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+                # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+                model.fit(
+                    selected_df.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                    selected_df.iloc[train]['Given'].sample(frac=1))
+                rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                           selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
+                rand_acc.append(rnd_sc)
+
                 # model weight extraction and saving
                 [weight_wr.writerow(x) for x in model.coef_]
 
@@ -1127,6 +1191,7 @@ def giv_ep_count_classification(data):
               [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
+        wr.writerow([rand_acc, 'Random'])
 
         # model weight file close
         weight_file.close()
@@ -1145,6 +1210,7 @@ def fam_ep_presabs_classification(data):
     weight_wr = csv.writer(weight_file)
 
     acc = []
+    rand_acc = []
 
     for rnd_st in random_states:
 
@@ -1161,6 +1227,14 @@ def fam_ep_presabs_classification(data):
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+            # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+            model.fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                data.iloc[train]['Family'].sample(frac=1))
+            rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                       data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
+            rand_acc.append(rnd_sc)
+
             # model weight extraction and saving
             [weight_wr.writerow(x) for x in model.coef_]
 
@@ -1168,6 +1242,7 @@ def fam_ep_presabs_classification(data):
           [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
+    wr.writerow([rand_acc, 'Random'])
 
     # model weight file close
     weight_file.close()
@@ -1186,6 +1261,7 @@ def fam_ep_dur_classification(data):
     weight_wr = csv.writer(weight_file)
 
     acc = []
+    rand_acc = []
 
     for rnd_st in random_states:
 
@@ -1202,6 +1278,14 @@ def fam_ep_dur_classification(data):
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+            # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+            model.fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                data.iloc[train]['Family'].sample(frac=1))
+            rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                       data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
+            rand_acc.append(rnd_sc)
+
             # model weight extraction and saving
             [weight_wr.writerow(x) for x in model.coef_]
 
@@ -1209,6 +1293,7 @@ def fam_ep_dur_classification(data):
           [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
+    wr.writerow([rand_acc, 'Random'])
 
     # model weight file close
     weight_file.close()
@@ -1227,6 +1312,7 @@ def fam_ep_count_classification(data):
     weight_wr = csv.writer(weight_file)
 
     acc = []
+    rand_acc = []
 
     for rnd_st in random_states:
 
@@ -1243,6 +1329,14 @@ def fam_ep_count_classification(data):
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
 
+            # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
+            model.fit(
+                data.iloc[train].drop(['Given', 'Asked', 'Family'], axis=1),
+                data.iloc[train]['Family'].sample(frac=1))
+            rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
+                                       data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
+            rand_acc.append(rnd_sc)
+
             # model weight extraction and saving
             [weight_wr.writerow(x) for x in model.coef_]
 
@@ -1250,6 +1344,7 @@ def fam_ep_count_classification(data):
           [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
+    wr.writerow([rand_acc, 'Random'])
 
     # model weight file close
     weight_file.close()

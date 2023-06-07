@@ -17,48 +17,73 @@ def ep_classification_plots():
     pairs = list(combinations(kinds, r=2))
 
     accuracies_df = pd.DataFrame()
+    rand_accuracies_df = pd.DataFrame()
 
     # GIVEN PRES/ABS
     obj_presabs_acc = []
+    obj_presabs_rand_acc = []
     obj_presabs = './results/EP/accuracy/ep_presabs_giv_results_file.csv'
+
     with open(obj_presabs, 'r') as obj_presabs_data:
         obj_presabs_reader = csv.reader(obj_presabs_data)
         for row in obj_presabs_reader:
             row_o_pa = row[0].replace("[", "")
             row_o_pa = row_o_pa.replace("]", "")
-            obj_presabs_acc = np.append(obj_presabs_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_presabs_acc = np.append(obj_presabs_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+            else:
+                obj_presabs_rand_acc = np.append(obj_presabs_rand_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+
     obj_label = ["given"] * len(obj_presabs_acc)
     kind_label = ["pres/abs"] * len(obj_presabs_acc)
     obj_presabs_acc_df = pd.DataFrame({"Accuracy": obj_presabs_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_presabs_acc_df, ignore_index=True)
+    obj_presabs_rand_acc_df = pd.DataFrame({"Accuracy": obj_presabs_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_presabs_rand_acc_df, ignore_index=True)
 
     # GIVEN COUNT
     obj_count_acc = []
+    obj_count_rand_acc = []
     obj_count = './results/EP/accuracy/ep_count_giv_results_file.csv'
+
     with open(obj_count, 'r') as obj_count_data:
         obj_count_reader = csv.reader(obj_count_data)
         for row in obj_count_reader:
             row_o_c = row[0].replace("[", "")
             row_o_c = row_o_c.replace("]", "")
-            obj_count_acc = np.append(obj_count_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_count_acc = np.append(obj_count_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+            else:
+                obj_count_rand_acc = np.append(obj_count_rand_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+
     obj_label = ["given"] * len(obj_count_acc)
     kind_label = ["count"] * len(obj_count_acc)
     obj_count_acc_df = pd.DataFrame({"Accuracy": obj_count_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_count_acc_df, ignore_index=True)
+    obj_count_rand_acc_df = pd.DataFrame({"Accuracy": obj_count_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_count_rand_acc_df, ignore_index=True)
 
     # GIVEN DURATION
     obj_dur_acc = []
+    obj_dur_rand_acc = []
     obj_dur = './results/EP/accuracy/ep_dur_giv_results_file.csv'
+
     with open(obj_dur, 'r') as obj_dur_data:
         obj_dur_reader = csv.reader(obj_dur_data)
         for row in obj_dur_reader:
             row_o_d = row[0].replace("[", "")
             row_o_d = row_o_d.replace("]", "")
-            obj_dur_acc = np.append(obj_dur_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_dur_acc = np.append(obj_count_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+            else:
+                obj_dur_rand_acc = np.append(obj_count_rand_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+
     obj_label = ["given"] * len(obj_dur_acc)
     kind_label = ["duration"] * len(obj_dur_acc)
     obj_dur_acc_df = pd.DataFrame({"Accuracy": obj_dur_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_dur_acc_df, ignore_index=True)
+    obj_dur_rand_acc_df = pd.DataFrame({"Accuracy": obj_dur_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_dur_rand_acc_df, ignore_index=True)
 
     # BOXPLOT EP GIVEN
     plt.figure()
@@ -76,45 +101,69 @@ def ep_classification_plots():
 
     # ASKED PRES/ABS
     obj_presabs_acc = []
+    obj_presabs_rand_acc = []
     obj_presabs = './results/EP/accuracy/ep_presabs_ask_results_file.csv'
+
     with open(obj_presabs, 'r') as obj_presabs_data:
         obj_presabs_reader = csv.reader(obj_presabs_data)
         for row in obj_presabs_reader:
             row_o_pa = row[0].replace("[", "")
             row_o_pa = row_o_pa.replace("]", "")
-            obj_presabs_acc = np.append(obj_presabs_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_presabs_acc = np.append(obj_presabs_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+            else:
+                obj_presabs_rand_acc = np.append(obj_presabs_rand_acc, np.fromstring(row_o_pa, dtype=float, sep=","))
+
     obj_label = ["asked"] * len(obj_presabs_acc)
     kind_label = ["pres/abs"] * len(obj_presabs_acc)
     obj_presabs_acc_df = pd.DataFrame({"Accuracy": obj_presabs_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_presabs_acc_df, ignore_index=True)
+    obj_presabs_rand_acc_df = pd.DataFrame({"Accuracy": obj_presabs_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_presabs_rand_acc_df, ignore_index=True)
 
     # ASKED COUNT
     obj_count_acc = []
+    obj_count_rand_acc = []
     obj_count = './results/EP/accuracy/ep_count_ask_results_file.csv'
+
     with open(obj_count, 'r') as obj_count_data:
         obj_count_reader = csv.reader(obj_count_data)
         for row in obj_count_reader:
             row_o_c = row[0].replace("[", "")
             row_o_c = row_o_c.replace("]", "")
-            obj_count_acc = np.append(obj_count_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_count_acc = np.append(obj_count_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+            else:
+                obj_count_rand_acc = np.append(obj_count_rand_acc, np.fromstring(row_o_c, dtype=float, sep=","))
+
     obj_label = ["asked"] * len(obj_count_acc)
     kind_label = ["count"] * len(obj_count_acc)
     obj_count_acc_df = pd.DataFrame({"Accuracy": obj_count_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_count_acc_df, ignore_index=True)
+    obj_count_rand_acc_df = pd.DataFrame({"Accuracy": obj_count_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_count_rand_acc_df, ignore_index=True)
 
     # ASKED DURATION
     obj_dur_acc = []
+    obj_dur_rand_acc = []
     obj_dur = './results/EP/accuracy/ep_dur_ask_results_file.csv'
+
     with open(obj_dur, 'r') as obj_dur_data:
         obj_dur_reader = csv.reader(obj_dur_data)
         for row in obj_dur_reader:
             row_o_d = row[0].replace("[", "")
             row_o_d = row_o_d.replace("]", "")
-            obj_dur_acc = np.append(obj_dur_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+            if row[1] != 'Random':
+                obj_dur_acc = np.append(obj_dur_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+            else:
+                obj_dur_rand_acc = np.append(obj_dur_rand_acc, np.fromstring(row_o_d, dtype=float, sep=","))
+
     obj_label = ["asked"] * len(obj_dur_acc)
     kind_label = ["duration"] * len(obj_dur_acc)
     obj_dur_acc_df = pd.DataFrame({"Accuracy": obj_dur_acc, "Obj/Fam": obj_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(obj_dur_acc_df, ignore_index=True)
+    obj_dur_rand_acc_df = pd.DataFrame({"Accuracy": obj_dur_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(obj_dur_rand_acc_df, ignore_index=True)
 
     # BOXPLOT EP ASKED
     plt.figure()
@@ -131,41 +180,62 @@ def ep_classification_plots():
 
     # FAMILY PRES/ABS
     fam_presabs_acc = []
+    fam_presabs_rand_acc = []
     fam_presabs = './results/EP/accuracy/ep_presabs_fam_results_file.csv'
+
     with open(fam_presabs, 'r') as fam_presabs_data:
         fam_presabs_reader = csv.reader(fam_presabs_data)
         for row in fam_presabs_reader:
             row_f_pa = row[0].replace("[", "")
             row_f_pa = row_f_pa.replace("]", "")
-            fam_presabs_acc = np.append(fam_presabs_acc, np.fromstring(row_f_pa, dtype=float, sep=","))
+            if row[1] != 'Random':
+                fam_presabs_acc = np.append(fam_presabs_acc, np.fromstring(row_f_pa, dtype=float, sep=","))
+            else:
+                fam_presabs_rand_acc = np.append(fam_presabs_rand_acc, np.fromstring(row_f_pa, dtype=float, sep=","))
+
     fam_label = ["family"] * len(fam_presabs_acc)
     kind_label = ["pres/abs"] * len(fam_presabs_acc)
     fam_presabs_acc_df = pd.DataFrame({"Accuracy": fam_presabs_acc, "Obj/Fam": fam_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(fam_presabs_acc_df, ignore_index=True)
+    fam_presabs_rand_acc_df = pd.DataFrame({"Accuracy": fam_presabs_rand_acc, "Obj/Fam": fam_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(fam_presabs_rand_acc_df, ignore_index=True)
 
     # FAMILY COUNT
     fam_count_acc = []
+    fam_count_rand_acc = []
     fam_count = './results/EP/accuracy/ep_count_fam_results_file.csv'
+
     with open(fam_count, 'r') as fam_count_data:
         fam_count_reader = csv.reader(fam_count_data)
         for row in fam_count_reader:
             row_f_c = row[0].replace("[", "")
             row_f_c = row_f_c.replace("]", "")
-            fam_count_acc = np.append(fam_count_acc, np.fromstring(row_f_c, dtype=float, sep=","))
+            if row[1] != 'Random':
+                fam_count_acc = np.append(fam_count_acc, np.fromstring(row_f_c, dtype=float, sep=","))
+            else:
+                fam_count_rand_acc = np.append(fam_count_rand_acc, np.fromstring(row_f_c, dtype=float, sep=","))
+
     fam_label = ["family"] * len(fam_count_acc)
     kind_label = ["count"] * len(fam_count_acc)
     fam_count_acc_df = pd.DataFrame({"Accuracy": fam_count_acc, "Obj/Fam": fam_label, "Kind": kind_label})
     accuracies_df = accuracies_df.append(fam_count_acc_df, ignore_index=True)
+    fam_count_rand_acc_df = pd.DataFrame({"Accuracy": fam_count_rand_acc, "Obj/Fam": fam_label, "Kind": kind_label})
+    rand_accuracies_df = rand_accuracies_df.append(fam_count_rand_acc_df, ignore_index=True)
 
     # FAMILY DURATION
     fam_dur_acc = []
+    fam_dur_rand_acc = []
     fam_dur = './results/EP/accuracy/ep_dur_fam_results_file.csv'
     with open(fam_dur, 'r') as fam_dur_data:
         fam_dur_reader = csv.reader(fam_dur_data)
         for row in fam_dur_reader:
             row_f_d = row[0].replace("[", "")
             row_f_d = row_f_d.replace("]", "")
-            fam_dur_acc = np.append(fam_dur_acc, np.fromstring(row_f_d, dtype=float, sep=","))
+            if row[1] != 'Random':
+                fam_dur_acc = np.append(fam_dur_acc, np.fromstring(row_f_d, dtype=float, sep=","))
+            else:
+                fam_dur_rand_acc = np.append(fam_dur_rand_acc, np.fromstring(row_f_d, dtype=float, sep=","))
+
     fam_label = ["family"] * len(fam_dur_acc)
     kind_label = ["duration"] * len(fam_dur_acc)
     fam_dur_acc_df = pd.DataFrame({"Accuracy": fam_dur_acc, "Obj/Fam": fam_label, "Kind": kind_label})
