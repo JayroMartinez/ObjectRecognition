@@ -121,7 +121,7 @@ def main():
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFICATION
-    # hierarchical_classification(split_df)
+    hierarchical_classification(split_df)
 
 
 if __name__ == "__main__":
