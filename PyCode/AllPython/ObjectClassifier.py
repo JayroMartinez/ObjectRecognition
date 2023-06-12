@@ -42,24 +42,24 @@ def main():
 
     for subject in subject_folders:  # load data for each subject
         # LOAD RAW DATA
-        # subject_df = load(subject)
-        # data_df = pd.concat([data_df, subject_df], ignore_index=True)
+        subject_df = load(subject)
+        data_df = pd.concat([data_df, subject_df], ignore_index=True)
 
         # LOAD EP TRIALS
-        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+        # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+        # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+        # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+        # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
 
 
 
     # RAW DATA PREPROCESSING
-    # split_df = split(data_df)  # split data into trials and EPs and add fields
-    # split_df['Trial num'] = split_df['Trial num'].astype('str')
-    # split_df['EP num'] = split_df['EP num'].astype('str')
+    split_df = split(data_df)  # split data into trials and EPs and add fields
+    split_df['Trial num'] = split_df['Trial num'].astype('str')
+    split_df['EP num'] = split_df['EP num'].astype('str')
 
     # check tactile distribution (only for checking)
-    tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
+    # tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
     # g = sns.violinplot(data=split_df[tactile_cols])
     # g.set_xticklabels(labels=tactile_cols, rotation=45, size=4)
     # plt.ylabel('Raw Tactile Data Value')
@@ -69,32 +69,32 @@ def main():
     # VARIANCE STUDY (only for checking)
     # variance(split_df)
 
-    ################################
-    ## EP CLASSIFICATION
-    ################################
-    # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    ask_ep_presabs_classification(ep_presabs_df)
-    # ASKED OBJECT CLASSIFICATION BY EP DURATION
-    ask_ep_dur_classification(ep_dur_df)
-    # ASKED OBJECT CLASSIFICATION BY EP COUNT
-    ask_ep_count_classification(ep_count_df)
-
-    # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    giv_ep_presabs_classification(ep_presabs_df)
-    # GIVEN OBJECT CLASSIFICATION BY EP DURATION
-    giv_ep_dur_classification(ep_dur_df)
-    # GIVEN OBJECT CLASSIFICATION BY EP COUNT
-    giv_ep_count_classification(ep_count_df)
-
-    # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
-    fam_ep_presabs_classification(ep_presabs_df)
-    # FAMILY CLASSIFICATION BY EP DURATION
-    fam_ep_dur_classification(ep_dur_df)
-    # FAMILY CLASSIFICATION BY EP COUNT
-    fam_ep_count_classification(ep_count_df)
+    # ################################
+    # ## EP CLASSIFICATION
+    # ################################
+    # # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
+    # ask_ep_presabs_classification(ep_presabs_df)
+    # # ASKED OBJECT CLASSIFICATION BY EP DURATION
+    # ask_ep_dur_classification(ep_dur_df)
+    # # ASKED OBJECT CLASSIFICATION BY EP COUNT
+    # ask_ep_count_classification(ep_count_df)
+    #
+    # # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
+    # giv_ep_presabs_classification(ep_presabs_df)
+    # # GIVEN OBJECT CLASSIFICATION BY EP DURATION
+    # giv_ep_dur_classification(ep_dur_df)
+    # # GIVEN OBJECT CLASSIFICATION BY EP COUNT
+    # giv_ep_count_classification(ep_count_df)
+    #
+    # # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
+    # fam_ep_presabs_classification(ep_presabs_df)
+    # # FAMILY CLASSIFICATION BY EP DURATION
+    # fam_ep_dur_classification(ep_dur_df)
+    # # FAMILY CLASSIFICATION BY EP COUNT
+    # fam_ep_count_classification(ep_count_df)
 
     # EP ACCURACY PLOTS
-    ep_classification_plots()
+    # ep_classification_plots()
     # EP WEIGHT PLOTS
     # ep_weights()
 
@@ -114,7 +114,7 @@ def main():
     # tactile_time = time.time()
     # print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
     # # MULTIMODAL SOURCE CLASSIFICATION
-    # multiple_source_classification(split_df)
+    multiple_source_classification(split_df)
     # multimodal_time = time.time()
     # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
     # print("###########################################")

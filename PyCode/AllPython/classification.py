@@ -101,6 +101,8 @@ def emg_aux_classif(input_data):
             log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
             sc = round(log_model.score(X=test_data, y=test_labels)*100, 2)
             total_score.append(sc)
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
             random.shuffle(train_labels)
@@ -110,8 +112,6 @@ def emg_aux_classif(input_data):
             rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             random_score.append(rnd_sc)
 
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
     # print(log_model.classes_)
@@ -224,6 +224,8 @@ def kin_aux_classif(input_data):
             log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
             sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
             random.shuffle(train_labels)
@@ -233,8 +235,6 @@ def kin_aux_classif(input_data):
             rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             random_score.append(rnd_sc)
 
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
 
@@ -341,6 +341,8 @@ def tact_aux_classif(input_data):
             log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
             sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
             random.shuffle(train_labels)
@@ -350,8 +352,6 @@ def tact_aux_classif(input_data):
             rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             random_score.append(rnd_sc)
 
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in log_model.coef_]
     # model weight file close
     weight_file.close()
 
@@ -384,6 +384,23 @@ def multiple_source_aux_classif(input_data):
     # num_bin = 20
     # l1_param = 1
     # c_par = 0.1
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+    emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
+    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+                 'pdl', 'pdr', 'pdlo', 'lpo']
+
+    #########
+    ## TEST NOT ALL SOURCES
+    #########
+    data.drop(columns=tact_cols, inplace=True)
 
     total_score = []
     random_score = []
@@ -468,28 +485,29 @@ def multiple_source_aux_classif(input_data):
                 total_score.append(sc)
 
                 # random shuffle model
-                random.shuffle(train_labels)
-                random.shuffle(test_labels)
-                weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-                log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-                rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-                random_score.append(rnd_sc)
+                # random.shuffle(train_labels)
+                # random.shuffle(test_labels)
+                # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+                # log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+                # rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+                # random_score.append(rnd_sc)
 
             else:
                 sc = 0
                 total_score.append(sc)
-                random_score.append(sc)
+                # random_score.append(sc)
 
-    result = ['Multimodal']
+    result = ['Multimodal_KE']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
-    random_result = ['Multimodal_Rand']
-    random_result.extend(params)
-    random_result.append(random_score)
-    random_result.append(round(np.mean(random_score), 2))
-
-    return [result, random_result]
+    # random_result = ['Multimodal_Rand']
+    # random_result.extend(params)
+    # random_result.append(random_score)
+    # random_result.append(round(np.mean(random_score), 2))
+    #
+    # return [result, random_result]
+    return result
 
 
 def hierarchical_aux_classif(input_data):
@@ -509,17 +527,14 @@ def hierarchical_aux_classif(input_data):
     emg_l1 = 0
     emg_c = 1.5
 
-    tact_bins = 5
-    tact_l1 = 0.5
-    tact_c = 0.25
-
-    # for develop and test
-    kir = []
-    kir_2 = []
+    # tact_bins = 5
+    # tact_l1 = 0.5
+    # tact_c = 0.25
 
     # kin_total_score = []
     # emg_total_score = []
     total_score = []
+    random_score = []
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
 
@@ -529,11 +544,11 @@ def hierarchical_aux_classif(input_data):
                 'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
                 'Thumb_Proj_J1_Z']
     emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
-    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
-                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
-                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
-                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
-                 'pdl', 'pdr', 'pdlo', 'lpo']
+    # tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+    #              'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+    #              'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+    #              'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+    #              'pdl', 'pdr', 'pdlo', 'lpo']
 
     selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
 
@@ -553,7 +568,7 @@ def hierarchical_aux_classif(input_data):
 
             kin_train_data = []
             emg_train_data = []
-            tact_train_data = []
+            # tact_train_data = []
             train_labels = []
 
             trn_dropped = 0  # Number of dropped EPs in training dataset
@@ -569,8 +584,8 @@ def hierarchical_aux_classif(input_data):
                 ep_emg_data = train_ep[emg_cols]
                 emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
-                ep_tact_data = train_ep[tact_cols]
-                tact_in_bins = np.array_split(ep_tact_data, tact_bins)
+                # ep_tact_data = train_ep[tact_cols]
+                # tact_in_bins = np.array_split(ep_tact_data, tact_bins)
 
                 with warnings.catch_warnings():
                     warnings.filterwarnings('error')
@@ -584,13 +599,13 @@ def hierarchical_aux_classif(input_data):
                         flat_emg_mean = list(
                             itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
-                        flat_tact_mean = list(
-                            itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        # tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
+                        # flat_tact_mean = list(
+                        #     itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         kin_train_data.append(flat_kin_mean)
                         emg_train_data.append(flat_emg_mean)
-                        tact_train_data.append(flat_tact_mean)
+                        # tact_train_data.append(flat_tact_mean)
                         train_labels.append(np.unique(train_ep['Given Object'])[0])
 
                     except RuntimeWarning:
@@ -613,8 +628,8 @@ def hierarchical_aux_classif(input_data):
                 ep_emg_data = test_ep[emg_cols]
                 emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
-                ep_tact_data = test_ep[tact_cols]
-                tact_in_bins = np.array_split(ep_tact_data, tact_bins)
+                # ep_tact_data = test_ep[tact_cols]
+                # tact_in_bins = np.array_split(ep_tact_data, tact_bins)
 
                 with warnings.catch_warnings():
                     warnings.filterwarnings('error')
@@ -628,13 +643,13 @@ def hierarchical_aux_classif(input_data):
                         flat_emg_mean = list(
                             itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
-                        flat_tact_mean = list(
-                            itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        # tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
+                        # flat_tact_mean = list(
+                        #     itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         kin_test_data.append(flat_kin_mean)
                         emg_test_data.append(flat_emg_mean)
-                        tact_test_data.append(flat_tact_mean)
+                        # tact_test_data.append(flat_tact_mean)
                         test_labels.append(np.unique(test_ep['Given Object'])[0])
 
                     except RuntimeWarning:
@@ -666,23 +681,22 @@ def hierarchical_aux_classif(input_data):
             # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
             # emg_total_score.append(sc)
 
-            # build Tactile model
-            tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
-                                                random_state=rnd_st,
-                                                solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-                                                l1_ratio=tact_l1)
-
-            # train EMG model
-            tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
-            # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
-            # emg_total_score.append(sc)
+            # # build Tactile model
+            # tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
+            #                                     random_state=rnd_st,
+            #                                     solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+            #                                     l1_ratio=tact_l1)
+            #
+            # # train EMG model
+            # tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
 
             # get prediction probabilities from first layer to train second layer
             kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
             emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
-            tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
+            # tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
 
-            pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
+            # pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
+            pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba], axis=1)
 
             # build & train top layer classifier
             top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=rnd_st, solver='saga',
@@ -693,18 +707,44 @@ def hierarchical_aux_classif(input_data):
             # get probabilities from first layer on test set to feed the second layer
             kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
             emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
-            tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
-            test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+            # tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
+            # test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+            test_proba = np.concatenate([kin_test_pred, emg_test_pred], axis=1)
 
             # get prediction accuracy from second layer
             sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
             total_score.append(sc)
 
-    result = ['Hierarchical']
+            # RANDOM CLASSIFIER
+            # random.shuffle(train_labels)
+            # kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
+            # emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
+            # # tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
+            # kin_model_pred_rand_proba = kin_log_model.predict_proba(X=kin_train_data)
+            # emg_model_pred_rand_proba = emg_log_model.predict_proba(X=emg_train_data)
+            # # tact_model_pred_rand_proba = tact_log_model.predict_proba(X=tact_train_data)
+            # # pred_rand_proba = np.concatenate([kin_model_pred_rand_proba, emg_model_pred_rand_proba, tact_model_pred_rand_proba], axis=1)
+            # pred_rand_proba = np.concatenate([kin_model_pred_rand_proba, emg_model_pred_rand_proba], axis=1)
+            # top_log_model.fit(X=pred_rand_proba, y=train_labels, sample_weight=weights)
+            # kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
+            # emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
+            # # tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
+            # # test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+            # test_proba = np.concatenate([kin_test_pred, emg_test_pred], axis=1)
+            # rand_sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
+            # random_score.append(rand_sc)
+
+
+    result = ['Hierarchical_KE']
     result.extend([family, '0', '0', top_C])
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
-
+    # random_result = ['Hierarchical_Rand']
+    # random_result.extend([family, '0', '0', '0'])
+    # random_result.append(random_score)
+    # random_result.append(round(np.mean(random_score), 2))
+    #
+    # return [result, random_result]
     return result
 
 
@@ -831,9 +871,9 @@ def multiple_source_classification(data):
         result = pool.map_async(multiple_source_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res[0])
-            wr.writerow(res[1])
-            # a=1
+            # wr.writerow(res[0])
+            # wr.writerow(res[1])
+            wr.writerow(res)
 
     result_file.close()
 
@@ -856,6 +896,8 @@ def hierarchical_classification(data):
         result = pool.map_async(hierarchical_aux_classif, data_and_iter)
 
         for res in result.get():
+            # wr.writerow(res[0])
+            # wr.writerow(res[1])
             wr.writerow(res)
 
     result_file.close()
@@ -895,6 +937,8 @@ def ask_ep_presabs_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -903,9 +947,6 @@ def ask_ep_presabs_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Asked'].sample(frac = 1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(ASKED) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
               [round(x, 2) for x in acc])
@@ -951,6 +992,8 @@ def ask_ep_dur_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits)*100/len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -959,9 +1002,6 @@ def ask_ep_dur_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(ASKED) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
@@ -1007,6 +1047,8 @@ def ask_ep_count_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -1015,9 +1057,6 @@ def ask_ep_count_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(ASKED) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
               [round(x, 2) for x in acc])
@@ -1064,6 +1103,8 @@ def giv_ep_presabs_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -1072,9 +1113,6 @@ def giv_ep_presabs_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(GIVEN) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
               [round(x, 2) for x in acc])
@@ -1119,6 +1157,8 @@ def giv_ep_dur_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits)*100/len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -1127,9 +1167,6 @@ def giv_ep_dur_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(GIVEN) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
@@ -1175,6 +1212,8 @@ def giv_ep_count_classification(data):
 
                 hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
                 acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+                # model weight extraction and saving
+                [weight_wr.writerow(x) for x in model.coef_]
 
                 # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
                 model.fit(
@@ -1183,9 +1222,6 @@ def giv_ep_count_classification(data):
                 rnd_sc = round(model.score(selected_df.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
-
-                # model weight extraction and saving
-                [weight_wr.writerow(x) for x in model.coef_]
 
         print("(GIVEN) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
               [round(x, 2) for x in acc])
@@ -1226,6 +1262,8 @@ def fam_ep_presabs_classification(data):
 
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
 
             # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
             model.fit(
@@ -1234,9 +1272,6 @@ def fam_ep_presabs_classification(data):
             rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
-
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in model.coef_]
 
     print("Pre/Abs Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
           [round(x, 2) for x in acc])
@@ -1277,6 +1312,8 @@ def fam_ep_dur_classification(data):
 
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
 
             # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
             model.fit(
@@ -1285,9 +1322,6 @@ def fam_ep_dur_classification(data):
             rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
-
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in model.coef_]
 
     print("Dur Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
           [round(x, 2) for x in acc])
@@ -1328,6 +1362,8 @@ def fam_ep_count_classification(data):
 
             hits = [int(list(labels.values)[x] == list(predicted)[x]) for x in range(0, len(predicted))]
             acc.append(round(np.sum(hits) * 100 / len(predicted), 2))
+            # model weight extraction and saving
+            [weight_wr.writerow(x) for x in model.coef_]
 
             # random shuffle model selected_df.iloc[train]['Asked'].sample(frac = 1)
             model.fit(
@@ -1336,9 +1372,6 @@ def fam_ep_count_classification(data):
             rnd_sc = round(model.score(data.iloc[test].drop(['Given', 'Asked', 'Family'], axis=1),
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
-
-            # model weight extraction and saving
-            [weight_wr.writerow(x) for x in model.coef_]
 
     print("Count Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
           [round(x, 2) for x in acc])
