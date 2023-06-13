@@ -746,7 +746,7 @@ def hierarchical_aux_classif(input_data):
             # random_score.append(rand_sc)
 
 
-    result = ['Hierarchical_KE']
+    result = ['Hierarchical_KT']
     result.extend([family, '0', '0', top_C])
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
