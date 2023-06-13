@@ -403,14 +403,14 @@ def multiple_source_aux_classif(input_data):
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            data.drop(columns=tact_cols, inplace=True)
+            part_data = data.drop(columns=tact_cols)
         except:
             print("Error dropping Tact Cols with params:", params)
 
     total_score = []
     random_score = []
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = part_data.loc[data['Family'] == family]  # select particular family
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
