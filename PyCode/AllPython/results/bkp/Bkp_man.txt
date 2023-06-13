@@ -34,3 +34,10 @@ Backup 6:
 Backup 7:
 ******************************
 - Added object classification by EP duration
+
+Backup 8:
+******************************
+- Added object classification by EP number of ocurrences
+- Splitted EP classification into given object, asked object and family
+- Added random classifiers
+- Added statistical test over classifiers' acciracies
