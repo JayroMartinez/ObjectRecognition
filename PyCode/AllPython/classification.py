@@ -273,7 +273,7 @@ def tact_aux_classif(input_data):
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
-    selected_df.dropna(subset=tact_cols, axis=0, inplace=True)  # drop rows containing NaN values
+    # selected_df.dropna(subset=tact_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
     to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
@@ -400,13 +400,24 @@ def multiple_source_aux_classif(input_data):
     #########
     ## TEST NOT ALL SOURCES
     #########
-    data.drop(columns=tact_cols, inplace=True)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            data.drop(columns=tact_cols, inplace=True)
+        except:
+            print("Error dropping Tact Cols with params:", params)
 
     total_score = []
     random_score = []
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
-    selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
+        except:
+            print("Error dropping NaNs with params:", params)
+
 
     to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
 
