@@ -403,7 +403,7 @@ def multiple_source_aux_classif(input_data):
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            part_data = data.drop(columns=emg_cols)
+            part_data = data.drop(columns=kin_cols)
         except:
             print("Error dropping Tact Cols with params:", params)
 
@@ -508,7 +508,7 @@ def multiple_source_aux_classif(input_data):
                 total_score.append(sc)
                 # random_score.append(sc)
 
-    result = ['Multimodal_KT']
+    result = ['Multimodal_ET']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
@@ -530,13 +530,13 @@ def hierarchical_aux_classif(input_data):
     family = params[0]
     top_C = params[1]
 
-    kin_bins = 40
-    kin_l1 = 0.25
-    kin_c = 0.1
+    # kin_bins = 40
+    # kin_l1 = 0.25
+    # kin_c = 0.1
 
-    # emg_bins = 10
-    # emg_l1 = 0
-    # emg_c = 1.5
+    emg_bins = 10
+    emg_l1 = 0
+    emg_c = 1.5
 
     tact_bins = 5
     tact_l1 = 0.5
@@ -549,12 +549,12 @@ def hierarchical_aux_classif(input_data):
 
     selected_df = data.loc[data['Family'] == family]  # select particular family
 
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
-    # emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
+    # kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+    #             'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+    #             'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+    #             'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+    #             'Thumb_Proj_J1_Z']
+    emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
                  'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
                  'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
@@ -589,11 +589,11 @@ def hierarchical_aux_classif(input_data):
 
                 train_ep = selected_df.loc[selected_df['Trial num'] == trn_iter]
 
-                ep_kin_data = train_ep[kin_cols]
-                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+                # ep_kin_data = train_ep[kin_cols]
+                # kin_in_bins = np.array_split(ep_kin_data, kin_bins)
 
-                # ep_emg_data = train_ep[emg_cols]
-                # emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+                ep_emg_data = train_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
                 ep_tact_data = train_ep[tact_cols]
                 tact_in_bins = np.array_split(ep_tact_data, tact_bins)
@@ -602,20 +602,20 @@ def hierarchical_aux_classif(input_data):
                     warnings.filterwarnings('error')
                     try:
 
-                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                        flat_kin_mean = list(
-                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        # kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        # flat_kin_mean = list(
+                        #     itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        # emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                        # flat_emg_mean = list(
-                        #     itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
                         flat_tact_mean = list(
                             itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        kin_train_data.append(flat_kin_mean)
-                        # emg_train_data.append(flat_emg_mean)
+                        # kin_train_data.append(flat_kin_mean)
+                        emg_train_data.append(flat_emg_mean)
                         tact_train_data.append(flat_tact_mean)
                         train_labels.append(np.unique(train_ep['Given Object'])[0])
 
@@ -633,11 +633,11 @@ def hierarchical_aux_classif(input_data):
 
                 test_ep = selected_df.loc[selected_df['Trial num'] == tst_iter]
 
-                ep_kin_data = test_ep[kin_cols]
-                kin_in_bins = np.array_split(ep_kin_data, kin_bins)
+                # ep_kin_data = test_ep[kin_cols]
+                # kin_in_bins = np.array_split(ep_kin_data, kin_bins)
 
-                # ep_emg_data = test_ep[emg_cols]
-                # emg_in_bins = np.array_split(ep_emg_data, emg_bins)
+                ep_emg_data = test_ep[emg_cols]
+                emg_in_bins = np.array_split(ep_emg_data, emg_bins)
 
                 ep_tact_data = test_ep[tact_cols]
                 tact_in_bins = np.array_split(ep_tact_data, tact_bins)
@@ -646,20 +646,20 @@ def hierarchical_aux_classif(input_data):
                     warnings.filterwarnings('error')
                     try:
 
-                        kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-                        flat_kin_mean = list(
-                            itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        # kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                        # flat_kin_mean = list(
+                        #     itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        # emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-                        # flat_emg_mean = list(
-                        #     itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                        flat_emg_mean = list(
+                            itertools.chain.from_iterable(emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
                         tact_bin_mean = [np.nanmean(x, axis=0) for x in tact_in_bins]  # size = [num_bins] X [64]
                         flat_tact_mean = list(
                             itertools.chain.from_iterable(tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
 
-                        kin_test_data.append(flat_kin_mean)
-                        # emg_test_data.append(flat_emg_mean)
+                        # kin_test_data.append(flat_kin_mean)
+                        emg_test_data.append(flat_emg_mean)
                         tact_test_data.append(flat_tact_mean)
                         test_labels.append(np.unique(test_ep['Given Object'])[0])
 
@@ -671,26 +671,26 @@ def hierarchical_aux_classif(input_data):
             weights = compute_sample_weight(class_weight='balanced', y=train_labels)
 
             # build kinematic model
-            kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
-                                               random_state=rnd_st,
-                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-                                               l1_ratio=kin_l1)
-
-            # train kinematic model
-            kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
-            # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
-            # kin_total_score.append(sc)
-
-            # # build EMG model
-            # emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
+            # kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
             #                                    random_state=rnd_st,
             #                                    solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-            #                                    l1_ratio=emg_l1)
+            #                                    l1_ratio=kin_l1)
             #
-            # # train EMG model
-            # emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
-            # # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
-            # # emg_total_score.append(sc)
+            # # train kinematic model
+            # kin_log_model.fit(X=kin_train_data, y=train_labels, sample_weight=weights)
+            # # sc = round(kin_log_model.score(X=kin_test_data, y=test_labels) * 100, 2)
+            # # kin_total_score.append(sc)
+
+            # build EMG model
+            emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
+                                               random_state=rnd_st,
+                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               l1_ratio=emg_l1)
+
+            # train EMG model
+            emg_log_model.fit(X=emg_train_data, y=train_labels, sample_weight=weights)
+            # sc = round(emg_log_model.score(X=emg_test_data, y=test_labels) * 100, 2)
+            # emg_total_score.append(sc)
 
             # build Tactile model
             tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
@@ -702,12 +702,12 @@ def hierarchical_aux_classif(input_data):
             tact_log_model.fit(X=tact_train_data, y=train_labels, sample_weight=weights)
 
             # get prediction probabilities from first layer to train second layer
-            kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
-            # emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
+            # kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
+            emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
             tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
 
             # pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
-            pred_proba = np.concatenate([kin_model_pred_proba, tact_model_pred_proba], axis=1)
+            pred_proba = np.concatenate([emg_model_pred_proba, tact_model_pred_proba], axis=1)
 
             # build & train top layer classifier
             top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=rnd_st, solver='saga',
@@ -716,11 +716,11 @@ def hierarchical_aux_classif(input_data):
             top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
 
             # get probabilities from first layer on test set to feed the second layer
-            kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
-            # emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
+            # kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
+            emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
             tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
             # test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
-            test_proba = np.concatenate([kin_test_pred, tact_test_pred], axis=1)
+            test_proba = np.concatenate([emg_test_pred, tact_test_pred], axis=1)
 
             # get prediction accuracy from second layer
             sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
@@ -746,7 +746,7 @@ def hierarchical_aux_classif(input_data):
             # random_score.append(rand_sc)
 
 
-    result = ['Hierarchical_KT']
+    result = ['Hierarchical_ET']
     result.extend([family, '0', '0', top_C])
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
