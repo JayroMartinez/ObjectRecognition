@@ -40,4 +40,10 @@ Backup 8:
 - Added object classification by EP number of ocurrences
 - Splitted EP classification into given object, asked object and family
 - Added random classifiers
-- Added statistical test over classifiers' acciracies
+- Added statistical test over classifiers' accuracies
+
+Backup 9:
+******************************
+- Add hierarchichal and multimodal for all source combinations
+- Add statistical analysis on classification accuracy difference
+

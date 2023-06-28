@@ -35,15 +35,15 @@ def main():
     data_folder = '/BIDSData'
     subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
 
-    data_df = pd.DataFrame()
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
+    # data_df = pd.DataFrame()
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
 
-    for subject in subject_folders:  # load data for each subject
-        # LOAD RAW DATA
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    # for subject in subject_folders:  # load data for each subject
+    #     # LOAD RAW DATA
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
 
         # LOAD EP TRIALS
         # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
@@ -54,9 +54,9 @@ def main():
 
 
     # RAW DATA PREPROCESSING
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
 
     # check tactile distribution (only for checking)
     # tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -114,14 +114,14 @@ def main():
     # tactile_time = time.time()
     # print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
     # # MULTIMODAL SOURCE CLASSIFICATION
-    multiple_source_classification(split_df)
+    # multiple_source_classification(split_df)
     # multimodal_time = time.time()
     # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
     # print("###########################################")
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFICATION
-    hierarchical_classification(split_df)
+    # hierarchical_classification(split_df)
 
 
 if __name__ == "__main__":
