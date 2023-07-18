@@ -189,17 +189,17 @@ def ep_classification_plots():
 
     new_pairs = [(x,'random') for x in kinds]
 
-    plt.figure()
-    h = sns.barplot(data=asked, x="Kind", y="Accuracy")
-    annotator_h = Annotator(h, new_pairs, data=asked, x="Kind", y="Accuracy")
-    annotator_h.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    annotator_h.apply_and_annotate()
-    h.set(ylabel="Accuracy (95% ci)")
-    h.axhline(33.33, color='r')
-    plt.title('Classification Accuracy for Asked Object Classification')
-    plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
-    # plt.show()
-    # plt.close()
+    # plt.figure()
+    # h = sns.barplot(data=asked, x="Kind", y="Accuracy")
+    # annotator_h = Annotator(h, new_pairs, data=asked, x="Kind", y="Accuracy")
+    # annotator_h.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    # annotator_h.apply_and_annotate()
+    # h.set(ylabel="Accuracy (95% ci)")
+    # h.axhline(33.33, color='r')
+    # plt.title('Classification Accuracy for Asked Object Classification')
+    # plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
+    # # plt.show()
+    # # plt.close()
 
     # FAMILY PRES/ABS
     fam_presabs_acc = []
@@ -279,29 +279,30 @@ def ep_classification_plots():
     # # plt.show()
     # plt.close()
 
-    # # BOXPLOT ALL COMPARISON
-    # plt.figure()
-    # j = sns.barplot(data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]))
-    # statannot.add_stat_annotation(j, data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]),
-    #     box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
-    #                (("pres/abs", "asked"), ("pres/abs", "family")),
-    #                (("pres/abs", "given"), ("pres/abs", "family")),
-    #                (("count", "asked"), ("count", "given")),
-    #                (("count", "asked"), ("count", "family")),
-    #                (("count", "given"), ("count", "family")),
-    #                (("duration", "asked"), ("duration", "given")),
-    #                (("duration", "asked"), ("duration", "family")),
-    #                (("duration", "given"), ("duration", "family"))],
-    #     test="Mann-Whitney",
-    #     text_format="simple",
-    #     show_test_name=False,
-    # )
-    # j.set(ylabel="Accuracy (95% ci)")
-    # plt.title('Classification Accuracy Comparison')
-    # sns.move_legend(j, "lower right")
-    # plt.savefig('./results/EP/plots/EP_all_comp_acc.png', dpi=600)
-    # # plt.show()
-    # plt.close()
+    # BOXPLOT ALL COMPARISON
+    plt.figure()
+    j = sns.barplot(data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]))
+    statannot.add_stat_annotation(j, data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]),
+        box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
+                   (("pres/abs", "asked"), ("pres/abs", "family")),
+                   (("pres/abs", "given"), ("pres/abs", "family")),
+                   (("count", "asked"), ("count", "given")),
+                   (("count", "asked"), ("count", "family")),
+                   (("count", "given"), ("count", "family")),
+                   (("duration", "asked"), ("duration", "given")),
+                   (("duration", "asked"), ("duration", "family")),
+                   (("duration", "given"), ("duration", "family"))],
+        test="Mann-Whitney",
+        text_format="star",
+        show_test_name=False,
+    )
+    j.set(ylabel="Accuracy (95% ci)")
+    plt.title('Classification Accuracy Comparison')
+    sns.move_legend(j, "lower right")
+    plt.savefig('./results/EP/plots/EP_all_comp_acc_star.png', dpi=600)
+    plt.show()
+    plt.close()
+    a=1
 
     # BOXPLOT COMPARISON ASKED-GIVEN
     # plt.figure()

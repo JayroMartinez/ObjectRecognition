@@ -47,3 +47,9 @@ Backup 9:
 - Add hierarchichal and multimodal for all source combinations
 - Add statistical analysis on classification accuracy difference
 
+Backup 10:
+******************************
+- Added synergy extraction (PCA for all sources, all subjects together)
+- Syn classification (C and L1vL2 fixed as in raw hierarchical)
+
+

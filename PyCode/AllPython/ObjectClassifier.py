@@ -28,6 +28,8 @@ from ep_class_acc_stats import ep_classification_plots
 from stat_analysis import variance
 from weight_analysis import raw_weights
 from weight_analysis import ep_weights
+from synergy_pipeline import syn_pip
+from synergy_pipeline import print_syn_results
 
 
 def main():
@@ -35,7 +37,8 @@ def main():
     data_folder = '/BIDSData'
     subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
 
-    # data_df = pd.DataFrame()
+    data_df = pd.DataFrame()
+
     # ep_presabs_df = pd.DataFrame()
     # ep_dur_df = pd.DataFrame()
     # ep_count_df = pd.DataFrame()
@@ -53,7 +56,7 @@ def main():
 
 
 
-    # RAW DATA PREPROCESSING
+    # # RAW DATA PREPROCESSING
     # split_df = split(data_df)  # split data into trials and EPs and add fields
     # split_df['Trial num'] = split_df['Trial num'].astype('str')
     # split_df['EP num'] = split_df['EP num'].astype('str')
@@ -94,7 +97,7 @@ def main():
     # fam_ep_count_classification(ep_count_df)
 
     # EP ACCURACY PLOTS
-    # ep_classification_plots()
+    ep_classification_plots()
     # EP WEIGHT PLOTS
     # ep_weights()
 
@@ -123,6 +126,12 @@ def main():
     # HIERARCHICAL CLASSIFICATION
     # hierarchical_classification(split_df)
 
+    ################################
+    ## SYNERGY CLASSIFICATION
+    ################################
+    # split_df = []
+    # syn_pip(split_df)
+    # print_syn_results()
 
 if __name__ == "__main__":
     main()
