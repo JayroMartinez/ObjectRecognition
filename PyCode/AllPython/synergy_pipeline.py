@@ -136,7 +136,8 @@ def kin_syn_classif(input_data):
     total_score = []
 
     num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
-    data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)
+    # data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
     selected_df = data_df.loc[data_df['Family'] == family]
 
     to_kfold = selected_df.drop_duplicates(
@@ -229,7 +230,8 @@ def emg_pca_syn_classif(input_data):
     total_score = []
 
     num_syns = np.ceil(len(emg_pca_scores.columns) * perc_syns / 100)
-    data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)
+    # data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     selected_df = data_df.loc[data_df['Family'] == family]
 
     to_kfold = selected_df.drop_duplicates(
@@ -425,7 +427,8 @@ def tact_syn_classif(input_data):
     total_score = []
 
     num_syns = np.ceil(len(tact_scores.columns) * perc_syns / 100)
-    data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)
+    # data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     selected_df = data_df.loc[data_df['Family'] == family]
 
     to_kfold = selected_df.drop_duplicates(
@@ -524,7 +527,7 @@ def syn_single_source_classification():
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
-    result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Syn/accuracy/syn_results_decr.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
     kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
     emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
@@ -551,23 +554,20 @@ def syn_single_source_classification():
         for res_kin in result_kin.get():
             # print(res_kin)
             wr.writerow(res_kin)
-
         print("Kinematic classification done!")
 
         for res_emg_pca in result_emg_pca.get():
             # print(res_emg_pca)
             wr.writerow(res_emg_pca)
-
         print("EMG PCA classification done!")
 
         # for res_emg_nmf in result_emg_nmf.get():
         #     # print(res_emg_nmf)
         #     wr.writerow(res_emg_nmf)
-        #
+
         for res_tact in result_tact.get():
             # print(res_tact)
             wr.writerow(res_tact)
-
         print("Tactile classification done!")
 
     print("Single source classification done!!")
@@ -604,14 +604,25 @@ def hierarchical_syn_classification():
             num_syn_emg = np.ceil(len(emg_score_df.columns) * p / 100)
             num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
 
-            kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-            kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+            """Keeps most relevant synergies"""
+            # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+            # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+            #
+            # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+            # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+            #
+            # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+            # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
 
-            emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-            emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+            """Discards most relevant synergies"""
+            kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+            kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
 
-            tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-            tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+            emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+            emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+
+            tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+            tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
             # print("Kin shape:", kin_scores.shape)
             # print("EMG shape:", emg_scores.shape)
@@ -813,10 +824,10 @@ def hierarchical_syn_classification():
                         res.append(sc)
                         # res.append(round(np.mean(total_score), 2))
                         wr.writerow(res)
-                        print(res)
+                        # print(res)
 
     result_file.close()
-    print("DONE !!!")
+    print(" HIERARCHICAL DONE !!!")
 
 
 def multi_aux_classification(input_data):
@@ -841,14 +852,25 @@ def multi_aux_classification(input_data):
     num_syn_emg = np.ceil(len(emg_score_df.columns) * perc / 100)
     num_syn_tact = np.ceil(len(tact_score_df.columns) * perc / 100)
 
-    kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-    kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+    """Keeps most relevant synergies"""
+    # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+    # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+    #
+    # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+    # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+    #
+    # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+    # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
 
-    emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-    emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+    """Discards most relevant synergies"""
+    kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+    kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
 
-    tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-    tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+    emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+    emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+
+    tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+    tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
     total_score = []
 
@@ -996,14 +1018,14 @@ def multi_aux_classification(input_data):
     res.extend([family, perc, l1_param, c_param])
     res.append(total_score)
 
-    print(res)
+    # print(res)
     return res
 
 
 def multisource_syn_classification():
 
-    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
-    perc_syns = [80, 70, 60, 50, 40, 30, 20, 10]
+    perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    # perc_syns = [80, 70, 60, 50, 40, 30, 20, 10]
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
@@ -1027,6 +1049,7 @@ def multisource_syn_classification():
             # print(res)
 
     result_file.close()
+    print(" MULTIMODAL DONE !!!")
 
 
 def print_syn_results():

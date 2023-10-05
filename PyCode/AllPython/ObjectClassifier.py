@@ -139,10 +139,10 @@ def main():
     ################################
     ## SYNERGY CLASSIFICATION
     ################################
-    # syn_single_source_classification()
-    print_syn_results()
-    # hierarchical_syn_classification()
-    # multisource_syn_classification()
+    syn_single_source_classification()
+    hierarchical_syn_classification()
+    multisource_syn_classification()
+    # print_syn_results()
 
 
 
