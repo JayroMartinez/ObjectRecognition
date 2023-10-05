@@ -52,4 +52,11 @@ Backup 10:
 - Added synergy extraction (PCA for all sources, all subjects together)
 - Syn classification (C and L1vL2 fixed as in raw hierarchical)
 
+Backup 11:
+******************************
+- Now we extract best C and L1 for each source in single source synergy classification to be used in hierarchical classification
+- Iteration over C in hierarchical classification
+- Added results from hierarchical with fixed C and L1
+- Added plots comparing single source classification accuracy between raw and synergies (progressively discarding)
+
 

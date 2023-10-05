@@ -31,6 +31,8 @@ from weight_analysis import ep_weights
 from synergy_pipeline import syn_extraction
 from synergy_pipeline import syn_single_source_classification
 from synergy_pipeline import print_syn_results
+from synergy_pipeline import hierarchical_syn_classification
+from synergy_pipeline import multisource_syn_classification
 
 
 def main():
@@ -139,6 +141,8 @@ def main():
     ################################
     # syn_single_source_classification()
     print_syn_results()
+    # hierarchical_syn_classification()
+    # multisource_syn_classification()
 
 
 

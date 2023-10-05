@@ -8,15 +8,19 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.decomposition import NMF
 import csv
+import re
 from scipy.stats import zscore
 import pandas as pd
 from multiprocessing.pool import Pool
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
+from statannotations.Annotator import Annotator
+from statannot import add_stat_annotation, statannot
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
 
 
 def kin_syn_extraction(data):
@@ -35,7 +39,6 @@ def kin_syn_extraction(data):
     pd.DataFrame(kin_var).to_csv('./results/Syn/variance/kin_var.csv')
 
 
-
 def emg_pca_syn_extraction(data):
 
     emg_scaled = StandardScaler().fit_transform(data)  # Z score
@@ -50,7 +53,6 @@ def emg_pca_syn_extraction(data):
 
     emg_var = pca_mod.explained_variance_ratio_
     pd.DataFrame(emg_var).to_csv('./results/Syn/variance/emg_pca_var.csv')
-
 
 
 def emg_nmf_syn_extraction(data):
@@ -73,7 +75,6 @@ def emg_nmf_syn_extraction(data):
         print('Done for', p, '%')
 
 
-
 def tact_syn_extraction(data):
 
     tact_scaled = StandardScaler().fit_transform(data)  # Z score
@@ -88,7 +89,6 @@ def tact_syn_extraction(data):
 
     tact_var = pca_mod.explained_variance_ratio_
     pd.DataFrame(tact_var).to_csv('./results/Syn/variance/tact_var.csv')
-
 
 
 def syn_extraction(data):
@@ -120,247 +120,6 @@ def syn_extraction(data):
     emg_pca_syn_extraction(data_clean[emg_cols])
     emg_nmf_syn_extraction(data_clean[emg_cols])
     tact_syn_extraction(data_clean[tact_cols])
-
-
-
-def hierarchical_syn_classification():
-
-    """This code is a piece of the original hierarchical classifier. It does not iterate over C or L1vL2 for the second
-    layer classifier and C and L1vL2 parameters are fixed for the single-layer classifier. The idea now is to get the
-    best combination for each iteration over the number of synergies"""
-
-    # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
-    # cv = 3
-    #
-    # kin_bins = 40
-    # kin_l1 = 0.25
-    # kin_c = 0.1
-    #
-    # emg_bins = 10
-    # emg_l1 = 0
-    # emg_c = 1.5
-    #
-    # tact_bins = 5
-    # tact_l1 = 0.5
-    # tact_c = 0.25
-    #
-    # top_c = 0.5
-
-    # result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Open file in append mode
-    # wr = csv.writer(result_file)
-    # kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-    # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-    # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
-    #
-    # extra_data = pd.read_csv('./results/Syn/extra_data.csv')
-    #
-    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
-    #
-    # for p in perc_syns:
-    #
-    #     num_syn_kin = np.ceil(len(kin_score_df.columns) * p / 100)
-    #     num_syn_emg = np.ceil(len(emg_score_df.columns) * p / 100)
-    #     num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
-    #
-    #     kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-    #     kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-    #
-    #     emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-    #     emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-    #
-    #     tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-    #     tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
-    #
-    #     # print("Kin shape:", kin_scores.shape)
-    #     # print("EMG shape:", emg_scores.shape)
-    #     # print("Tact shape:", tact_scores.shape)
-    #
-    #     for family in families:
-    #
-    #         total_score = []
-    #
-    #         kin_dat = kin_scores.loc[kin_scores['Family'] == family]
-    #         emg_dat = emg_scores.loc[emg_scores['Family'] == family]
-    #         tact_dat = tact_scores.loc[tact_scores['Family'] == family]
-    #
-    #         to_kfold = kin_dat.drop_duplicates(
-    #             subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
-    #
-    #         random_states = [42, 43, 44]
-    #
-    #         for rnd_st in random_states:
-    #
-    #             skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
-    #             # WARNING: the skf.split returns the indexes
-    #             for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
-    #
-    #                 train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
-    #                 test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
-    #
-    #                 kin_train_data = []
-    #                 emg_train_data = []
-    #                 tact_train_data = []
-    #                 train_labels = []
-    #
-    #                 trn_dropped = 0  # Number of dropped EPs in training dataset
-    #                 tst_dropped = 0  # Number of dropped EPs in test dataset
-    #
-    #                 for trn_iter in train_eps:
-    #
-    #                     ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == trn_iter]
-    #                     kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1), kin_bins)
-    #
-    #                     ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == trn_iter]
-    #                     emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1), emg_bins)
-    #
-    #                     ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == trn_iter]
-    #                     tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1), tact_bins)
-    #
-    #                     with warnings.catch_warnings():
-    #                         warnings.filterwarnings('error')
-    #                         try:
-    #
-    #                             kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
-    #                             flat_kin_mean = list(
-    #                                 itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
-    #                             flat_emg_mean = list(
-    #                                 itertools.chain.from_iterable(
-    #                                     emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             tact_bin_mean = [np.nanmean(x, axis=0) for x in
-    #                                              tact_in_bins]  # size = [num_bins] X [64]
-    #                             flat_tact_mean = list(
-    #                                 itertools.chain.from_iterable(
-    #                                     tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             kin_train_data.append(flat_kin_mean)
-    #                             emg_train_data.append(flat_emg_mean)
-    #                             tact_train_data.append(flat_tact_mean)
-    #                             train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-    #
-    #                         except RuntimeWarning:
-    #                             # print("Dropped EP", trn_iter, "from family ", family)
-    #                             trn_dropped += 1
-    #
-    #                 kin_test_data = []
-    #                 emg_test_data = []
-    #                 tact_test_data = []
-    #                 test_labels = []
-    #
-    #                 for tst_iter in test_eps:
-    #
-    #                     ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == tst_iter]
-    #                     kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1),
-    #                                                  kin_bins)
-    #
-    #                     ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == tst_iter]
-    #                     emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1),
-    #                                                  emg_bins)
-    #
-    #                     ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == tst_iter]
-    #                     tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1),
-    #                                                   tact_bins)
-    #
-    #                     with warnings.catch_warnings():
-    #                         warnings.filterwarnings('error')
-    #                         try:
-    #
-    #                             kin_bin_mean = [np.nanmean(x, axis=0) for x in
-    #                                             kin_in_bins]  # size = [num_bins] X [64]
-    #                             flat_kin_mean = list(
-    #                                 itertools.chain.from_iterable(
-    #                                     kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             emg_bin_mean = [np.nanmean(x, axis=0) for x in
-    #                                             emg_in_bins]  # size = [num_bins] X [64]
-    #                             flat_emg_mean = list(
-    #                                 itertools.chain.from_iterable(
-    #                                     emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             tact_bin_mean = [np.nanmean(x, axis=0) for x in
-    #                                              tact_in_bins]  # size = [num_bins] X [64]
-    #                             flat_tact_mean = list(
-    #                                 itertools.chain.from_iterable(
-    #                                     tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
-    #
-    #                             kin_test_data.append(flat_kin_mean)
-    #                             emg_test_data.append(flat_emg_mean)
-    #                             tact_test_data.append(flat_tact_mean)
-    #                             test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-    #
-    #                         except RuntimeWarning:
-    #                             # print("Dropped EP", tst_iter, "from family ", family)
-    #                             tst_dropped += 1
-    #
-    #                 # compute weights (because unbalanced dataset)
-    #                 # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-    #
-    #                 # build kinematic model
-    #                 kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, random_state=rnd_st,
-    #                                                    solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
-    #                                                    l1_ratio=kin_l1)
-    #
-    #                 # train kinematic model
-    #                 kin_log_model.fit(X=kin_train_data, y=train_labels)
-    #
-    #                 # build EMG model
-    #                 emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c,
-    #                                                    random_state=rnd_st,
-    #                                                    solver='saga', max_iter=25000, multi_class='ovr',
-    #                                                    n_jobs=-1,
-    #                                                    l1_ratio=emg_l1)
-    #
-    #                 # train EMG model
-    #                 emg_log_model.fit(X=emg_train_data, y=train_labels)
-    #
-    #
-    #                 # build Tactile model
-    #                 tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c,
-    #                                                     random_state=rnd_st,
-    #                                                     solver='saga', max_iter=25000, multi_class='ovr',
-    #                                                     n_jobs=-1,
-    #                                                     l1_ratio=tact_l1)
-    #
-    #                 # train EMG model
-    #                 tact_log_model.fit(X=tact_train_data, y=train_labels)
-    #
-    #                 # get prediction probabilities from first layer to train second layer
-    #                 kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
-    #                 emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
-    #                 tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
-    #
-    #                 # pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
-    #                 pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
-    #
-    #                 # build & train top layer classifier
-    #                 top_log_model = LogisticRegression(C=top_c, random_state=rnd_st, solver='saga',
-    #                                                    max_iter=25000,
-    #                                                    multi_class='ovr', n_jobs=-1)
-    #                 top_log_model.fit(X=pred_proba, y=train_labels)
-    #
-    #                 # get probabilities from first layer on test set to feed the second layer
-    #                 kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
-    #                 emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
-    #                 tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
-    #                 test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
-    #                 # test_proba = np.concatenate([emg_test_pred, tact_test_pred], axis=1)
-    #
-    #                 # get prediction accuracy from second layer
-    #                 sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
-    #                 # total_score.append(sc)
-    #
-    #                 res = ['Hierarchical']
-    #                 res.extend([family, p])
-    #                 res.append(sc)
-    #                 # res.append(round(np.mean(total_score), 2))
-    #                 wr.writerow(res)
-    #                 print(res)
-    #
-    # result_file.close()
-    # print("DONE !!!")
-
 
 
 def kin_syn_classif(input_data):
@@ -456,7 +215,6 @@ def kin_syn_classif(input_data):
     return result
 
 
-
 def emg_pca_syn_classif(input_data):
 
     emg_pca_scores = input_data[0]
@@ -549,7 +307,6 @@ def emg_pca_syn_classif(input_data):
     # print("RESULT:", result)
 
     return result
-
 
 
 def emg_nmf_syn_classif(input_data):
@@ -654,7 +411,6 @@ def emg_nmf_syn_classif(input_data):
     return result
 
 
-
 def tact_syn_classif(input_data):
 
     tact_scores = input_data[0]
@@ -749,7 +505,6 @@ def tact_syn_classif(input_data):
     return result
 
 
-
 def syn_single_source_classification():
 
     cv = 3
@@ -819,38 +574,485 @@ def syn_single_source_classification():
     result_file.close()
 
 
+def hierarchical_syn_classification():
+
+    families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
+    cv = 3
+
+    kin_bins = 40
+    emg_bins = 10
+    tact_bins = 5
+
+    best_params = pd.read_csv('./results/Syn/best_syn_params.csv')
+
+    c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+    result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Open file in append mode
+    wr = csv.writer(result_file)
+    kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+    perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+
+    for top_c in c_values:
+        for p in perc_syns:
+
+            num_syn_kin = np.ceil(len(kin_score_df.columns) * p / 100)
+            num_syn_emg = np.ceil(len(emg_score_df.columns) * p / 100)
+            num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
+
+            kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+            kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+
+            emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+            emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+
+            tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+            tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+
+            # print("Kin shape:", kin_scores.shape)
+            # print("EMG shape:", emg_scores.shape)
+            # print("Tact shape:", tact_scores.shape)
+
+            for family in families:
+
+                total_score = []
+
+                kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+                emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+                tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+
+                to_kfold = kin_dat.drop_duplicates(
+                    subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+
+                random_states = [42, 43, 44]
+
+                for rnd_st in random_states:
+
+                    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+                    # WARNING: the skf.split returns the indexes
+                    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+
+                        train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+                        test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
+
+                        kin_train_data = []
+                        emg_train_data = []
+                        tact_train_data = []
+                        train_labels = []
+
+                        trn_dropped = 0  # Number of dropped EPs in training dataset
+                        tst_dropped = 0  # Number of dropped EPs in test dataset
+
+                        for trn_iter in train_eps:
+
+                            ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == trn_iter]
+                            kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1), kin_bins)
+
+                            ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == trn_iter]
+                            emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1), emg_bins)
+
+                            ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == trn_iter]
+                            tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1), tact_bins)
+
+                            with warnings.catch_warnings():
+                                warnings.filterwarnings('error')
+                                try:
+
+                                    kin_bin_mean = [np.nanmean(x, axis=0) for x in kin_in_bins]  # size = [num_bins] X [64]
+                                    flat_kin_mean = list(
+                                        itertools.chain.from_iterable(kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    emg_bin_mean = [np.nanmean(x, axis=0) for x in emg_in_bins]  # size = [num_bins] X [64]
+                                    flat_emg_mean = list(
+                                        itertools.chain.from_iterable(
+                                            emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    tact_bin_mean = [np.nanmean(x, axis=0) for x in
+                                                     tact_in_bins]  # size = [num_bins] X [64]
+                                    flat_tact_mean = list(
+                                        itertools.chain.from_iterable(
+                                            tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    kin_train_data.append(flat_kin_mean)
+                                    emg_train_data.append(flat_emg_mean)
+                                    tact_train_data.append(flat_tact_mean)
+                                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+
+                                except RuntimeWarning:
+                                    # print("Dropped EP", trn_iter, "from family ", family)
+                                    trn_dropped += 1
+
+                        kin_test_data = []
+                        emg_test_data = []
+                        tact_test_data = []
+                        test_labels = []
+
+                        for tst_iter in test_eps:
+
+                            ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == tst_iter]
+                            kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1),
+                                                         kin_bins)
+
+                            ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == tst_iter]
+                            emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1),
+                                                         emg_bins)
+
+                            ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == tst_iter]
+                            tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1),
+                                                          tact_bins)
+
+                            with warnings.catch_warnings():
+                                warnings.filterwarnings('error')
+                                try:
+
+                                    kin_bin_mean = [np.nanmean(x, axis=0) for x in
+                                                    kin_in_bins]  # size = [num_bins] X [64]
+                                    flat_kin_mean = list(
+                                        itertools.chain.from_iterable(
+                                            kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    emg_bin_mean = [np.nanmean(x, axis=0) for x in
+                                                    emg_in_bins]  # size = [num_bins] X [64]
+                                    flat_emg_mean = list(
+                                        itertools.chain.from_iterable(
+                                            emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    tact_bin_mean = [np.nanmean(x, axis=0) for x in
+                                                     tact_in_bins]  # size = [num_bins] X [64]
+                                    flat_tact_mean = list(
+                                        itertools.chain.from_iterable(
+                                            tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                                    kin_test_data.append(flat_kin_mean)
+                                    emg_test_data.append(flat_emg_mean)
+                                    tact_test_data.append(flat_tact_mean)
+                                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+
+                                except RuntimeWarning:
+                                    # print("Dropped EP", tst_iter, "from family ", family)
+                                    tst_dropped += 1
+
+                        # compute weights (because unbalanced dataset)
+                        # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+
+                        # build kinematic model
+                        kin_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)][0]
+                        kin_l1, kin_c = kin_iter_param.split(',')
+                        kin_l1 = float(re.sub('[, | \s | \[ | \]]', '', kin_l1))
+                        kin_c = float(re.sub('[, | \s | \[ | \]]', '', kin_c))
+
+                        kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, random_state=rnd_st,
+                                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                                           l1_ratio=kin_l1)
+
+                        # train kinematic model
+                        kin_log_model.fit(X=kin_train_data, y=train_labels)
+
+                        # build EMG model
+                        emg_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)][0]
+                        emg_l1, emg_c = emg_iter_param.split(',')
+                        emg_l1 = float(re.sub('[, | \s | \[ | \]]', '', emg_l1))
+                        emg_c = float(re.sub('[, | \s | \[ | \]]', '', emg_c))
+
+                        emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c,
+                                                           random_state=rnd_st,
+                                                           solver='saga', max_iter=25000, multi_class='ovr',
+                                                           n_jobs=-1,
+                                                           l1_ratio=emg_l1)
+
+                        # train EMG model
+                        emg_log_model.fit(X=emg_train_data, y=train_labels)
+
+
+                        # build Tactile model
+                        tact_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)][0]
+                        tact_l1, tact_c = tact_iter_param.split(',')
+                        tact_l1 = float(re.sub('[, | \s | \[ | \]]', '', tact_l1))
+                        tact_c = float(re.sub('[, | \s | \[ | \]]', '', tact_c))
+
+                        tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c,
+                                                            random_state=rnd_st,
+                                                            solver='saga', max_iter=25000, multi_class='ovr',
+                                                            n_jobs=-1,
+                                                            l1_ratio=tact_l1)
+
+                        # train EMG model
+                        tact_log_model.fit(X=tact_train_data, y=train_labels)
+
+                        # get prediction probabilities from first layer to train second layer
+                        kin_model_pred_proba = kin_log_model.predict_proba(X=kin_train_data)
+                        emg_model_pred_proba = emg_log_model.predict_proba(X=emg_train_data)
+                        tact_model_pred_proba = tact_log_model.predict_proba(X=tact_train_data)
+
+                        # pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
+                        pred_proba = np.concatenate([kin_model_pred_proba, emg_model_pred_proba, tact_model_pred_proba], axis=1)
+
+                        # build & train top layer classifier
+                        top_log_model = LogisticRegression(C=top_c, random_state=rnd_st, solver='saga',
+                                                           max_iter=25000,
+                                                           multi_class='ovr', n_jobs=-1)
+                        top_log_model.fit(X=pred_proba, y=train_labels)
+
+                        # get probabilities from first layer on test set to feed the second layer
+                        kin_test_pred = kin_log_model.predict_proba(X=kin_test_data)
+                        emg_test_pred = emg_log_model.predict_proba(X=emg_test_data)
+                        tact_test_pred = tact_log_model.predict_proba(X=tact_test_data)
+                        test_proba = np.concatenate([kin_test_pred, emg_test_pred, tact_test_pred], axis=1)
+                        # test_proba = np.concatenate([emg_test_pred, tact_test_pred], axis=1)
+
+                        # get prediction accuracy from second layer
+                        sc = round(top_log_model.score(X=test_proba, y=test_labels) * 100, 2)
+                        # total_score.append(sc)
+
+                        res = ['Hierarchical']
+                        res.extend([family, p, top_c])
+                        res.append(sc)
+                        # res.append(round(np.mean(total_score), 2))
+                        wr.writerow(res)
+                        print(res)
+
+    result_file.close()
+    print("DONE !!!")
+
+
+def multi_aux_classification(input_data):
+
+    cv = 3
+    family = input_data[0]
+    l1_param = input_data[1]
+    c_param = input_data[2]
+    perc = input_data[3]
+    rnd_st = input_data[4]
+
+    kin_bins = 40
+    emg_bins = 10
+    tact_bins = 5
+
+    kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+    num_syn_kin = np.ceil(len(kin_score_df.columns) * perc / 100)
+    num_syn_emg = np.ceil(len(emg_score_df.columns) * perc / 100)
+    num_syn_tact = np.ceil(len(tact_score_df.columns) * perc / 100)
+
+    kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+    kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+
+    emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+    emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+
+    tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+    tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+
+    total_score = []
+
+    kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+    emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+    tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+
+    to_kfold = kin_dat.drop_duplicates(
+        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+
+
+    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+    # WARNING: the skf.split returns the indexes
+    for train, test in skf.split(to_kfold['Trial num'].astype(int),
+                                 to_kfold['Given Object'].astype(str)):
+
+        train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+        test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
+
+        kin_train_data = []
+        emg_train_data = []
+        tact_train_data = []
+        train_labels = []
+
+        trn_dropped = 0  # Number of dropped EPs in training dataset
+        tst_dropped = 0  # Number of dropped EPs in test dataset
+
+        for trn_iter in train_eps:
+
+            ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == trn_iter]
+            kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1),
+                                         kin_bins)
+
+            ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == trn_iter]
+            emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1),
+                                         emg_bins)
+
+            ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == trn_iter]
+            tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1),
+                                          tact_bins)
+
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+
+                    kin_bin_mean = [np.nanmean(x, axis=0) for x in
+                                    kin_in_bins]  # size = [num_bins] X [64]
+                    flat_kin_mean = list(
+                        itertools.chain.from_iterable(
+                            kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    emg_bin_mean = [np.nanmean(x, axis=0) for x in
+                                    emg_in_bins]  # size = [num_bins] X [64]
+                    flat_emg_mean = list(
+                        itertools.chain.from_iterable(
+                            emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    tact_bin_mean = [np.nanmean(x, axis=0) for x in
+                                     tact_in_bins]  # size = [num_bins] X [64]
+                    flat_tact_mean = list(
+                        itertools.chain.from_iterable(
+                            tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    kin_train_data.append(flat_kin_mean)
+                    emg_train_data.append(flat_emg_mean)
+                    tact_train_data.append(flat_tact_mean)
+                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+
+                except RuntimeWarning:
+                    # print("Dropped EP", trn_iter, "from family ", family)
+                    trn_dropped += 1
+
+        train_kin_df = pd.DataFrame(kin_train_data)
+        train_emg_df = pd.DataFrame(emg_train_data)
+        train_tact_df = pd.DataFrame(tact_train_data)
+        train_df = pd.concat([train_kin_df, train_emg_df, train_tact_df], axis=1)
+        train_df.apply(zscore)
+
+        kin_test_data = []
+        emg_test_data = []
+        tact_test_data = []
+        test_labels = []
+
+        for tst_iter in test_eps:
+
+            ep_kin_data = kin_dat.loc[kin_dat['Trial num'] == tst_iter]
+            kin_in_bins = np.array_split(ep_kin_data.drop(columns=extra_data.columns, axis=1),
+                                         kin_bins)
+
+            ep_emg_data = emg_dat.loc[emg_dat['Trial num'] == tst_iter]
+            emg_in_bins = np.array_split(ep_emg_data.drop(columns=extra_data.columns, axis=1),
+                                         emg_bins)
+
+            ep_tact_data = tact_dat.loc[tact_dat['Trial num'] == tst_iter]
+            tact_in_bins = np.array_split(ep_tact_data.drop(columns=extra_data.columns, axis=1),
+                                          tact_bins)
+
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+
+                    kin_bin_mean = [np.nanmean(x, axis=0) for x in
+                                    kin_in_bins]  # size = [num_bins] X [64]
+                    flat_kin_mean = list(
+                        itertools.chain.from_iterable(
+                            kin_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    emg_bin_mean = [np.nanmean(x, axis=0) for x in
+                                    emg_in_bins]  # size = [num_bins] X [64]
+                    flat_emg_mean = list(
+                        itertools.chain.from_iterable(
+                            emg_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    tact_bin_mean = [np.nanmean(x, axis=0) for x in
+                                     tact_in_bins]  # size = [num_bins] X [64]
+                    flat_tact_mean = list(
+                        itertools.chain.from_iterable(
+                            tact_bin_mean))  # size = [num_bins X 64] (unidimensional)
+
+                    kin_test_data.append(flat_kin_mean)
+                    emg_test_data.append(flat_emg_mean)
+                    tact_test_data.append(flat_tact_mean)
+                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+
+                except RuntimeWarning:
+                    # print("Dropped EP", tst_iter, "from family ", family)
+                    tst_dropped += 1
+
+        test_kin_df = pd.DataFrame(kin_test_data)
+        test_emg_df = pd.DataFrame(emg_test_data)
+        test_tact_df = pd.DataFrame(tact_test_data)
+        test_df = pd.concat([test_kin_df, test_emg_df, test_tact_df], axis=1)
+        test_df.apply(zscore)
+
+        log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
+                                       random_state=rnd_st, solver='saga', max_iter=25000,
+                                       multi_class='ovr',
+                                       n_jobs=-1, l1_ratio=l1_param)
+        # train model
+        log_model.fit(X=train_df, y=train_labels)
+        sc = round(log_model.score(X=test_df, y=test_labels) * 100, 2)
+        total_score.append(sc)
+
+    res = ['Multimodal']
+    res.extend([family, perc, l1_param, c_param])
+    res.append(total_score)
+
+    print(res)
+    return res
+
+
+def multisource_syn_classification():
+
+    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    perc_syns = [80, 70, 60, 50, 40, 30, 20, 10]
+    families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
+    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    result_file = open('./results/Syn/accuracy/syn_multi_results.csv', 'a')  # Open file in append mode
+    wr = csv.writer(result_file)
+    random_states = [42, 43, 44]
+
+    # we need to build the object to be iterated in the multiprocessing pool
+    all_param = list(itertools.product(families, l1VSl2, c_values, perc_syns, random_states))
+
+    # multiprocessing
+    with Pool() as pool:
+
+        result = pool.map_async(multi_aux_classification, all_param)
+
+        for res in result.get():
+
+            wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][0]])
+            wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][1]])
+            wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][2]])
+            # print(res)
+
+    result_file.close()
 
 
 def print_syn_results():
 
     """Very preliminar function. Need to be updated"""
 
-    # plt.close()
-    # cols = ['Kind', 'Family', 'Perc', 'Acc']
-    # results_df = pd.read_csv('./results/Syn/accuracy/syn_results.csv', header=None)
-    # results_df.columns = cols
-    # i = sns.pointplot(data=results_df, x="Perc", y="Acc", order=[100, 90, 80, 70, 60, 50, 40, 20, 10], errorbar='ci', errwidth='.75', capsize=.2, color="0")
-    # i.set(ylabel="Accuracy (95% ci)")
-    # i.set(xlabel="Percentage of Synergies")
-    # i.axhline(33, color='b', linestyle='--', label='Chance level')
-    # i.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
-    # plt.legend()
-    # i.set_ylim([29, 64])
-    # sns.move_legend(i, "best")
-    # # plt.show()
-    # plt.savefig('./results/Syn/plots/drop_syn_acc.png', dpi=600)
-
     plt.close()
+    plt.clf()
     cols = ['Kind', 'Perc', 'Family', 'L1vsL2', 'C', 'Acc', 'Mean']
     results_df = pd.read_csv('./results/Syn/accuracy/syn_results.csv', header=None)
     results_df.columns = cols
+    multi_res_df = pd.read_csv('./results/Syn/accuracy/syn_multi_results.csv', header=None)
+    multi_cols = ['Kind', 'Family', 'Perc', 'L1vsL2', 'C', 'Acc']
+    multi_res_df.columns = multi_cols
+    hier_res_df = pd.read_csv('./results/Syn/accuracy/syn_hier_results.csv', header=None)
+    hier_cols = ['Kind', 'Family', 'Perc', 'C', 'Acc']
+    hier_res_df.columns = hier_cols
 
     kin_results_df = results_df.loc[results_df['Kind'] == 'Kin']
     emg_pca_results_df = results_df.loc[results_df['Kind'] == 'EMG PCA']
     # emg_nmf_results_df = results_df.loc[results_df['Kind'] == 'EMG NMF']
     tact_results_df = results_df.loc[results_df['Kind'] == 'Tact']
+    hier_results_df = hier_res_df.loc[hier_res_df['Kind'] == 'Hierarchical']
+    multi_results_df = multi_res_df.loc[multi_res_df['Kind'] == 'Multimodal']
 
-    ## BEST RESULTS
+    ## GET SYNERGIES BEST RESULTS
 
     perc_values = np.flip(np.unique(results_df['Perc']))
     l1vsl2_values = np.unique(results_df['L1vsL2'])
@@ -868,6 +1070,12 @@ def print_syn_results():
     tact_best_acc = np.zeros((len(perc_values),5))
     tact_best_params = [[[], []]] * len(perc_values)
 
+    multi_best_acc = np.zeros((len(perc_values), 5))
+    multi_best_params = [[[], []]] * len(perc_values)
+
+    hier_best_acc = np.zeros((len(perc_values), 5))
+    hier_best_params = [[]] * len(perc_values)
+
     for iter_perc in range(0, len(perc_values)):
         for l1 in l1vsl2_values:
             for c in c_values:
@@ -883,7 +1091,7 @@ def print_syn_results():
 
                 emg_pca_sel = emg_pca_results_df.loc[
                     (emg_pca_results_df['Perc'] == perc_values[iter_perc]) & (emg_pca_results_df['L1vsL2'] == l1) & (
-                                emg_pca_results_df['C'] == c)]
+                            emg_pca_results_df['C'] == c)]
                 emg_pca_sel_mean_acc = emg_pca_sel['Mean'].mean()
 
                 if emg_pca_sel_mean_acc > emg_pca_best_acc[iter_perc].mean():
@@ -894,23 +1102,41 @@ def print_syn_results():
                 #     (emg_nmf_results_df['Perc'] == perc_values[iter_perc]) & (emg_nmf_results_df['L1vsL2'] == l1) & (
                 #                 emg_nmf_results_df['C'] == c)]
                 # emg_nmf_sel_mean_acc = emg_nmf_sel['Mean'].mean()
-                # 
+                #
                 # if emg_nmf_sel_mean_acc > emg_nmf_best_acc[iter_perc].mean():
                 #     emg_nmf_best_acc[iter_perc] = emg_nmf_sel['Mean']
                 #     emg_nmf_best_params[iter_perc] = [l1, c]
 
                 tact_sel = tact_results_df.loc[
                     (tact_results_df['Perc'] == perc_values[iter_perc]) & (tact_results_df['L1vsL2'] == l1) & (
-                                tact_results_df['C'] == c)]
+                            tact_results_df['C'] == c)]
                 tact_sel_mean_acc = tact_sel['Mean'].mean()
 
                 if tact_sel_mean_acc > tact_best_acc[iter_perc].mean():
                     tact_best_acc[iter_perc] = tact_sel['Mean']
                     tact_best_params[iter_perc] = [l1, c]
 
+                multi_sel = multi_results_df.loc[
+                    (multi_results_df['Perc'] == perc_values[iter_perc]) & (multi_results_df['L1vsL2'] == l1) & (
+                            multi_results_df['C'] == c)]
+                multi_sel_mean_acc = multi_sel.groupby('Family')['Acc'].mean()
+
+                if multi_sel_mean_acc.mean() > multi_best_acc[iter_perc].mean():
+                    multi_best_acc[iter_perc] = multi_sel_mean_acc
+                    multi_best_params[iter_perc] = [l1, c]
+
+                hier_sel = hier_results_df.loc[
+                    (hier_results_df['Perc'] == perc_values[iter_perc]) & (hier_results_df['C'] == c)]
+                hier_sel_mean_acc = hier_sel.groupby('Family')['Acc'].mean()
+
+                if hier_sel_mean_acc.mean() > hier_best_acc[iter_perc].mean():
+                    hier_best_acc[iter_perc] = hier_sel_mean_acc
+                    hier_best_params[iter_perc] = c
+
+    # BEST ACCURACIES
     syn_cols = ["Source"]
     syn_cols.extend(perc_values)
-    syn_best_df = pd.DataFrame(columns=syn_cols)
+    syn_best_acc_df = pd.DataFrame(columns=syn_cols)
 
     kin_aux_df = pd.DataFrame(data=kin_best_acc.transpose(), columns=perc_values)
     kin_aux_df.insert(0, "Source", ["Kin"] * 5)
@@ -921,9 +1147,43 @@ def print_syn_results():
     tact_aux_df = pd.DataFrame(data=tact_best_acc.transpose(), columns=perc_values)
     tact_aux_df.insert(0, "Source", ["Tact"] * 5)
 
-    syn_best_df = syn_best_df.append(kin_aux_df)
-    syn_best_df = syn_best_df.append(emg_pca_aux_df)
-    syn_best_df = syn_best_df.append(tact_aux_df)
+    multi_aux_df = pd.DataFrame(data=multi_best_acc.transpose(), columns=perc_values)
+    multi_aux_df.insert(0, "Source", ["Multi"] * 5)
+
+    hier_aux_df = pd.DataFrame(data=hier_best_acc.transpose(), columns=perc_values)
+    hier_aux_df.insert(0, "Source", ["Hier"] * 5)
+
+    syn_best_acc_df = syn_best_acc_df.append(kin_aux_df)
+    syn_best_acc_df = syn_best_acc_df.append(emg_pca_aux_df)
+    syn_best_acc_df = syn_best_acc_df.append(tact_aux_df)
+    syn_best_acc_df = syn_best_acc_df.append(multi_aux_df)
+    syn_best_acc_df = syn_best_acc_df.append(hier_aux_df)
+
+    # BEST HYPERPARAMETERS
+    syn_best_param_df = pd.DataFrame(columns=syn_cols)
+
+    kin_l1c_param = pd.DataFrame(data=[kin_best_params], columns=perc_values)
+    kin_l1c_param.insert(0, "Source", ["Kin"])
+
+    emg_pca_l1c_param = pd.DataFrame(data=[emg_pca_best_params], columns=perc_values)
+    emg_pca_l1c_param.insert(0, "Source", ["EMG PCA"])
+
+    tact_l1c_param = pd.DataFrame(data=[tact_best_params], columns=perc_values)
+    tact_l1c_param.insert(0, "Source", ["Tact"])
+
+    multi_l1c_param = pd.DataFrame(data=[multi_best_params], columns=perc_values)
+    multi_l1c_param.insert(0, "Source", ["Multi"])
+
+    hier_l1c_param = pd.DataFrame(data=[hier_best_params], columns=perc_values)
+    hier_l1c_param.insert(0, "Source", ["Hier"])
+
+    syn_best_param_df = syn_best_param_df.append(kin_l1c_param)
+    syn_best_param_df = syn_best_param_df.append(emg_pca_l1c_param)
+    syn_best_param_df = syn_best_param_df.append(tact_l1c_param)
+    syn_best_param_df = syn_best_param_df.append(multi_l1c_param)
+    syn_best_param_df = syn_best_param_df.append(hier_l1c_param)
+
+    syn_best_param_df.to_csv('./results/Syn/best_syn_params.csv', index=False)
 
     ## LOAD RAW BEST RESULTS
     raw_cols = ['Kind', 'Family', 'bins', 'L1vsL2', 'C', 'Acc', 'Mean']
@@ -933,67 +1193,285 @@ def print_syn_results():
     kin_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Kin"]
     emg_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "EMG"]
     tact_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Tactile"]
+    multi_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Multimodal"]
+    hier_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Hierarchical"]
 
     best_kin_param = [40, 0.25, 0.1]
     best_emg_param = [10, 0, 1.5]
     best_tact_param = [5, 0.5, 0.25]
+    best_multi_param = [5, 0.75, 0.25]
+    best_hier_param = 0.5
 
+    # KIN
     best_raw_kin_results = kin_raw_df.loc[
         (kin_raw_df["bins"] == best_kin_param[0]) & (kin_raw_df["L1vsL2"] == best_kin_param[1]) & (
                 kin_raw_df["C"] == best_kin_param[2])]["Mean"]
 
+    best_raw_kin_df = pd.DataFrame()
+    for x in range(len(syn_best_acc_df.columns) - 1):
+        best_raw_kin_df = best_raw_kin_df.append(best_raw_kin_results)
+    best_raw_kin_df = best_raw_kin_df.transpose()
+    best_raw_kin_df.columns = perc_values
+
+    # EMG PCA
     best_raw_emg_results = emg_raw_df.loc[
         (emg_raw_df["bins"] == best_emg_param[0]) & (emg_raw_df["L1vsL2"] == best_emg_param[1]) & (
-                    emg_raw_df["C"] == best_emg_param[2])]["Mean"]
+                emg_raw_df["C"] == best_emg_param[2])]["Mean"]
 
+    best_raw_emg_df = pd.DataFrame()
+    for x in range(len(syn_best_acc_df.columns) - 1):
+        best_raw_emg_df = best_raw_emg_df.append(best_raw_emg_results)
+    best_raw_emg_df = best_raw_emg_df.transpose()
+    best_raw_emg_df.columns = perc_values
+
+    # TACT
     best_raw_tact_results = tact_raw_df.loc[
         (tact_raw_df["bins"] == best_tact_param[0]) & (tact_raw_df["L1vsL2"] == best_tact_param[1]) & (
                 tact_raw_df["C"] == best_tact_param[2])]["Mean"]
 
+    best_raw_tact_df = pd.DataFrame()
+    for x in range(len(syn_best_acc_df.columns) - 1):
+        best_raw_tact_df = best_raw_tact_df.append(best_raw_tact_results)
+    best_raw_tact_df = best_raw_tact_df.transpose()
+    best_raw_tact_df.columns = perc_values
 
-    ## PLOTS
-    # kin plot
-    i = sns.pointplot(data=syn_best_df.loc[syn_best_df["Source"] == "Kin"], errorbar='ci', errwidth='.75', capsize=.2, color="0")
+    # MULTI
+    best_raw_multi_results = multi_raw_df.loc[
+        (multi_raw_df["bins"] == best_multi_param[0]) & (multi_raw_df["L1vsL2"] == best_multi_param[1]) & (
+                multi_raw_df["C"] == best_multi_param[2])]["Mean"]
+
+    best_raw_multi_df = pd.DataFrame()
+    for x in range(len(syn_best_acc_df.columns) - 1):
+        best_raw_multi_df = best_raw_multi_df.append(best_raw_multi_results)
+    best_raw_multi_df = best_raw_multi_df.transpose()
+    best_raw_multi_df.columns = perc_values
+
+    # HIER
+    best_raw_hier_results = hier_raw_df.loc[hier_raw_df["C"] == best_hier_param]["Mean"]
+
+    best_raw_hier_df = pd.DataFrame()
+    for x in range(len(syn_best_acc_df.columns) - 1):
+        best_raw_hier_df = best_raw_hier_df.append(best_raw_hier_results)
+    best_raw_hier_df = best_raw_hier_df.transpose()
+    best_raw_hier_df.columns = perc_values
+
+    # PLOTS
+    # KIN lines plot
+    i = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Kin"], errorbar='ci', errwidth='.75', capsize=.2,
+                      color="0", label='Syn classifier')
+    sns.pointplot(data=best_raw_kin_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
     i.set(ylabel="Accuracy (95% ci)")
     i.set(xlabel="Percentage of Synergies")
     i.set(title="Kinematic accuracy comparison")
     # i.axhline(33, color='b', linestyle='--', label='Chance level')
     # i.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
-    plt.legend()
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    handles = leg.legendHandles
+    colors = ['0', '0.75']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
     i.set_ylim([0, 100])
     sns.move_legend(i, "best")
-    plt.show()
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)
+    # plt.show()
+    plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)
+    plt.close()
 
-    # EMG PCA plot
-    j = sns.pointplot(data=syn_best_df.loc[syn_best_df["Source"] == "EMG PCA"], errorbar='ci', errwidth='.75', capsize=.2,
-                      color="0")
+    # KIN bar pval plot
+    kin_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:,1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    kin_pval_df.insert(0, 'Raw', best_raw_kin_df.iloc[:,0].values)
+
+    plt.figure()
+    i = sns.barplot(data=kin_pval_df)
+    # pairs_kin = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                 ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_kin, data=kin_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    i.set(title="Kinematic accuracy comparison")
+    plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval.png', dpi=600)
+    # plt.tight_layout()
+    # plt.show()
+    plt.close()
+
+    # # EMG PCA plot
+    j = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "EMG PCA"], errorbar='ci', errwidth='.75', capsize=.2,
+                      color="0", label='Syn classifier')
+    sns.pointplot(data=best_raw_emg_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
     j.set(ylabel="Accuracy (95% ci)")
     j.set(xlabel="Percentage of Synergies")
     j.set(title="EMG PCA accuracy comparison")
     # j.axhline(33, color='b', linestyle='--', label='Chance level')
     # j.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
-    plt.legend()
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    handles = leg.legendHandles
+    colors = ['0', '0.75']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
     j.set_ylim([0, 100])
     sns.move_legend(j, "best")
-    plt.show()
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)
+    # plt.show()
+    plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc.png', dpi=600)
+    plt.close()
 
-    # tact plot
-    k = sns.pointplot(data=syn_best_df.loc[syn_best_df["Source"] == "Tact"], errorbar='ci', errwidth='.75', capsize=.2,
-                      color="0")
+    # EMG PCA bar pval plot
+    emg_pca_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    emg_pca_pval_df.insert(0, 'Raw', best_raw_emg_df.iloc[:, 0].values)
+
+    plt.figure()
+    i = sns.barplot(data=emg_pca_pval_df)
+    # pairs_emg_pca = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_emg_pca = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                     ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_emg_pca, data=emg_pca_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    i.set(title="EMG PCA accuracy comparison")
+    plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval.png', dpi=600)
+    # plt.tight_layout()
+    # plt.show()
+    plt.close()
+
+
+    # TACT plot
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Tact"], errorbar='ci', errwidth='.75', capsize=.2,
+                      color="0", label='Syn classifier')
+    sns.pointplot(data=best_raw_tact_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
     k.set(ylabel="Accuracy (95% ci)")
     k.set(xlabel="Percentage of Synergies")
     k.set(title="Tactile accuracy comparison")
     # k.axhline(33, color='b', linestyle='--', label='Chance level')
     # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
-    plt.legend()
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    handles = leg.legendHandles
+    colors = ['0', '0.75']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
     k.set_ylim([0, 100])
     sns.move_legend(k, "best")
-    plt.show()
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)
+    # plt.show()
+    plt.savefig('./results/Syn/plots/tact_drop_syn_acc.png', dpi=600)
+    plt.close()
+    
+    # TACT bar pval plot
+    tact_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    tact_pval_df.insert(0, 'Raw', best_raw_tact_df.iloc[:, 0].values)
 
+    plt.figure()
+    i = sns.barplot(data=tact_pval_df)
+    # pairs_tact = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_tact = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_tact, data=tact_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    i.set(title="Tactile accuracy comparison")
+    plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval.png', dpi=600)
+    # plt.tight_layout()
+    # plt.show()
+    plt.close()
+    
+    # MULTI plot
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Tact"], errorbar='ci', errwidth='.75', capsize=.2,
+                      color="0", label='Syn classifier')
+    sns.pointplot(data=best_raw_multi_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
+    k.set(ylabel="Accuracy (95% ci)")
+    k.set(xlabel="Percentage of Synergies")
+    k.set(title="Multimodal accuracy comparison")
+    # k.axhline(33, color='b', linestyle='--', label='Chance level')
+    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    handles = leg.legendHandles
+    colors = ['0', '0.75']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    k.set_ylim([0, 100])
+    sns.move_legend(k, "best")
+    # plt.show()
+    plt.savefig('./results/Syn/plots/multi_drop_syn_acc.png', dpi=600)
+    plt.close()
 
-    a=1
+    # MULTI bar pval plot
+    multi_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    multi_pval_df.insert(0, 'Raw', best_raw_multi_df.iloc[:, 0].values)
+
+    plt.figure()
+    i = sns.barplot(data=multi_pval_df)
+    # pairs_multi = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_multi = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                 ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_multi, data=multi_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    i.set(title="Multimodal accuracy comparison")
+    plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval.png', dpi=600)
+    # plt.tight_layout()
+    # plt.show()
+    plt.close()
+    
+    # HIER plot
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Tact"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="0", label='Syn classifier')
+    sns.pointplot(data=best_raw_hier_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75",
+                  label='Raw classifier')
+    k.set(ylabel="Accuracy (95% ci)")
+    k.set(xlabel="Percentage of Synergies")
+    k.set(title="Hierarchical accuracy comparison")
+    # k.axhline(33, color='b', linestyle='--', label='Chance level')
+    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    handles = leg.legendHandles
+    colors = ['0', '0.75']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    k.set_ylim([0, 100])
+    sns.move_legend(k, "best")
+    # plt.show()
+    plt.savefig('./results/Syn/plots/hier_drop_syn_acc.png', dpi=600)
+    plt.close()
+
+    # HIER bar pval plot
+    hier_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    hier_pval_df.insert(0, 'Raw', best_raw_hier_df.iloc[:, 0].values)
+
+    plt.figure()
+    i = sns.barplot(data=hier_pval_df)
+    # pairs_hier = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                 ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    i.set(title="Hierarchical accuracy comparison")
+    plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval.png', dpi=600)
+    # plt.tight_layout()
+    # plt.show()
+    plt.close()
 
 
