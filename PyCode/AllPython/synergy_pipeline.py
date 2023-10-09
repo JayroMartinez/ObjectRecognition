@@ -587,7 +587,7 @@ def hierarchical_syn_classification():
 
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
-    result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Syn/accuracy/syn_hier_results_decr.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
     kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
     emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
@@ -827,7 +827,7 @@ def hierarchical_syn_classification():
                         # print(res)
 
     result_file.close()
-    print(" HIERARCHICAL DONE !!!")
+    print("HIERARCHICAL DONE !!!")
 
 
 def multi_aux_classification(input_data):
@@ -1029,7 +1029,7 @@ def multisource_syn_classification():
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
-    result_file = open('./results/Syn/accuracy/syn_multi_results.csv', 'a')  # Open file in append mode
+    result_file = open('./results/Syn/accuracy/syn_multi_results_decr.csv', 'a')  # Open file in append mode
     wr = csv.writer(result_file)
     random_states = [42, 43, 44]
 
@@ -1049,7 +1049,7 @@ def multisource_syn_classification():
             # print(res)
 
     result_file.close()
-    print(" MULTIMODAL DONE !!!")
+    print("MULTIMODAL DONE !!!")
 
 
 def print_syn_results():
