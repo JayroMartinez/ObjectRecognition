@@ -59,4 +59,9 @@ Backup 11:
 - Added results from hierarchical with fixed C and L1
 - Added plots comparing single source classification accuracy between raw and synergies (progressively discarding)
 
+Backup 12:
+******************************
+- Added synergy classification discarding the most relevant synergies
+- Added synergy classification discarding random synergies
+
 
