@@ -29,6 +29,7 @@ from stat_analysis import variance
 from weight_analysis import raw_weights
 from weight_analysis import ep_weights
 from synergy_pipeline import syn_extraction
+from synergy_pipeline import syn_extraction_subj
 from synergy_pipeline import syn_single_source_classification
 from synergy_pipeline import print_syn_results
 from synergy_pipeline import hierarchical_syn_classification
@@ -37,32 +38,32 @@ from synergy_pipeline import multisource_syn_classification
 
 def main():
 
-    # data_folder = '/BIDSData'
-    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-    #
-    # data_df = pd.DataFrame()
+    data_folder = '/BIDSData'
+    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
 
-    # ep_presabs_df = pd.DataFrame()
-    # ep_dur_df = pd.DataFrame()
-    # ep_count_df = pd.DataFrame()
+    data_df = pd.DataFrame()
 
-    # for subject in subject_folders:  # load data for each subject
-    #     # LOAD RAW DATA
-    #     subject_df = load(subject)
-    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    ep_presabs_df = pd.DataFrame()
+    ep_dur_df = pd.DataFrame()
+    ep_count_df = pd.DataFrame()
+
+    for subject in subject_folders:  # load data for each subject
+        # LOAD RAW DATA
+        subject_df = load(subject)
+        data_df = pd.concat([data_df, subject_df], ignore_index=True)
 
         # LOAD EP TRIALS
-        # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
 
 
 
     # RAW DATA PREPROCESSING
-    # split_df = split(data_df)  # split data into trials and EPs and add fields
-    # split_df['Trial num'] = split_df['Trial num'].astype('str')
-    # split_df['EP num'] = split_df['EP num'].astype('str')
+    split_df = split(data_df)  # split data into trials and EPs and add fields
+    split_df['Trial num'] = split_df['Trial num'].astype('str')
+    split_df['EP num'] = split_df['EP num'].astype('str')
 
     # check tactile distribution (only for checking)
     # tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -134,6 +135,7 @@ def main():
     ################################
     # split_df = []
     # syn_extraction(split_df)
+    syn_extraction_subj(split_df)
     # print_syn_results()
 
     ################################
@@ -142,7 +144,7 @@ def main():
     # syn_single_source_classification()
     # hierarchical_syn_classification()
     # multisource_syn_classification()
-    print_syn_results()
+    # print_syn_results()
 
 
 

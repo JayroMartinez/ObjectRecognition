@@ -30,13 +30,12 @@ def kin_syn_extraction(data):
     pca_mod = PCA()
 
     kin_scores = pca_mod.fit_transform(kin_df)
-    pd.DataFrame(kin_scores).to_csv('./results/Syn/scores/kin_scores.csv')
 
     kin_syns = pca_mod.components_  # Each column is a synergy
-    pd.DataFrame(kin_syns).to_csv('./results/Syn/synergies/kin_syns.csv')
 
     kin_var = pca_mod.explained_variance_ratio_
-    pd.DataFrame(kin_var).to_csv('./results/Syn/variance/kin_var.csv')
+
+    return [kin_scores, kin_syns, kin_var]
 
 
 def emg_pca_syn_extraction(data):
@@ -46,17 +45,14 @@ def emg_pca_syn_extraction(data):
     pca_mod = PCA()
 
     emg_scores = pca_mod.fit_transform(emg_df)
-    pd.DataFrame(emg_scores).to_csv('./results/Syn/scores/emg_pca_scores.csv')
-
     emg_syns = pca_mod.components_  # Each column is a synergy
-    pd.DataFrame(emg_syns).to_csv('./results/Syn/synergies/emg_pca_syns.csv')
-
     emg_var = pca_mod.explained_variance_ratio_
-    pd.DataFrame(emg_var).to_csv('./results/Syn/variance/emg_pca_var.csv')
+
+    return [emg_scores, emg_syns, emg_var]
 
 
 def emg_nmf_syn_extraction(data):
-
+    """Probably useless"""
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
 
     for p in perc_syns:
@@ -82,16 +78,13 @@ def tact_syn_extraction(data):
     pca_mod = PCA()
 
     tact_scores = pca_mod.fit_transform(tact_df)
-    pd.DataFrame(tact_scores).to_csv('./results/Syn/scores/tact_scores.csv')
-
     tact_syns = pca_mod.components_  # Each column is a synergy
-    pd.DataFrame(tact_syns).to_csv('./results/Syn/synergies/tact_syns.csv')
-
     tact_var = pca_mod.explained_variance_ratio_
-    pd.DataFrame(tact_var).to_csv('./results/Syn/variance/tact_var.csv')
 
+    return [tact_scores, tact_syns, tact_var]
 
 def syn_extraction(data):
+    """Synergy extraction for each source using all subjects together"""
 
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
                             'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
@@ -105,8 +98,6 @@ def syn_extraction(data):
                  'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
                  'pdl', 'pdr', 'pdlo', 'lpo']
 
-    families = np.unique(data['Family'])
-
     # REMOVE NANs
     data_clean = data.dropna(axis=0, how='any')
 
@@ -116,10 +107,76 @@ def syn_extraction(data):
     extra_df.to_csv('./results/Syn/extra_data.csv', index=False)
 
     ## SYNERGY EXTRACTION AND SAVING
-    kin_syn_extraction(data_clean[kin_cols])
-    emg_pca_syn_extraction(data_clean[emg_cols])
-    emg_nmf_syn_extraction(data_clean[emg_cols])
-    tact_syn_extraction(data_clean[tact_cols])
+    [kin_scores, kin_syns, kin_var] = kin_syn_extraction(data_clean[kin_cols])
+    pd.DataFrame(kin_scores).to_csv('./results/Syn/scores/kin_scores.csv')
+    pd.DataFrame(kin_syns).to_csv('./results/Syn/synergies/kin_syns.csv')
+    pd.DataFrame(kin_var).to_csv('./results/Syn/variance/kin_var.csv')
+
+    [emg_scores, emg_syns, emg_var] = emg_pca_syn_extraction(data_clean[emg_cols])
+    pd.DataFrame(emg_scores).to_csv('./results/Syn/scores/emg_pca_scores.csv')
+    pd.DataFrame(emg_syns).to_csv('./results/Syn/synergies/emg_pca_syns.csv')
+    pd.DataFrame(emg_var).to_csv('./results/Syn/variance/emg_pca_var.csv')
+
+    # emg_nmf_syn_extraction(data_clean[emg_cols]) # NEEDS TO BE REFACTORED
+
+    [tact_scores, tact_syns, tact_var] = tact_syn_extraction(data_clean[tact_cols])
+    pd.DataFrame(tact_scores).to_csv('./results/Syn/scores/tact_scores.csv')
+    pd.DataFrame(tact_syns).to_csv('./results/Syn/synergies/tact_syns.csv')
+    pd.DataFrame(tact_var).to_csv('./results/Syn/variance/tact_var.csv')
+
+
+def syn_extraction_subj(data):
+
+    """Synergy extraction for each source and each subject"""
+
+    subjects = np.unique(data['Subject'])
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+    emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
+    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+                 'pdl', 'pdr', 'pdlo', 'lpo']
+
+    families = np.unique(data['Family'])
+
+    # REMOVE NANs
+    data_clean = data.dropna(axis=0, how='any')
+
+    # # NON-NUMERIC DATA EXTRACTION & SAVING
+    extra_cols = [col for col in data_clean.columns if
+                  (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+    extra_df = data_clean[extra_cols]
+    extra_df.to_csv('./results/Syn/extra_data.csv', index=False)
+
+    for subj in subjects:
+
+        subj_data = data_clean.loc[data_clean['Subject'] == subj]
+
+        ## SYNERGY EXTRACTION AND SAVING
+        [kin_subj_scores, kin_subj_syns, kin_subj_var] = kin_syn_extraction(subj_data[kin_cols])
+        pd.DataFrame(kin_subj_scores).to_csv('./results/Syn/scores/' + subj + '_kin_scores.csv')
+        pd.DataFrame(kin_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_kin_syns.csv')
+        pd.DataFrame(kin_subj_var).to_csv('./results/Syn/variance/' + subj + '_kin_var.csv')
+        
+        [emg_pca_subj_scores, emg_pca_subj_syns, emg_pca_subj_var] = emg_pca_syn_extraction(subj_data[emg_cols])
+        pd.DataFrame(emg_pca_subj_scores).to_csv('./results/Syn/scores/' + subj + '_emg_pca_scores.csv')
+        pd.DataFrame(emg_pca_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_emg_pca_syns.csv')
+        pd.DataFrame(emg_pca_subj_var).to_csv('./results/Syn/variance/' + subj + '_emg_pca_var.csv')
+
+        # emg_nmf_syn_extraction(data_clean[emg_cols])
+
+        [tact_subj_scores, tact_subj_syns, tact_subj_var] = tact_syn_extraction(subj_data[tact_cols])
+        pd.DataFrame(tact_subj_scores).to_csv('./results/Syn/scores/' + subj + '_tact_scores.csv')
+        pd.DataFrame(tact_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_tact_syns.csv')
+        pd.DataFrame(tact_subj_var).to_csv('./results/Syn/variance/' + subj + '_tact_var.csv')
+
+    print("Individual synergy extraction done!")
 
 
 def kin_syn_classif(input_data):
