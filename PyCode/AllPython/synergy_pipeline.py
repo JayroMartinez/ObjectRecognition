@@ -76,7 +76,7 @@ def syn_clustering():
         numerical_data = all_data.select_dtypes(include='float64')
 
         with Pool(num_simulations) as pool:
-            results = pool.map_async(aux_syn_clustering, itertools.repeat([numerical_data, len(components)], num_simulations))
+            results = pool.map_async(aux_syn_clustering, itertools.repeat([numerical_data, len(numerical_data.columns)], num_simulations))
             results.wait()
         [optimal_num_clust.append(x) for x in results.get()]
         print("\n", source.upper(), "Optimal Number Clusters after", num_simulations, "iterations:", max(set(optimal_num_clust), key=optimal_num_clust.count))
