@@ -69,7 +69,7 @@ def syn_clustering():
             subject = aux_sub.replace('_' + source + '_syns.csv', '')
             suj_dat['Subject'] = np.repeat(subject, suj_dat.shape[0])
 
-            all_data = all_data.append(suj_dat)
+            all_data = pd.concat([all_data, pd.DataFrame(suj_dat)], ignore_index=True)
 
         optimal_num_clust = []
         num_simulations = 250
@@ -81,16 +81,18 @@ def syn_clustering():
         [optimal_num_clust.append(x) for x in results.get()]
         print("\n", source.upper(), "Optimal Number Clusters after", num_simulations, "iterations:", max(set(optimal_num_clust), key=optimal_num_clust.count))
 
-            # # num_clust = len(components)
-            # kmeans = KMeans(n_clusters=num_clust, algorithm='lloyd', n_init=25, max_iter=10000)
-            # numerical_data = all_data.select_dtypes(include='float64')
-            # kmeans.fit(numerical_data)
-            # syns = kmeans.labels_.reshape((-1, len(components)))
-            # # print(metrics.silhouette_score(numerical_data, kmeans.labels_, metric='euclidean'))
-            # silh_score = metrics.silhouette_samples(numerical_data, kmeans.labels_)
-            # # print(sum(silh_score))
-            # clus_scores_df = pd.DataFrame({'label': kmeans.labels_, 'score': silh_score})
-            # score_per_clust = clus_scores_df.groupby(by=['label']).sum()
+        a=1
+
+        # # num_clust = len(components)
+        # kmeans = KMeans(n_clusters=num_clust, algorithm='lloyd', n_init=25, max_iter=10000)
+        # numerical_data = all_data.select_dtypes(include='float64')
+        # kmeans.fit(numerical_data)
+        # syns = kmeans.labels_.reshape((-1, len(components)))
+        # # print(metrics.silhouette_score(numerical_data, kmeans.labels_, metric='euclidean'))
+        # silh_score = metrics.silhouette_samples(numerical_data, kmeans.labels_)
+        # # print(sum(silh_score))
+        # clus_scores_df = pd.DataFrame({'label': kmeans.labels_, 'score': silh_score})
+        # score_per_clust = clus_scores_df.groupby(by=['label']).sum()
 
 
         # hierarchical_cluster = AgglomerativeClustering(n_clusters=len(components), linkage='ward')
@@ -98,8 +100,6 @@ def syn_clustering():
         # print(metrics.silhouette_score(numerical_data, hierarchical_cluster.labels_, metric='euclidean'))
         # silh_score_2 = metrics.silhouette_samples(numerical_data, hierarchical_cluster.labels_)
         # print(sum(silh_score_2))
-
-        a = 1
 
 
 def kin_syn_extraction(data):
