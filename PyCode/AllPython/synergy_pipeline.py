@@ -17,10 +17,89 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from statannotations.Annotator import Annotator
 from statannot import add_stat_annotation, statannot
+import glob
+from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering
+from sklearn import metrics
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+
+def aux_syn_clustering(input_data):
+
+    data = input_data[0]
+    num_components = input_data[1]
+
+    optimal_num_clust = 0
+    optimal_score = 0
+
+    for num_clust in range(num_components, 2*num_components):
+
+        kmeans = KMeans(n_clusters=num_clust, algorithm='lloyd', n_init=50, max_iter=25000)
+        kmeans.fit(data)
+        score = metrics.silhouette_score(data, kmeans.labels_, metric='euclidean')
+
+        if score > optimal_score:
+            optimal_num_clust = num_clust
+
+    return optimal_num_clust
+
+
+def syn_clustering():
+
+    """This function is created to pair synergies among subjects"""
+
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        selected_files = glob.glob('./results/Syn/synergies/*' + source + '_syns.csv')
+        selected_files.sort()
+
+        all_data = pd.DataFrame()
+
+        for file in selected_files:
+
+            suj_dat = pd.read_csv(file)
+            components = suj_dat.pop('Unnamed: 0').to_list()
+            suj_dat = suj_dat.T
+            suj_dat['Component'] = components
+            aux_sub = file.replace('./results/Syn/synergies/', '')
+            subject = aux_sub.replace('_' + source + '_syns.csv', '')
+            suj_dat['Subject'] = np.repeat(subject, suj_dat.shape[0])
+
+            all_data = all_data.append(suj_dat)
+
+        optimal_num_clust = []
+        num_simulations = 250
+        numerical_data = all_data.select_dtypes(include='float64')
+
+        with Pool(num_simulations) as pool:
+            results = pool.map_async(aux_syn_clustering, itertools.repeat([numerical_data, len(components)], num_simulations))
+            results.wait()
+        [optimal_num_clust.append(x) for x in results.get()]
+        print("\n", source.upper(), "Optimal Number Clusters after", num_simulations, "iterations:", max(set(optimal_num_clust), key=optimal_num_clust.count))
+
+            # # num_clust = len(components)
+            # kmeans = KMeans(n_clusters=num_clust, algorithm='lloyd', n_init=25, max_iter=10000)
+            # numerical_data = all_data.select_dtypes(include='float64')
+            # kmeans.fit(numerical_data)
+            # syns = kmeans.labels_.reshape((-1, len(components)))
+            # # print(metrics.silhouette_score(numerical_data, kmeans.labels_, metric='euclidean'))
+            # silh_score = metrics.silhouette_samples(numerical_data, kmeans.labels_)
+            # # print(sum(silh_score))
+            # clus_scores_df = pd.DataFrame({'label': kmeans.labels_, 'score': silh_score})
+            # score_per_clust = clus_scores_df.groupby(by=['label']).sum()
+
+
+        # hierarchical_cluster = AgglomerativeClustering(n_clusters=len(components), linkage='ward')
+        # hier_syns = hierarchical_cluster.fit_predict(numerical_data).reshape((-1, len(components)))
+        # print(metrics.silhouette_score(numerical_data, hierarchical_cluster.labels_, metric='euclidean'))
+        # silh_score_2 = metrics.silhouette_samples(numerical_data, hierarchical_cluster.labels_)
+        # print(sum(silh_score_2))
+
+        a = 1
 
 
 def kin_syn_extraction(data):
@@ -82,6 +161,7 @@ def tact_syn_extraction(data):
     tact_var = pca_mod.explained_variance_ratio_
 
     return [tact_scores, tact_syns, tact_var]
+
 
 def syn_extraction(data):
     """Synergy extraction for each source using all subjects together"""
