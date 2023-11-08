@@ -1070,9 +1070,11 @@ def multi_aux_classification(input_data):
     kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
     kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
 
+    emg_score_df.reset_index(inplace=True, drop=True)
     emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
     emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
 
+    tact_score_df.reset_index(inplace=True, drop=True)
     tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
     tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
@@ -1082,14 +1084,16 @@ def multi_aux_classification(input_data):
     # aux_kin = kin_score_df.sample(n=int(num_syn_kin), axis='columns')
     # kin_scores = pd.concat([aux_kin, extra_data], axis=1, ignore_index=True)
     # kin_scores.columns = list(aux_kin) + list(extra_data.columns)
-    #
+
+    # emg_score_df.reset_index(inplace=True, drop=True)
     # aux_emg = emg_score_df.sample(n=int(num_syn_emg), axis='columns')
     # emg_scores = pd.concat([aux_emg, extra_data], axis=1, ignore_index=True)
     # emg_scores.columns = list(aux_emg) + list(extra_data.columns)
 
-    aux_tact = tact_score_df.sample(n=int(num_syn_tact), axis='columns')
-    tact_scores = pd.concat([aux_tact, extra_data], axis=1, ignore_index=True)
-    tact_scores.columns = list(aux_tact) + list(extra_data.columns)
+    # tact_score_df.reset_index(inplace=True, drop=True)
+    # aux_tact = tact_score_df.sample(n=int(num_syn_tact), axis='columns')
+    # tact_scores = pd.concat([aux_tact, extra_data], axis=1, ignore_index=True)
+    # tact_scores.columns = list(aux_tact) + list(extra_data.columns)
 
     total_score = []
 
