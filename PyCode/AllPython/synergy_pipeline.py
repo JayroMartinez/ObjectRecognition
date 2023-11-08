@@ -1065,6 +1065,8 @@ def multi_aux_classification(input_data):
     # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
 
     """Discards most relevant synergies"""
+    extra_data.reset_index(inplace=True, drop=True)
+    kin_score_df.reset_index(inplace=True, drop=True)
     kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
     kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
 
@@ -1075,6 +1077,8 @@ def multi_aux_classification(input_data):
     tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
     """Select random synergies"""
+    # extra_data.reset_index(inplace=True, drop=True)
+    # kin_score_df.reset_index(inplace=True, drop=True)
     # aux_kin = kin_score_df.sample(n=int(num_syn_kin), axis='columns')
     # kin_scores = pd.concat([aux_kin, extra_data], axis=1, ignore_index=True)
     # kin_scores.columns = list(aux_kin) + list(extra_data.columns)
