@@ -263,8 +263,8 @@ def kin_syn_classif(input_data):
     num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
-    data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    # data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
+    # data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
     # data_df = pd.concat([kin_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -360,8 +360,8 @@ def emg_pca_syn_classif(input_data):
     num_syns = np.ceil(len(emg_pca_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     emg_pca_scores.reset_index(inplace=True, drop=True)
-    data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    # data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    # data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([emg_pca_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -560,8 +560,8 @@ def tact_syn_classif(input_data):
     num_syns = np.ceil(len(tact_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     tact_scores.reset_index(inplace=True, drop=True)
-    data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    # data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    # data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([tact_scores.sample(n=int(num_syns), axis='columns'), extra_data],axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -671,8 +671,8 @@ def syn_single_source_classification():
     # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
-    result_file = open('./results/Syn/accuracy/subj_noclust_syn_results.csv', 'a')  # Keep most relevant synergies
-    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results.csv', 'a')  # Keep most relevant synergies
+    result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_rand.csv', 'a')  # Keep random synergies
     wr = csv.writer(result_file)
     data_folder = '/results/Syn/synergies'
@@ -1051,28 +1051,28 @@ def multi_aux_classification(input_data):
     num_syn_tact = np.ceil(len(tact_score_df.columns) * perc / 100)
 
     """Keeps most relevant synergies"""
-    extra_data.reset_index(inplace=True, drop=True)
-    kin_score_df.reset_index(inplace=True, drop=True)
-    kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-    kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-
-    emg_score_df.reset_index(inplace=True, drop=True)
-    emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-    emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-
-    tact_score_df.reset_index(inplace=True, drop=True)
-    tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-    tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+    # extra_data.reset_index(inplace=True, drop=True)
+    # kin_score_df.reset_index(inplace=True, drop=True)
+    # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+    # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
+    #
+    # emg_score_df.reset_index(inplace=True, drop=True)
+    # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+    # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
+    #
+    # tact_score_df.reset_index(inplace=True, drop=True)
+    # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+    # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
 
     """Discards most relevant synergies"""
-    # kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
-    # kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
-    #
-    # emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
-    # emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
-    #
-    # tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
-    # tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+    kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+    kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+
+    emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+    emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+
+    tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+    tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
     """Select random synergies"""
     # aux_kin = kin_score_df.sample(n=int(num_syn_kin), axis='columns')
@@ -1244,9 +1244,15 @@ def multisource_syn_classification():
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
+    """SYNERGIES FROM ALL SUBJECTS"""
     result_file = open('./results/Syn/accuracy/syn_multi_results.csv', 'a')  # Keep most relevant synergies
     # result_file = open('./results/Syn/accuracy/syn_multi_results_decr.csv', 'a') # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/syn_multi_results_rand.csv', 'a')  # Random synergies
+
+    """SYNERGIES FROM EACH SUBJECT"""
+    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results.csv', 'a')  # Keep most relevant synergies
+    result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results_decr.csv', 'a') # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results_rand.csv', 'a')  # Random synergies
 
     wr = csv.writer(result_file)
     random_states = [42, 43, 44]
