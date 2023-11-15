@@ -138,14 +138,14 @@ def main():
     # syn_extraction(split_df)
     # syn_extraction_subj(split_df)
     """NOT PERFORMING CLUSTERING NOW"""
-    # syn_clustering()
+    syn_clustering()
     # print_syn_results()
 
     ################################
     ## SYNERGY CLASSIFICATION
     ################################
     # syn_single_source_classification()
-    multisource_syn_classification()
+    # multisource_syn_classification()
     # hierarchical_syn_classification()
     # print_syn_results()
 
