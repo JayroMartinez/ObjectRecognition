@@ -63,10 +63,10 @@ def syn_clustering():
 
             remaining_clusters = num_clust - iter_clust
 
-            model = KMeans(n_clusters=remaining_clusters, init='k-means++', algorithm='lloyd', n_init=1000, max_iter=100000)
-            # model = KMeans(n_clusters=remaining_clusters, init='k-means++', algorithm='lloyd', n_init=20,
-            #                max_iter=100)
-            # model = AgglomerativeClustering(n_clusters=num_clust, linkage='ward')
+            # model = KMeans(n_clusters=remaining_clusters, init='k-means++', algorithm='lloyd', n_init=1000, max_iter=100000)
+
+            model = AgglomerativeClustering(n_clusters=remaining_clusters, metric='cosine', linkage='average')
+
             numerical_data = all_data.select_dtypes(include='float64')
             model.fit(numerical_data)
             # syns = pd.DataFrame(model.labels_.reshape((-1, len(numerical_data.columns))))
@@ -104,11 +104,11 @@ def syn_clustering():
                     """WE DROP THE ALREADY CLUSTERED SYNERGIES"""
                     all_data.drop(all_data.loc[(all_data["Subject"] == subjects[it_subj]) & (all_data["Component"] == best_suj_component)].index, inplace=True)
 
-        a = 1       # each cluster / synergy
+        a = 1
 
 
         resulting_clusters_df = pd.DataFrame(resulting_clusters)
-        resulting_clusters_df.to_csv('./results/Syn/resulting_components_' + source + '.csv')
+        resulting_clusters_df.to_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv', mode='a')
 
         a = 1           # cluster done
 

@@ -138,7 +138,8 @@ def main():
     # syn_extraction(split_df)
     # syn_extraction_subj(split_df)
     """NOT PERFORMING CLUSTERING NOW"""
-    syn_clustering()
+    [syn_clustering() for x in range(0, 5)]
+    # syn_clustering()
     # print_syn_results()
 
     ################################
