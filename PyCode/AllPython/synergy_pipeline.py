@@ -790,28 +790,28 @@ def syn_single_source_classification():
     with Pool() as pool:
 
         result_kin = pool.map_async(kin_syn_classif, kin_data_and_iter)
-        result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
+        # result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
         # result_emg_nmf = pool.map_async(emg_nmf_syn_classif, emg_nmf_iter)
-        result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
+        # result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
 
-        # for res_kin in result_kin.get():
-        #     # print(res_kin)
-        #     wr.writerow(res_kin)
-        # print("Kinematic classification done!")
+        for res_kin in result_kin.get():
+            # print(res_kin)
+            wr.writerow(res_kin)
+        print("Kinematic classification done!")
 
-        for res_emg_pca in result_emg_pca.get():
-            # print(res_emg_pca)
-            wr.writerow(res_emg_pca)
-        print("EMG PCA classification done!")
+        # for res_emg_pca in result_emg_pca.get():
+        #     # print(res_emg_pca)
+        #     wr.writerow(res_emg_pca)
+        # print("EMG PCA classification done!")
 
         # for res_emg_nmf in result_emg_nmf.get():
         #     # print(res_emg_nmf)
         #     wr.writerow(res_emg_nmf)
 
-        for res_tact in result_tact.get():
-            # print(res_tact)
-            wr.writerow(res_tact)
-        print("Tactile classification done!")
+        # for res_tact in result_tact.get():
+        #     # print(res_tact)
+        #     wr.writerow(res_tact)
+        # print("Tactile classification done!")
 
     print("Single source classification done!!")
     result_file.close()
