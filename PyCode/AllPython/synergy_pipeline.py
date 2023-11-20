@@ -23,9 +23,68 @@ import glob
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn import metrics
+from sklearn.impute import SimpleImputer
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def score_reordering():
+
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        source_clusters = pd.read_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv')
+        source_clusters.drop(source_clusters.columns[0], axis=1, inplace=True)
+
+        score_files = glob.glob('./results/Syn/scores/*' + source + '_scores.csv')
+        score_files.sort()
+
+        all_data = pd.DataFrame()
+        all_var = pd.DataFrame()
+
+        for iter_file in range(0, len(score_files)):
+
+            subj_dat = pd.read_csv(score_files[iter_file])
+            subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
+
+            var_file = score_files[iter_file].replace('_scores', '_var')
+            var_file = var_file.replace('scores', 'variance')
+            subj_var = pd.read_csv(var_file)
+            subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
+
+            new_subj_dat = np.empty(subj_dat.shape)
+            new_subj_dat[:] = np.nan
+
+            new_subj_var = np.empty([len(subj_dat.columns)])
+            new_subj_var[:] = np.nan
+
+            subj_order = source_clusters.iloc[iter_file, :]
+
+            for iter_cols in range(0, len(subj_order)):
+
+                if ~np.isnan(subj_order[iter_cols]):
+
+                    new_subj_dat[:, iter_cols] = subj_dat.iloc[:, int(subj_order[iter_cols])]
+                    new_subj_var[iter_cols] = subj_var.iloc[int(subj_order[iter_cols])]
+                    a=1
+
+            all_data = pd.concat([all_data, pd.DataFrame(new_subj_dat)])
+            all_var = pd.concat([all_var, pd.DataFrame(new_subj_var).T], ignore_index=True)
+
+        """ AFTER FILLING ALL SUBJECTS WE NEED TO PERFORM IMPUTATION """
+        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+        imp_data = imp.fit_transform(all_data)
+
+        """ WE ALSO NEED TO COMPUTE VARIANCE FOR EACH SYNERGY AND REORDER SYNS """
+        variance = all_var.mean(axis=0, skipna=True)
+        variance = variance.sort_values(ascending=False)
+        variance.to_csv('./results/Syn/variance/overall_var_' + source + '.csv')
+
+        reordered_scores = pd.DataFrame(imp_data[:, variance.index])
+        reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
+
 
 
 def syn_clustering():
@@ -104,20 +163,9 @@ def syn_clustering():
                     """WE DROP THE ALREADY CLUSTERED SYNERGIES"""
                     all_data.drop(all_data.loc[(all_data["Subject"] == subjects[it_subj]) & (all_data["Component"] == best_suj_component)].index, inplace=True)
 
-        a = 1
-
-
         resulting_clusters_df = pd.DataFrame(resulting_clusters)
         resulting_clusters_df.to_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv', mode='a')
 
-        a = 1           # cluster done
-
-
-        # hierarchical_cluster = AgglomerativeClustering(n_clusters=num_clust, linkage='ward')
-        # hier_syns = hierarchical_cluster.fit_predict(numerical_data).reshape((-1, num_clust))
-        # print(metrics.silhouette_score(numerical_data, hierarchical_cluster.labels_, metric='euclidean'))
-        # silh_score_2 = metrics.silhouette_samples(numerical_data, hierarchical_cluster.labels_)
-        # print(sum(silh_score_2))
 
 
 def kin_syn_extraction(data):
@@ -293,8 +341,8 @@ def kin_syn_classif(input_data):
     num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
+    data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
     # data_df = pd.concat([kin_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -390,8 +438,8 @@ def emg_pca_syn_classif(input_data):
     num_syns = np.ceil(len(emg_pca_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     emg_pca_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([emg_pca_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -590,8 +638,8 @@ def tact_syn_classif(input_data):
     num_syns = np.ceil(len(tact_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     tact_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([tact_scores.sample(n=int(num_syns), axis='columns'), extra_data],axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -702,22 +750,31 @@ def syn_single_source_classification():
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results.csv', 'a')  # Keep most relevant synergies
-    result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results_rand.csv', 'a')  # Keep random synergies
+    # wr = csv.writer(result_file)
+    # data_folder = '/results/Syn/synergies'
+    # csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1 ])
+    # subjects = np.unique([x.split('_')[0] for x in csv_files])
+    # kin_score_df = pd.DataFrame()
+    # emg_score_df = pd.DataFrame()
+    # tact_score_df = pd.DataFrame()
+    # for suj in subjects:
+    #     kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
+    #     kin_score_df = pd.concat([kin_score_df, kin_subj_score])
+    #     emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
+    #     emg_score_df = pd.concat([emg_score_df, emg_subj_score])
+    #     tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
+    #     tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+
+    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
+    result_file = open('./results/Syn/accuracy/subj_clust_syn_results.csv', 'a')  # Keep most relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_results_rand.csv', 'a')  # Keep random synergies
     wr = csv.writer(result_file)
-    data_folder = '/results/Syn/synergies'
-    csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1 ])
-    subjects = np.unique([x.split('_')[0] for x in csv_files])
-    kin_score_df = pd.DataFrame()
-    emg_score_df = pd.DataFrame()
-    tact_score_df = pd.DataFrame()
-    for suj in subjects:
-        kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
-        kin_score_df = pd.concat([kin_score_df, kin_subj_score])
-        emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
-        emg_score_df = pd.concat([emg_score_df, emg_subj_score])
-        tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
-        tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
 
     all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins] for x in all_param]
@@ -737,10 +794,10 @@ def syn_single_source_classification():
         # result_emg_nmf = pool.map_async(emg_nmf_syn_classif, emg_nmf_iter)
         result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
 
-        for res_kin in result_kin.get():
-            # print(res_kin)
-            wr.writerow(res_kin)
-        print("Kinematic classification done!")
+        # for res_kin in result_kin.get():
+        #     # print(res_kin)
+        #     wr.writerow(res_kin)
+        # print("Kinematic classification done!")
 
         for res_emg_pca in result_emg_pca.get():
             # print(res_emg_pca)
@@ -1088,19 +1145,25 @@ def multi_aux_classification(input_data):
     # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
-    data_folder = '/results/Syn/synergies'
-    csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1])
-    subjects = np.unique([x.split('_')[0] for x in csv_files])
-    kin_score_df = pd.DataFrame()
-    emg_score_df = pd.DataFrame()
-    tact_score_df = pd.DataFrame()
-    for suj in subjects:
-        kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
-        kin_score_df = pd.concat([kin_score_df, kin_subj_score])
-        emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
-        emg_score_df = pd.concat([emg_score_df, emg_subj_score])
-        tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
-        tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+    # data_folder = '/results/Syn/synergies'
+    # csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1])
+    # subjects = np.unique([x.split('_')[0] for x in csv_files])
+    # kin_score_df = pd.DataFrame()
+    # emg_score_df = pd.DataFrame()
+    # tact_score_df = pd.DataFrame()
+    #
+    # for suj in subjects:
+    #     kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
+    #     kin_score_df = pd.concat([kin_score_df, kin_subj_score])
+    #     emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
+    #     emg_score_df = pd.concat([emg_score_df, emg_subj_score])
+    #     tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
+    #     tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+
+    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
+    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
 
     num_syn_kin = np.ceil(len(kin_score_df.columns) * perc / 100)
     num_syn_emg = np.ceil(len(emg_score_df.columns) * perc / 100)
@@ -1317,6 +1380,11 @@ def multisource_syn_classification():
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results.csv', 'a')  # Keep most relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results_decr.csv', 'a') # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_multi_results_rand.csv', 'a')  # Random synergies
+
+    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
+    result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results.csv', 'a')  # Keep most relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results_rand.csv', 'a')  # Keep random synergies
 
     wr = csv.writer(result_file)
     random_states = [42, 43, 44]
