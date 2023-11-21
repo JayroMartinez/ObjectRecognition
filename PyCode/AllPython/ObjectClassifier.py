@@ -34,8 +34,9 @@ from synergy_pipeline import syn_single_source_classification
 from synergy_pipeline import print_syn_results
 from synergy_pipeline import hierarchical_syn_classification
 from synergy_pipeline import multisource_syn_classification
-from synergy_pipeline import  syn_clustering
+from synergy_pipeline import syn_clustering
 from synergy_pipeline import score_reordering
+from synergy_pipeline import get_early_enclosure
 
 
 def main():
@@ -60,8 +61,6 @@ def main():
     #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
     #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
 
-
-
     # # RAW DATA PREPROCESSING
     # split_df = split(data_df)  # split data into trials and EPs and add fields
     # split_df['Trial num'] = split_df['Trial num'].astype('str')
@@ -78,9 +77,9 @@ def main():
     # VARIANCE STUDY (only for checking)
     # variance(split_df)
 
-    # ################################
-    # ## EP CLASSIFICATION
-    # ################################
+    ###################################
+    ## EP CLASSIFICATION
+    ###################################
     # # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
     # ask_ep_presabs_classification(ep_presabs_df)
     # # ASKED OBJECT CLASSIFICATION BY EP DURATION
@@ -107,9 +106,9 @@ def main():
     # EP WEIGHT PLOTS
     # ep_weights()
 
-    ################################
+    ###################################
     ## RAW DATA CLASSIFICATION
-    ################################
+    ###################################
 
     # SINGLE SOURCE CLASSIFICATION
     # init_time = time.time()
@@ -132,9 +131,9 @@ def main():
     # HIERARCHICAL CLASSIFICATION
     # hierarchical_classification(split_df)
 
-    ################################
+    ###################################
     ## SYNERGY EXTRACTION
-    ################################
+    ###################################
     # split_df = []
     # syn_extraction(split_df)
     # syn_extraction_subj(split_df)
@@ -144,14 +143,19 @@ def main():
     # score_reordering()
     # print_syn_results()
 
-    ################################
+    ###################################
     ## SYNERGY CLASSIFICATION
-    ################################
+    ###################################
     # syn_single_source_classification()
     # multisource_syn_classification()
     hierarchical_syn_classification()
     # print_syn_results()
 
+    ###################################
+    ## EARLY ENCLOSURE CLASSIFICATION
+    ###################################
+    # split_df = []
+    # get_early_enclosure(split_df)
 
 
 if __name__ == "__main__":
