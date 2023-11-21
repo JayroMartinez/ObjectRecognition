@@ -827,7 +827,8 @@ def hierarchical_syn_classification():
     tact_bins = 5
 
     # best_params = pd.read_csv('./results/Syn/best_syn_params.csv') # All subjects together, no clust
-    best_params = pd.read_csv('./results/Syn/subj_noclust_best_syn_params.csv')  # All subjects together, no clust
+    # best_params = pd.read_csv('./results/Syn/subj_noclust_best_syn_params.csv')  # All subjects together, no clust
+    best_params = pd.read_csv('./results/Syn/subj_clust_best_syn_params.csv')  # All subjects together, no clust
 
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
@@ -842,23 +843,32 @@ def hierarchical_syn_classification():
     # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNS FROM EACH SUBJECT WITHOUT CLUSTERING"""
-    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results.csv', 'a')  # Keep most relevant synergies
-    result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
-    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results_rand.csv', 'a')  # Keep random synergies
+    # # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results.csv', 'a')  # Keep most relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
+    # # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results_rand.csv', 'a')  # Keep random synergies
+    # wr = csv.writer(result_file)
+    # data_folder = '/results/Syn/synergies'
+    # csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1])
+    # subjects = np.unique([x.split('_')[0] for x in csv_files])
+    # kin_score_df = pd.DataFrame()
+    # emg_score_df = pd.DataFrame()
+    # tact_score_df = pd.DataFrame()
+    # for suj in subjects:
+    #     kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
+    #     kin_score_df = pd.concat([kin_score_df, kin_subj_score])
+    #     emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
+    #     emg_score_df = pd.concat([emg_score_df, emg_subj_score])
+    #     tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
+    #     tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+
+    """SYNS FROM EACH SUBJECT WITH CLUSTERING"""
+    result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', 'a')  # Keep most relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results_rand.csv', 'a')  # Keep random synergies
     wr = csv.writer(result_file)
-    data_folder = '/results/Syn/synergies'
-    csv_files = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.name.find(".csv") != -1])
-    subjects = np.unique([x.split('_')[0] for x in csv_files])
-    kin_score_df = pd.DataFrame()
-    emg_score_df = pd.DataFrame()
-    tact_score_df = pd.DataFrame()
-    for suj in subjects:
-        kin_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_kin_scores.csv', index_col=0)
-        kin_score_df = pd.concat([kin_score_df, kin_subj_score])
-        emg_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_emg_pca_scores.csv', index_col=0)
-        emg_score_df = pd.concat([emg_score_df, emg_subj_score])
-        tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
-        tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
@@ -871,34 +881,34 @@ def hierarchical_syn_classification():
             num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
 
             """Keeps most relevant synergies"""
-            # extra_data.reset_index(inplace=True, drop=True)
-            #
-            # kin_score_df.reset_index(inplace=True, drop=True)
-            # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-            # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-            #
-            # emg_score_df.reset_index(inplace=True, drop=True)
-            # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-            # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-            #
-            # tact_score_df.reset_index(inplace=True, drop=True)
-            # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-            # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
-
-            """Discards most relevant synergies"""
             extra_data.reset_index(inplace=True, drop=True)
 
             kin_score_df.reset_index(inplace=True, drop=True)
-            kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
-            kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+            kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+            kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
 
             emg_score_df.reset_index(inplace=True, drop=True)
-            emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
-            emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+            emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+            emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
 
             tact_score_df.reset_index(inplace=True, drop=True)
-            tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
-            tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+            tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+            tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+
+            """Discards most relevant synergies"""
+            # extra_data.reset_index(inplace=True, drop=True)
+            #
+            # kin_score_df.reset_index(inplace=True, drop=True)
+            # kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+            # kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+            #
+            # emg_score_df.reset_index(inplace=True, drop=True)
+            # emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+            # emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+            #
+            # tact_score_df.reset_index(inplace=True, drop=True)
+            # tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+            # tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
             # """Select random synergies"""
             # extra_data.reset_index(inplace=True, drop=True)
@@ -1438,14 +1448,30 @@ def print_syn_results():
     # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results.csv', header=None) # Keep more relevant
 
     """Keep less relevant synergies"""
-    results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', header=None)  # Keep less relevant
+    # results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', header=None)  # Keep less relevant
     # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results_decr.csv', header=None)  # Keep less relevant
+    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results_decr.csv', header=None)  # Keep less relevant
 
     """Keep random synergies"""
     # results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results_rand.csv', header=None)  # Keep less relevant
     # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_multi_results_rand.csv', header=None)  # Keep less relevant
     # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results_rand.csv', header=None)  # Keep less relevant
+
+    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
+    """ Keep most relevant synergies"""
+    results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results.csv', header=None) # Keep more relevant
+    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results.csv', header=None) # Keep more relevant
+    hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', header=None) # Keep more relevant
+
+    """Keep less relevant synergies"""
+    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', header=None)  # Keep less relevant
+    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results_decr.csv', header=None)  # Keep less relevant
+    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results_decr.csv', header=None)  # Keep less relevant
+
+    """Keep random synergies"""
+    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results_rand.csv', header=None)  # Keep less relevant
+    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results_rand.csv', header=None)  # Keep less relevant
+    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results_rand.csv', header=None)  # Keep less relevant
 
     results_df.columns = cols
     # multi_cols = ['Kind', 'Family', 'Perc', 'L1vsL2', 'C', 'Acc']
@@ -1598,8 +1624,13 @@ def print_syn_results():
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
     # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params.csv', index=False)  # Keep most relevant
-    syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_decr.csv', index=False)  # Keep less relevant
+    # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_decr.csv', index=False)  # Keep less relevant
     # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_rand.csv', index=False)  # Keep random synergies
+
+    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
+    syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params.csv', index=False)  # Keep most relevant
+    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_decr.csv', index=False)  # Keep less relevant
+    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     ## LOAD RAW BEST RESULTS
     raw_cols = ['Kind', 'Family', 'bins', 'L1vsL2', 'C', 'Acc', 'Mean']
@@ -1703,8 +1734,11 @@ def print_syn_results():
     # # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
     #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    # # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1738,8 +1772,11 @@ def print_syn_results():
     # # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
     #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    # # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_kin_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1773,8 +1810,12 @@ def print_syn_results():
     # # j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
     #
-    # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    # # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_decr.png',
+    #             dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1808,8 +1849,12 @@ def print_syn_results():
     # # i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
     #
-    # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc_pval_decr.png',
+    # # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_emg_pca_drop_syn_acc_pval_decr.png',
+    # #             dpi=600)  # Keep less relevant synergies
+    #
+    # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_pval_decr.png',
     #             dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
@@ -1844,8 +1889,11 @@ def print_syn_results():
     # # k.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
     #
-    # k.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    # # k.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # k.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1877,8 +1925,12 @@ def print_syn_results():
     # # i.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
     #
-    # i.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    # # i.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_tact_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # i.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc_pval_decr.png',
+    #             dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1911,8 +1963,11 @@ def print_syn_results():
     # # k.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
     #
-    # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    # # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1945,8 +2000,12 @@ def print_syn_results():
     # # i.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
     #
-    # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    # # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # # plt.savefig('./results/Syn/plots/subj_noclust_multi_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
+    #
+    # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc_pval_decr.png',
+    #             dpi=600)  # Keep less relevant synergies
     #
     # plt.close()
 
@@ -1981,9 +2040,16 @@ def print_syn_results():
     # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc.png', dpi=600)
 
-    k.set(
-        title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_decr.png', dpi=600)
+    # k.set(
+    #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_decr.png', dpi=600)
+
+    k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
+    plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc.png', dpi=600)
+
+    # k.set(
+    #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_decr.png', dpi=600)
 
     plt.close()
 
@@ -2017,9 +2083,17 @@ def print_syn_results():
     #     title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject, no clustering")
     # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_pval.png', dpi=600)
 
+    # i.set(
+    #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
+    # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_pval_decr.png', dpi=600)
+
     i.set(
-        title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
-    plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_pval_decr.png', dpi=600)
+        title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
+    plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval.png', dpi=600)
+
+    # i.set(
+    #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval_decr.png', dpi=600)
 
     plt.close()
 
