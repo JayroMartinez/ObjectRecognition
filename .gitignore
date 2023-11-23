@@ -26,3 +26,5 @@ PyCode/AllPython/results/EP/weights
 PyCode/AllPython/results/Raw/weights
 PyCode/AllPython/results/bkp
 PyCode/AllPython/results/Syn
+PyCode/AllPython/results/Early Enclosure/early_enclosure_data.csv
+PyCode/AllPython/results/Early Enclosure/early_enclosure_extra_data.csv

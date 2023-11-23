@@ -29,31 +29,6 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def get_early_enclosure(data):
-
-    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
-
-    # dat_nodupl = extra_data.drop_duplicates(keep='first')
-    first_ep_per_trial = extra_data.loc[extra_data['EP num'] == 0]
-
-    datapoints_first_ep = []
-    unique_first_ep_trial = first_ep_per_trial.drop_duplicates()
-
-    for iter_trials in range(0, len(unique_first_ep_trial)):
-
-        target_ep = unique_first_ep_trial.iloc[iter_trials, :]['EP total']
-        sel_data = extra_data.loc[extra_data['EP total'] == target_ep]
-        num_datapoints_target = len(sel_data)
-
-        datapoints_first_ep.append(num_datapoints_target)
-
-    print('Min number datapoints in first EP on each trial:', min(datapoints_first_ep))
-    print('Max number datapoints in first EP on each trial:', max(datapoints_first_ep))
-    print('Mean number datapoints in first EP on each trial:', np.mean(datapoints_first_ep))
-
-    a=1
-
-
 def score_reordering():
 
     sources = ['kin', 'emg_pca', 'tact']
@@ -109,6 +84,143 @@ def score_reordering():
 
         reordered_scores = pd.DataFrame(imp_data[:, variance.index])
         reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
+
+
+def score_reordering_early_enclosure():
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        source_clusters = pd.read_csv('./results/Early Enclosure/resulting_components/agglomerative_' + source + '.csv')
+        source_clusters.drop(source_clusters.columns[0], axis=1, inplace=True)
+
+        score_files = glob.glob('./results/Early Enclosure/scores/*' + source + '_scores.csv')
+        score_files.sort()
+
+        all_data = pd.DataFrame()
+        all_var = pd.DataFrame()
+
+        for iter_file in range(0, len(score_files)):
+
+            subj_dat = pd.read_csv(score_files[iter_file])
+            subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
+
+            var_file = score_files[iter_file].replace('_scores', '_var')
+            var_file = var_file.replace('scores', 'variance')
+            subj_var = pd.read_csv(var_file)
+            subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
+
+            new_subj_dat = np.empty(subj_dat.shape)
+            new_subj_dat[:] = np.nan
+
+            new_subj_var = np.empty([len(subj_dat.columns)])
+            new_subj_var[:] = np.nan
+
+            subj_order = source_clusters.iloc[iter_file, :]
+
+            for iter_cols in range(0, len(subj_order)):
+
+                if ~np.isnan(subj_order[iter_cols]):
+                    new_subj_dat[:, iter_cols] = subj_dat.iloc[:, int(subj_order[iter_cols])]
+                    new_subj_var[iter_cols] = subj_var.iloc[int(subj_order[iter_cols])]
+                    a = 1
+
+            all_data = pd.concat([all_data, pd.DataFrame(new_subj_dat)])
+            all_var = pd.concat([all_var, pd.DataFrame(new_subj_var).T], ignore_index=True)
+
+        """ AFTER FILLING ALL SUBJECTS WE NEED TO PERFORM IMPUTATION """
+        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+        imp_data = imp.fit_transform(all_data)
+
+        """ WE ALSO NEED TO COMPUTE VARIANCE FOR EACH SYNERGY AND REORDER SYNS """
+        variance = all_var.mean(axis=0, skipna=True)
+        variance = variance.sort_values(ascending=False)
+        variance.to_csv('./results/Early Enclosure/variance/overall_var_' + source + '.csv')
+
+        reordered_scores = pd.DataFrame(imp_data[:, variance.index])
+        reordered_scores.to_csv('./results/Early Enclosure/scores/reordered_' + source + '_scores.csv')
+
+    a=1
+
+
+def syn_clustering_early_enclosure():
+
+    """This function is created to pair synergies among subjects"""
+
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        selected_files = glob.glob('./results/Early Enclosure/synergies/*' + source + '_syns.csv')
+        selected_files.sort()
+
+        all_data = pd.DataFrame()
+
+        for file in selected_files:
+
+            suj_dat = pd.read_csv(file)
+            components = suj_dat.pop('Unnamed: 0').to_list()
+            suj_dat = suj_dat.T
+            suj_dat['Component'] = components
+            aux_sub = file.replace('./results/Early Enclosure/synergies/', '')
+            subject = aux_sub.replace('_' + source + '_syns.csv', '')
+            suj_dat['Subject'] = np.repeat(subject, suj_dat.shape[0])
+
+            all_data = pd.concat([all_data, pd.DataFrame(suj_dat)], ignore_index=True)
+
+        numerical_data = all_data.select_dtypes(include='float64')
+        num_clust = len(numerical_data.columns) + 1  # we include an extra cluster to drop "garbage" components
+
+        resulting_clusters = np.empty((len(selected_files), len(numerical_data.columns)))
+        resulting_clusters[:] = np.nan  # fill array with NaNs
+
+        for iter_clust in range(0, num_clust - 1):  # -1 because makes no sense to ask for 1 cluster
+
+            remaining_clusters = num_clust - iter_clust
+
+            # model = KMeans(n_clusters=remaining_clusters, init='k-means++', algorithm='lloyd', n_init=1000, max_iter=100000)
+
+            model = AgglomerativeClustering(n_clusters=remaining_clusters, metric='cosine', linkage='average')
+
+            numerical_data = all_data.select_dtypes(include='float64')
+            model.fit(numerical_data)
+            # syns = pd.DataFrame(model.labels_.reshape((-1, len(numerical_data.columns))))
+            # print(metrics.silhouette_score(numerical_data, model.labels_, metric='euclidean'))
+            silh_score = metrics.silhouette_samples(numerical_data, model.labels_)
+            # silh_df = silh_score
+            # silh_df = pd.DataFrame(silh_score.reshape((-1, len(numerical_data.columns))))
+            # print(sum(silh_score))
+            # clus_scores_df = pd.DataFrame({'label': model.labels_, 'score': silh_score})
+            # score_per_clust = clus_scores_df.groupby(by=['label']).median()
+
+            components_df = all_data[['Component', 'Subject']]
+            components_df['Label'] = model.labels_
+            components_df['Score'] = silh_score
+
+            subjects = np.unique(components_df['Subject'])
+
+            """checking for best cluster after removing duplicates [subject-label]"""
+            aux_df = components_df.sort_values(by='Score', ascending=False)
+            aux_df.drop_duplicates(subset=['Subject', 'Label'], keep='first', inplace=True)
+            score_per_clust = aux_df.groupby(by=['Label'])['Score'].mean()
+            best_clust = score_per_clust.idxmax()
+
+            for it_subj in range(len(subjects)):
+
+                select_components = components_df.loc[(components_df['Subject'] == str(subjects[it_subj])) & (components_df['Label'] == int(best_clust))]
+
+                if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
+
+                    best_suj_component = select_components.loc[select_components['Score'].idxmax()]['Component']
+
+                    """SAVE THE CLUSTERED SYNERGIES [rows=subjects, columns=this cluster {clusters still not ordered}]"""
+                    resulting_clusters[it_subj, iter_clust] = int(best_suj_component)
+
+                    """WE DROP THE ALREADY CLUSTERED SYNERGIES"""
+                    all_data.drop(all_data.loc[(all_data["Subject"] == subjects[it_subj]) & (all_data["Component"] == best_suj_component)].index, inplace=True)
+
+        resulting_clusters_df = pd.DataFrame(resulting_clusters)
+        resulting_clusters_df.to_csv('./results/Early Enclosure/resulting_components/agglomerative_' + source + '.csv', mode='a')
 
 
 def syn_clustering():
@@ -199,7 +311,7 @@ def kin_syn_extraction(data):
 
     kin_scores = pca_mod.fit_transform(kin_df)
 
-    kin_syns = pca_mod.components_  # Each column is a synergy
+    kin_syns = pca_mod.components_.T  # Each column is a synergy
 
     kin_var = pca_mod.explained_variance_ratio_
 
@@ -213,7 +325,7 @@ def emg_pca_syn_extraction(data):
     pca_mod = PCA()
 
     emg_scores = pca_mod.fit_transform(emg_df)
-    emg_syns = pca_mod.components_  # Each column is a synergy
+    emg_syns = pca_mod.components_.T  # Each column is a synergy
     emg_var = pca_mod.explained_variance_ratio_
 
     return [emg_scores, emg_syns, emg_var]
@@ -233,7 +345,7 @@ def emg_nmf_syn_extraction(data):
         nmf_mod = NMF(n_components=num_syn_emg, max_iter=1500)
         emg_scores = nmf_mod.fit_transform(data)
         pd.DataFrame(emg_scores).to_csv(file_name_sc + '_scores.csv')
-        emg_syns = nmf_mod.components_
+        emg_syns = nmf_mod.components_.T
         pd.DataFrame(emg_syns).to_csv(file_name_sy + '_syns.csv')
 
         print('Done for', p, '%')
@@ -246,7 +358,7 @@ def tact_syn_extraction(data):
     pca_mod = PCA()
 
     tact_scores = pca_mod.fit_transform(tact_df)
-    tact_syns = pca_mod.components_  # Each column is a synergy
+    tact_syns = pca_mod.components_.T  # Each column is a synergy
     tact_var = pca_mod.explained_variance_ratio_
 
     return [tact_scores, tact_syns, tact_var]
@@ -348,6 +460,62 @@ def syn_extraction_subj(data):
     print("Individual synergy extraction done!")
 
 
+def syn_extraction_early_enclosure():
+
+    data = pd.read_csv('./results/Early Enclosure/early_enclosure_data.csv')
+
+    subjects = np.unique(data['Subject'])
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+    emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
+    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+                 'pdl', 'pdr', 'pdlo', 'lpo']
+
+    families = np.unique(data['Family'])
+
+    # REMOVE NANs
+    data_clean = data.dropna(axis=0, how='any')
+
+    # # NON-NUMERIC DATA EXTRACTION & SAVING
+    extra_cols = [col for col in data_clean.columns if
+                  (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+    extra_df = data_clean[extra_cols]
+    extra_df.to_csv('./results/Early Enclosure/early_enclosure_extra_data.csv', index=False)
+
+    for subj in subjects:
+        subj_data = data_clean.loc[data_clean['Subject'] == subj]
+
+        ## SYNERGY EXTRACTION AND SAVING
+        [kin_subj_scores, kin_subj_syns, kin_subj_var] = kin_syn_extraction(subj_data[kin_cols])
+        pd.DataFrame(kin_subj_scores).to_csv('./results/Early Enclosure/scores/' + subj + '_kin_scores.csv')
+        pd.DataFrame(kin_subj_syns).to_csv('./results/Early Enclosure/synergies/' + subj + '_kin_syns.csv')
+        pd.DataFrame(kin_subj_var).to_csv('./results/Early Enclosure/variance/' + subj + '_kin_var.csv')
+
+        [emg_pca_subj_scores, emg_pca_subj_syns, emg_pca_subj_var] = emg_pca_syn_extraction(subj_data[emg_cols])
+        pd.DataFrame(emg_pca_subj_scores).to_csv('./results/Early Enclosure/scores/' + subj + '_emg_pca_scores.csv')
+        pd.DataFrame(emg_pca_subj_syns).to_csv('./results/Early Enclosure/synergies/' + subj + '_emg_pca_syns.csv')
+        pd.DataFrame(emg_pca_subj_var).to_csv('./results/Early Enclosure/variance/' + subj + '_emg_pca_var.csv')
+
+        # emg_nmf_syn_extraction(data_clean[emg_cols])
+
+        [tact_subj_scores, tact_subj_syns, tact_subj_var] = tact_syn_extraction(subj_data[tact_cols])
+        pd.DataFrame(tact_subj_scores).to_csv('./results/Early Enclosure/scores/' + subj + '_tact_scores.csv')
+        pd.DataFrame(tact_subj_syns).to_csv('./results/Early Enclosure/synergies/' + subj + '_tact_syns.csv')
+        pd.DataFrame(tact_subj_var).to_csv('./results/Early Enclosure/variance/' + subj + '_tact_var.csv')
+
+    print("Early enclosure individual synergy extraction done!")
+
+
+    a=1
+
+
 def kin_syn_classif(input_data):
 
     kin_scores = input_data[0]
@@ -364,8 +532,8 @@ def kin_syn_classif(input_data):
     num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
+    data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
     # data_df = pd.concat([kin_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -461,8 +629,8 @@ def emg_pca_syn_classif(input_data):
     num_syns = np.ceil(len(emg_pca_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     emg_pca_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([emg_pca_scores.sample(n=int(num_syns), axis='columns'), extra_data], axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -661,8 +829,8 @@ def tact_syn_classif(input_data):
     num_syns = np.ceil(len(tact_scores.columns) * perc_syns / 100)
     extra_data.reset_index(inplace=True, drop=True)
     tact_scores.reset_index(inplace=True, drop=True)
-    # data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
-    data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+    data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
+    # data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
     # data_df = pd.concat([tact_scores.sample(n=int(num_syns), axis='columns'), extra_data],axis=1)  # random selection
     selected_df = data_df.loc[data_df['Family'] == family]
 
@@ -763,13 +931,13 @@ def syn_single_source_classification():
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
     """SYNERGIES FROM ALL SUBJECTS"""
-    # result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Keep most relevant synergies
-    # # result_file = open('./results/Syn/accuracy/syn_results_decr.csv', 'a')  # Keep less relevant synergies
-    # # result_file = open('./results/Syn/accuracy/syn_results_rand.csv', 'a')  # Keep random synergies
-    # wr = csv.writer(result_file)
-    # kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-    # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-    # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+    result_file = open('./results/Syn/accuracy/syn_results.csv', 'a')  # Keep most relevant synergies
+    # result_file = open('./results/Syn/accuracy/syn_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/syn_results_rand.csv', 'a')  # Keep random synergies
+    wr = csv.writer(result_file)
+    kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
     # result_file = open('./results/Syn/accuracy/subj_noclust_syn_results.csv', 'a')  # Keep most relevant synergies
@@ -792,12 +960,12 @@ def syn_single_source_classification():
 
     """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_results.csv', 'a')  # Keep most relevant synergies
-    result_file = open('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_results_rand.csv', 'a')  # Keep random synergies
-    wr = csv.writer(result_file)
-    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
-    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
-    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+    # wr = csv.writer(result_file)
+    # kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    # emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    # tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
 
     all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins] for x in all_param]
@@ -1173,9 +1341,9 @@ def multi_aux_classification(input_data):
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
     """SYNERGIES FROM ALL SUBJECTS"""
-    # kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-    # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-    # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+    kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
     # data_folder = '/results/Syn/synergies'
@@ -1194,41 +1362,41 @@ def multi_aux_classification(input_data):
     #     tact_score_df = pd.concat([tact_score_df, tact_subj_score])
 
     """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
-    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
-    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
-    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+    # kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    # emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    # tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
 
     num_syn_kin = np.ceil(len(kin_score_df.columns) * perc / 100)
     num_syn_emg = np.ceil(len(emg_score_df.columns) * perc / 100)
     num_syn_tact = np.ceil(len(tact_score_df.columns) * perc / 100)
 
     """Keeps most relevant synergies"""
-    # extra_data.reset_index(inplace=True, drop=True)
-    # kin_score_df.reset_index(inplace=True, drop=True)
-    # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-    # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-    #
-    # emg_score_df.reset_index(inplace=True, drop=True)
-    # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-    # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-    #
-    # tact_score_df.reset_index(inplace=True, drop=True)
-    # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-    # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
-
-    """Discards most relevant synergies"""
     extra_data.reset_index(inplace=True, drop=True)
     kin_score_df.reset_index(inplace=True, drop=True)
-    kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
-    kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+    kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+    kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
 
     emg_score_df.reset_index(inplace=True, drop=True)
-    emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
-    emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+    emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+    emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
 
     tact_score_df.reset_index(inplace=True, drop=True)
-    tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
-    tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+    tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+    tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+
+    """Discards most relevant synergies"""
+    # extra_data.reset_index(inplace=True, drop=True)
+    # kin_score_df.reset_index(inplace=True, drop=True)
+    # kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+    # kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+    #
+    # emg_score_df.reset_index(inplace=True, drop=True)
+    # emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+    # emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+    #
+    # tact_score_df.reset_index(inplace=True, drop=True)
+    # tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+    # tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
     """Select random synergies"""
     # extra_data.reset_index(inplace=True, drop=True)
@@ -1405,7 +1573,7 @@ def multisource_syn_classification():
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
     """SYNERGIES FROM ALL SUBJECTS"""
-    # result_file = open('./results/Syn/accuracy/syn_multi_results.csv', 'a')  # Keep most relevant synergies
+    result_file = open('./results/Syn/accuracy/syn_multi_results.csv', 'a')  # Keep most relevant synergies
     # result_file = open('./results/Syn/accuracy/syn_multi_results_decr.csv', 'a') # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/syn_multi_results_rand.csv', 'a')  # Random synergies
 
@@ -1416,7 +1584,7 @@ def multisource_syn_classification():
 
     """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results.csv', 'a')  # Keep most relevant synergies
-    result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_multi_results_rand.csv', 'a')  # Keep random synergies
 
     wr = csv.writer(result_file)

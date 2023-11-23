@@ -36,7 +36,9 @@ from synergy_pipeline import hierarchical_syn_classification
 from synergy_pipeline import multisource_syn_classification
 from synergy_pipeline import syn_clustering
 from synergy_pipeline import score_reordering
-from synergy_pipeline import get_early_enclosure
+from synergy_pipeline import syn_extraction_early_enclosure
+from synergy_pipeline import syn_clustering_early_enclosure
+from synergy_pipeline import score_reordering_early_enclosure
 
 
 def main():
@@ -65,6 +67,10 @@ def main():
     # split_df = split(data_df)  # split data into trials and EPs and add fields
     # split_df['Trial num'] = split_df['Trial num'].astype('str')
     # split_df['EP num'] = split_df['EP num'].astype('str')
+
+    # # SELECT & SAVE EARLY ENCLOSURE DATA
+    # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
+    # early_enclosure.to_csv('./results/Early Enclosure/early_enclosure_data.csv')
 
     # check tactile distribution (only for checking)
     # tactile_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
@@ -137,7 +143,6 @@ def main():
     # split_df = []
     # syn_extraction(split_df)
     # syn_extraction_subj(split_df)
-    """NOT PERFORMING CLUSTERING NOW"""
     # [syn_clustering() for x in range(0, 5)]
     # syn_clustering()
     # score_reordering()
@@ -146,16 +151,18 @@ def main():
     ###################################
     ## SYNERGY CLASSIFICATION
     ###################################
-    # syn_single_source_classification()
-    # multisource_syn_classification()
-    hierarchical_syn_classification()
+    syn_single_source_classification()
+    multisource_syn_classification()
+    # hierarchical_syn_classification()
     # print_syn_results()
 
     ###################################
-    ## EARLY ENCLOSURE CLASSIFICATION
+    ## EARLY ENCLOSURE SYNERGY EXTRACTION
     ###################################
-    # split_df = []
-    # get_early_enclosure(split_df)
+    # syn_extraction_early_enclosure()
+    # syn_clustering_early_enclosure()
+    # score_reordering_early_enclosure()
+
 
 
 if __name__ == "__main__":
