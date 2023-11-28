@@ -151,8 +151,8 @@ def main():
     ###################################
     ## SYNERGY CLASSIFICATION
     ###################################
-    syn_single_source_classification()
-    multisource_syn_classification()
+    # syn_single_source_classification()
+    # multisource_syn_classification()
     # hierarchical_syn_classification()
     # print_syn_results()
 
@@ -162,6 +162,11 @@ def main():
     # syn_extraction_early_enclosure()
     # syn_clustering_early_enclosure()
     # score_reordering_early_enclosure()
+
+    syn_single_source_classification()
+    multisource_syn_classification()
+    # hierarchical_syn_classification()
+    # print_syn_results()
 
 
 
