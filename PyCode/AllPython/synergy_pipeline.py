@@ -1027,21 +1027,23 @@ def hierarchical_syn_classification():
     emg_bins = 10
     tact_bins = 5
 
-    # best_params = pd.read_csv('./results/Syn/best_syn_params.csv') # All subjects together, no clust
-    # best_params = pd.read_csv('./results/Syn/subj_noclust_best_syn_params.csv')  # All subjects together, no clust
-    best_params = pd.read_csv('./results/Syn/subj_clust_best_syn_params.csv')  # All subjects together with clust
-
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
 
     """SYNS FROM ALL SUBJECTS"""
-    # result_file = open('./results/Syn/accuracy/syn_hier_results.csv', 'a')  # Keep most relevant synergies
+    result_file = open('./results/Syn/accuracy/syn_hier_results.csv', 'a')  # Keep most relevant synergies
+    best_params = pd.read_csv('./results/Syn/best_syn_params.csv') # All subjects together, no clust
+
     # result_file = open('./results/Syn/accuracy/syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
+    # best_params = pd.read_csv('./results/Syn/best_syn_params_decr.csv') # All subjects together, no clust
+
     # result_file = open('./results/Syn/accuracy/syn_hier_results_rand.csv', 'a')  # Keep random synergies
-    # wr = csv.writer(result_file)
-    # kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-    # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-    # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+    # best_params = pd.read_csv('./results/Syn/best_syn_params_rand.csv') # All subjects together, no clust
+
+    wr = csv.writer(result_file)
+    kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
 
     """SYNS FROM EACH SUBJECT WITHOUT CLUSTERING"""
     # # result_file = open('./results/Syn/accuracy/subj_noclust_syn_hier_results.csv', 'a')  # Keep most relevant synergies
@@ -1061,15 +1063,17 @@ def hierarchical_syn_classification():
     #     emg_score_df = pd.concat([emg_score_df, emg_subj_score])
     #     tact_subj_score = pd.read_csv('./results/Syn/scores/' + suj + '_tact_scores.csv', index_col=0)
     #     tact_score_df = pd.concat([tact_score_df, tact_subj_score])
+    # best_params = pd.read_csv('./results/Syn/subj_noclust_best_syn_params.csv')  # All subjects together, no clust
 
     """SYNS FROM EACH SUBJECT WITH CLUSTERING"""
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', 'a')  # Keep most relevant synergies
-    result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
+    # result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Syn/accuracy/subj_clust_syn_hier_results_rand.csv', 'a')  # Keep random synergies
-    wr = csv.writer(result_file)
-    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
-    emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
-    tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+    # wr = csv.writer(result_file)
+    # kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    # emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+    # tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+    # best_params = pd.read_csv('./results/Syn/subj_clust_best_syn_params.csv')  # All subjects together with clust
 
     """SYNERGIES FROM EARLY ENCLOSURE WITH CLUSTERING"""
     # result_file = open('./results/Early Enclosure/accuracy/syn_results.csv', 'a')  # Keep most relevant synergies
@@ -1079,9 +1083,10 @@ def hierarchical_syn_classification():
     # kin_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_kin_scores.csv', index_col=0)
     # emg_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_emg_pca_scores.csv', index_col=0)
     # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_tact_scores.csv', index_col=0)
+    # best_params =
 
-    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
-    # extra_data = pd.read_csv('./results/Early Enclosure/early_enclosure_extra_data.csv')
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv') # extra data for entire dataset
+    # extra_data = pd.read_csv('./results/Early Enclosure/early_enclosure_extra_data.csv') # extra data for early enclosure
 
 
     for top_c in c_values:
@@ -1092,36 +1097,36 @@ def hierarchical_syn_classification():
             num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
 
             """Keeps most relevant synergies"""
-            # extra_data.reset_index(inplace=True, drop=True)
-            #
-            # kin_score_df.reset_index(inplace=True, drop=True)
-            # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-            # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-            #
-            # emg_score_df.reset_index(inplace=True, drop=True)
-            # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-            # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-            #
-            # tact_score_df.reset_index(inplace=True, drop=True)
-            # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-            # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
-
-            """Discards most relevant synergies"""
             extra_data.reset_index(inplace=True, drop=True)
 
             kin_score_df.reset_index(inplace=True, drop=True)
-            kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
-            kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+            kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+            kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
 
             emg_score_df.reset_index(inplace=True, drop=True)
-            emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
-            emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+            emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+            emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
 
             tact_score_df.reset_index(inplace=True, drop=True)
-            tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
-            tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+            tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+            tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
 
-            # """Select random synergies"""
+            """Discards most relevant synergies"""
+            # extra_data.reset_index(inplace=True, drop=True)
+            #
+            # kin_score_df.reset_index(inplace=True, drop=True)
+            # kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+            # kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+            #
+            # emg_score_df.reset_index(inplace=True, drop=True)
+            # emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+            # emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+            #
+            # tact_score_df.reset_index(inplace=True, drop=True)
+            # tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+            # tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+
+            """Select random synergies"""
             # extra_data.reset_index(inplace=True, drop=True)
             #
             # kin_score_df.reset_index(inplace=True, drop=True)
@@ -1676,9 +1681,9 @@ def print_syn_results():
 
     """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
     """ Keep most relevant synergies"""
-    results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results.csv', header=None) # Keep more relevant
+    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results.csv', header=None) # Keep more relevant
     # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results.csv', header=None) # Keep more relevant
-    hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', header=None) # Keep more relevant
+    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', header=None) # Keep more relevant
 
     """Keep less relevant synergies"""
     # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', header=None)  # Keep less relevant
@@ -1690,18 +1695,29 @@ def print_syn_results():
     # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results_rand.csv', header=None)  # Keep less relevant
     # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results_rand.csv', header=None)  # Keep less relevant
 
-    results_df.columns = cols
-    # multi_cols = ['Kind', 'Family', 'Perc', 'L1vsL2', 'C', 'Acc']
-    # multi_res_df.columns = multi_cols
-    hier_cols = ['Kind', 'Family', 'Perc', 'C', 'Acc']
-    hier_res_df.columns = hier_cols
+    """SYNERGIES FROM EARLY ENCLOSURE WITH CLUSTERING"""
+    """ Keep most relevant synergies"""
+    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_results.csv', header=None) # Keep more relevant
+    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_multi_results.csv', header=None) # Keep more relevant
+    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results.csv', header=None) # Keep more relevant
 
-    # kin_results_df = results_df.loc[results_df['Kind'] == 'Kin']
-    # emg_pca_results_df = results_df.loc[results_df['Kind'] == 'EMG PCA']
+    """Keep less relevant synergies"""
+    results_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_results_decr.csv', header=None)  # Keep less relevant
+    multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_multi_results_decr.csv', header=None)  # Keep less relevant
+    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results_decr.csv', header=None)  # Keep less relevant
+
+    results_df.columns = cols
+    multi_cols = ['Kind', 'Family', 'Perc', 'L1vsL2', 'C', 'Acc']
+    multi_res_df.columns = multi_cols
+    # hier_cols = ['Kind', 'Family', 'Perc', 'C', 'Acc']
+    # hier_res_df.columns = hier_cols
+
+    kin_results_df = results_df.loc[results_df['Kind'] == 'Kin']
+    emg_pca_results_df = results_df.loc[results_df['Kind'] == 'EMG PCA']
     # emg_nmf_results_df = results_df.loc[results_df['Kind'] == 'EMG NMF']
-    # tact_results_df = results_df.loc[results_df['Kind'] == 'Tact']
-    hier_results_df = hier_res_df.loc[hier_res_df['Kind'] == 'Hierarchical']
-    # multi_results_df = multi_res_df.loc[multi_res_df['Kind'] == 'Multimodal']
+    tact_results_df = results_df.loc[results_df['Kind'] == 'Tact']
+    multi_results_df = multi_res_df.loc[multi_res_df['Kind'] == 'Multimodal']
+    # hier_results_df = hier_res_df.loc[hier_res_df['Kind'] == 'Hierarchical']
 
     ## GET SYNERGIES BEST RESULTS
 
@@ -1709,45 +1725,45 @@ def print_syn_results():
     l1vsl2_values = np.unique(results_df['L1vsL2'])
     c_values = np.unique(results_df['C'])
 
-    # kin_best_acc = np.zeros((len(perc_values),5))
-    # kin_best_params = [[[], []]] * len(perc_values)
+    kin_best_acc = np.zeros((len(perc_values),5))
+    kin_best_params = [[[], []]] * len(perc_values)
 
-    # emg_pca_best_acc = np.zeros((len(perc_values),5))
-    # emg_pca_best_params = [[[], []]] * len(perc_values)
+    emg_pca_best_acc = np.zeros((len(perc_values),5))
+    emg_pca_best_params = [[[], []]] * len(perc_values)
 
     # emg_nmf_best_acc = np.zeros((len(perc_values),))
     # emg_nmf_best_params = [[[], []]] * len(perc_values)
 
-    # tact_best_acc = np.zeros((len(perc_values),5))
-    # tact_best_params = [[[], []]] * len(perc_values)
+    tact_best_acc = np.zeros((len(perc_values),5))
+    tact_best_params = [[[], []]] * len(perc_values)
 
-    # multi_best_acc = np.zeros((len(perc_values), 5))
-    # multi_best_params = [[[], []]] * len(perc_values)
+    multi_best_acc = np.zeros((len(perc_values), 5))
+    multi_best_params = [[[], []]] * len(perc_values)
 
-    hier_best_acc = np.zeros((len(perc_values), 5))
-    hier_best_params = [[]] * len(perc_values)
+    # hier_best_acc = np.zeros((len(perc_values), 5))
+    # hier_best_params = [[]] * len(perc_values)
 
     for iter_perc in range(0, len(perc_values)):
         for l1 in l1vsl2_values:
             for c in c_values:
 
-                # kin_sel = kin_results_df.loc[
-                #     (kin_results_df['Perc'] == perc_values[iter_perc]) & (kin_results_df['L1vsL2'] == l1) & (
-                #             kin_results_df['C'] == c)]
-                # kin_sel_mean_acc = kin_sel['Mean'].mean()
-                #
-                # if kin_sel_mean_acc > kin_best_acc[iter_perc].mean():
-                #     kin_best_acc[iter_perc] = kin_sel['Mean']
-                #     kin_best_params[iter_perc] = [l1, c]
+                kin_sel = kin_results_df.loc[
+                    (kin_results_df['Perc'] == perc_values[iter_perc]) & (kin_results_df['L1vsL2'] == l1) & (
+                            kin_results_df['C'] == c)]
+                kin_sel_mean_acc = kin_sel['Mean'].mean()
 
-                # emg_pca_sel = emg_pca_results_df.loc[
-                #     (emg_pca_results_df['Perc'] == perc_values[iter_perc]) & (emg_pca_results_df['L1vsL2'] == l1) & (
-                #             emg_pca_results_df['C'] == c)]
-                # emg_pca_sel_mean_acc = emg_pca_sel['Mean'].mean()
-                #
-                # if emg_pca_sel_mean_acc > emg_pca_best_acc[iter_perc].mean():
-                #     emg_pca_best_acc[iter_perc] = emg_pca_sel['Mean']
-                #     emg_pca_best_params[iter_perc] = [l1, c]
+                if kin_sel_mean_acc > kin_best_acc[iter_perc].mean():
+                    kin_best_acc[iter_perc] = kin_sel['Mean']
+                    kin_best_params[iter_perc] = [l1, c]
+
+                emg_pca_sel = emg_pca_results_df.loc[
+                    (emg_pca_results_df['Perc'] == perc_values[iter_perc]) & (emg_pca_results_df['L1vsL2'] == l1) & (
+                            emg_pca_results_df['C'] == c)]
+                emg_pca_sel_mean_acc = emg_pca_sel['Mean'].mean()
+
+                if emg_pca_sel_mean_acc > emg_pca_best_acc[iter_perc].mean():
+                    emg_pca_best_acc[iter_perc] = emg_pca_sel['Mean']
+                    emg_pca_best_params[iter_perc] = [l1, c]
 
                 # emg_nmf_sel = emg_nmf_results_df.loc[
                 #     (emg_nmf_results_df['Perc'] == perc_values[iter_perc]) & (emg_nmf_results_df['L1vsL2'] == l1) & (
@@ -1758,81 +1774,81 @@ def print_syn_results():
                 #     emg_nmf_best_acc[iter_perc] = emg_nmf_sel['Mean']
                 #     emg_nmf_best_params[iter_perc] = [l1, c]
 
-                # tact_sel = tact_results_df.loc[
-                #     (tact_results_df['Perc'] == perc_values[iter_perc]) & (tact_results_df['L1vsL2'] == l1) & (
-                #             tact_results_df['C'] == c)]
-                # tact_sel_mean_acc = tact_sel['Mean'].mean()
+                tact_sel = tact_results_df.loc[
+                    (tact_results_df['Perc'] == perc_values[iter_perc]) & (tact_results_df['L1vsL2'] == l1) & (
+                            tact_results_df['C'] == c)]
+                tact_sel_mean_acc = tact_sel['Mean'].mean()
+
+                if tact_sel_mean_acc > tact_best_acc[iter_perc].mean():
+                    tact_best_acc[iter_perc] = tact_sel['Mean']
+                    tact_best_params[iter_perc] = [l1, c]
+
+                multi_sel = multi_results_df.loc[
+                    (multi_results_df['Perc'] == perc_values[iter_perc]) & (multi_results_df['L1vsL2'] == l1) & (
+                            multi_results_df['C'] == c)]
+                multi_sel_mean_acc = multi_sel.groupby('Family')['Acc'].mean()
+
+                if multi_sel_mean_acc.mean() > multi_best_acc[iter_perc].mean():
+                    multi_best_acc[iter_perc] = multi_sel_mean_acc
+                    multi_best_params[iter_perc] = [l1, c]
+
+                # hier_sel = hier_results_df.loc[
+                #     (hier_results_df['Perc'] == perc_values[iter_perc]) & (hier_results_df['C'] == c)]
+                # hier_sel_mean_acc = hier_sel.groupby('Family')['Acc'].mean()
                 #
-                # if tact_sel_mean_acc > tact_best_acc[iter_perc].mean():
-                #     tact_best_acc[iter_perc] = tact_sel['Mean']
-                #     tact_best_params[iter_perc] = [l1, c]
-
-                # multi_sel = multi_results_df.loc[
-                #     (multi_results_df['Perc'] == perc_values[iter_perc]) & (multi_results_df['L1vsL2'] == l1) & (
-                #             multi_results_df['C'] == c)]
-                # multi_sel_mean_acc = multi_sel.groupby('Family')['Acc'].mean()
-                #
-                # if multi_sel_mean_acc.mean() > multi_best_acc[iter_perc].mean():
-                #     multi_best_acc[iter_perc] = multi_sel_mean_acc
-                #     multi_best_params[iter_perc] = [l1, c]
-
-                hier_sel = hier_results_df.loc[
-                    (hier_results_df['Perc'] == perc_values[iter_perc]) & (hier_results_df['C'] == c)]
-                hier_sel_mean_acc = hier_sel.groupby('Family')['Acc'].mean()
-
-                if hier_sel_mean_acc.mean() > hier_best_acc[iter_perc].mean():
-                    hier_best_acc[iter_perc] = hier_sel_mean_acc
-                    hier_best_params[iter_perc] = c
+                # if hier_sel_mean_acc.mean() > hier_best_acc[iter_perc].mean():
+                #     hier_best_acc[iter_perc] = hier_sel_mean_acc
+                #     hier_best_params[iter_perc] = c
 
     # BEST ACCURACIES
     syn_cols = ["Source"]
     syn_cols.extend(perc_values)
     syn_best_acc_df = pd.DataFrame(columns=syn_cols)
 
-    # kin_aux_df = pd.DataFrame(data=kin_best_acc.transpose(), columns=perc_values)
-    # kin_aux_df.insert(0, "Source", ["Kin"] * 5)
+    kin_aux_df = pd.DataFrame(data=kin_best_acc.transpose(), columns=perc_values)
+    kin_aux_df.insert(0, "Source", ["Kin"] * 5)
 
-    # emg_pca_aux_df = pd.DataFrame(data=emg_pca_best_acc.transpose(), columns=perc_values)
-    # emg_pca_aux_df.insert(0, "Source", ["EMG PCA"] * 5)
+    emg_pca_aux_df = pd.DataFrame(data=emg_pca_best_acc.transpose(), columns=perc_values)
+    emg_pca_aux_df.insert(0, "Source", ["EMG PCA"] * 5)
 
-    # tact_aux_df = pd.DataFrame(data=tact_best_acc.transpose(), columns=perc_values)
-    # tact_aux_df.insert(0, "Source", ["Tact"] * 5)
+    tact_aux_df = pd.DataFrame(data=tact_best_acc.transpose(), columns=perc_values)
+    tact_aux_df.insert(0, "Source", ["Tact"] * 5)
 
-    # multi_aux_df = pd.DataFrame(data=multi_best_acc.transpose(), columns=perc_values)
-    # multi_aux_df.insert(0, "Source", ["Multi"] * 5)
+    multi_aux_df = pd.DataFrame(data=multi_best_acc.transpose(), columns=perc_values)
+    multi_aux_df.insert(0, "Source", ["Multi"] * 5)
 
-    hier_aux_df = pd.DataFrame(data=hier_best_acc.transpose(), columns=perc_values)
-    hier_aux_df.insert(0, "Source", ["Hier"] * 5)
+    # hier_aux_df = pd.DataFrame(data=hier_best_acc.transpose(), columns=perc_values)
+    # hier_aux_df.insert(0, "Source", ["Hier"] * 5)
 
-    # syn_best_acc_df = pd.concat([syn_best_acc_df, kin_aux_df])
-    # syn_best_acc_df = pd.concat([syn_best_acc_df, emg_pca_aux_df])
-    # syn_best_acc_df = pd.concat([syn_best_acc_df, tact_aux_df])
-    # syn_best_acc_df = pd.concat([syn_best_acc_df, multi_aux_df])
-    syn_best_acc_df = pd.concat([syn_best_acc_df, hier_aux_df])
+    syn_best_acc_df = pd.concat([syn_best_acc_df, kin_aux_df])
+    syn_best_acc_df = pd.concat([syn_best_acc_df, emg_pca_aux_df])
+    syn_best_acc_df = pd.concat([syn_best_acc_df, tact_aux_df])
+    syn_best_acc_df = pd.concat([syn_best_acc_df, multi_aux_df])
+    # syn_best_acc_df = pd.concat([syn_best_acc_df, hier_aux_df])
 
     # BEST HYPERPARAMETERS
     syn_best_param_df = pd.DataFrame(columns=syn_cols)
 
-    # kin_l1c_param = pd.DataFrame(data=[kin_best_params], columns=perc_values)
-    # kin_l1c_param.insert(0, "Source", ["Kin"])
+    kin_l1c_param = pd.DataFrame(data=[kin_best_params], columns=perc_values)
+    kin_l1c_param.insert(0, "Source", ["Kin"])
 
-    # emg_pca_l1c_param = pd.DataFrame(data=[emg_pca_best_params], columns=perc_values)
-    # emg_pca_l1c_param.insert(0, "Source", ["EMG PCA"])
+    emg_pca_l1c_param = pd.DataFrame(data=[emg_pca_best_params], columns=perc_values)
+    emg_pca_l1c_param.insert(0, "Source", ["EMG PCA"])
 
-    # tact_l1c_param = pd.DataFrame(data=[tact_best_params], columns=perc_values)
-    # tact_l1c_param.insert(0, "Source", ["Tact"])
+    tact_l1c_param = pd.DataFrame(data=[tact_best_params], columns=perc_values)
+    tact_l1c_param.insert(0, "Source", ["Tact"])
 
-    # multi_l1c_param = pd.DataFrame(data=[multi_best_params], columns=perc_values)
-    # multi_l1c_param.insert(0, "Source", ["Multi"])
+    multi_l1c_param = pd.DataFrame(data=[multi_best_params], columns=perc_values)
+    multi_l1c_param.insert(0, "Source", ["Multi"])
 
-    hier_l1c_param = pd.DataFrame(data=[hier_best_params], columns=perc_values)
-    hier_l1c_param.insert(0, "Source", ["Hier"])
+    # hier_l1c_param = pd.DataFrame(data=[hier_best_params], columns=perc_values)
+    # hier_l1c_param.insert(0, "Source", ["Hier"])
 
-    # syn_best_param_df = pd.concat([syn_best_param_df, kin_l1c_param])
-    # syn_best_param_df = pd.concat([syn_best_param_df, emg_pca_l1c_param])
-    # syn_best_param_df = pd.concat([syn_best_param_df, tact_l1c_param])
-    # syn_best_param_df = pd.concat([syn_best_param_df, multi_l1c_param])
-    syn_best_param_df = pd.concat([syn_best_param_df, hier_l1c_param])
+    syn_best_param_df = pd.concat([syn_best_param_df, kin_l1c_param])
+    syn_best_param_df = pd.concat([syn_best_param_df, emg_pca_l1c_param])
+    syn_best_param_df = pd.concat([syn_best_param_df, tact_l1c_param])
+    syn_best_param_df = pd.concat([syn_best_param_df, multi_l1c_param])
+    # syn_best_param_df = pd.concat([syn_best_param_df, hier_l1c_param])
 
     """SYNERGIES FROM ALL SUBJECTS"""
     # syn_best_param_df.to_csv('./results/Syn/best_syn_params.csv', index=False)  # Keep most relevant
@@ -1845,27 +1861,32 @@ def print_syn_results():
     # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
-    syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params.csv', index=False)  # Keep most relevant
+    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params.csv', index=False)  # Keep most relevant
     # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_decr.csv', index=False)  # Keep less relevant
     # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_rand.csv', index=False)  # Keep random synergies
+
+    """SYNERGIES FROM EARLY ENCLOSURE WITH CLUSTERING"""
+    # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params.csv', index=False)  # Keep most relevant
+    syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params_decr.csv', index=False)  # Keep less relevant
+    # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     ## LOAD RAW BEST RESULTS
     raw_cols = ['Kind', 'Family', 'bins', 'L1vsL2', 'C', 'Acc', 'Mean']
     raw_results_df = pd.read_csv('./results/Raw/accuracy/raw_results.csv', header=None)
     raw_results_df.columns = raw_cols
 
-    # kin_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Kin"]
-    # emg_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "EMG"]
-    # tact_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Tactile"]
-    # multi_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Multimodal"]
-    hier_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Hierarchical"]
+    kin_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Kin"]
+    emg_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "EMG"]
+    tact_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Tactile"]
+    multi_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Multimodal"]
+    # hier_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Hierarchical"]
 
     """BEST RAW PARAMETERS"""
     # best_kin_param = [40, 0.25, 0.1]
     # best_emg_param = [10, 0, 1.5]
     # best_tact_param = [5, 0.5, 0.25]
     # best_multi_param = [5, 0.75, 0.25]
-    best_hier_param = 0.5
+    # best_hier_param = 0.5
 
     # KIN
     # best_raw_kin_results = kin_raw_df.loc[
@@ -1912,16 +1933,15 @@ def print_syn_results():
     # best_raw_multi_df.columns = perc_values
 
     # HIER
-    best_raw_hier_results = hier_raw_df.loc[hier_raw_df["C"] == best_hier_param]["Mean"]
+    # best_raw_hier_results = hier_raw_df.loc[hier_raw_df["C"] == best_hier_param]["Mean"]
+    #
+    # best_raw_hier_df = pd.DataFrame()
+    # for x in range(len(syn_best_acc_df.columns) - 1):
+    #     best_raw_hier_df = pd.concat([best_raw_hier_df, best_raw_hier_results], axis=1)
+    # #best_raw_hier_df = best_raw_hier_df.transpose()
+    # best_raw_hier_df.columns = perc_values
 
-    best_raw_hier_df = pd.DataFrame()
-    for x in range(len(syn_best_acc_df.columns) - 1):
-        best_raw_hier_df = pd.concat([best_raw_hier_df, best_raw_hier_results], axis=1)
-    #best_raw_hier_df = best_raw_hier_df.transpose()
-    best_raw_hier_df.columns = perc_values
-
-    # PLOTS
-    # KIN lines plot
+    """ KIN lines plot """
     # i = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Kin"], errorbar='ci', errwidth='.75', capsize=.2,
     #                   color="0", label='Syn classifier')
     # sns.pointplot(data=best_raw_kin_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
@@ -1959,7 +1979,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # KIN bar pval plot
+    """ KIN bar pval plot """
     # kin_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:,1:].loc[syn_best_acc_df["Source"] == "Kin"])
     # kin_pval_df.insert(0, 'Raw', best_raw_kin_df.iloc[:,0].values)
     #
@@ -1997,7 +2017,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # # EMG PCA plot
+    """  EMG PCA plot """
     # j = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "EMG PCA"], errorbar='ci', errwidth='.75', capsize=.2,
     #                   color="0", label='Syn classifier')
     # sns.pointplot(data=best_raw_emg_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
@@ -2036,7 +2056,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # EMG PCA bar pval plot
+    """ EMG PCA bar pval plot """
     # emg_pca_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "EMG PCA"])
     # emg_pca_pval_df.insert(0, 'Raw', best_raw_emg_df.iloc[:, 0].values)
     #
@@ -2076,7 +2096,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # TACT plot
+    """ TACT plot """
     # k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Tact"], errorbar='ci', errwidth='.75', capsize=.2,
     #                   color="0", label='Syn classifier')
     # sns.pointplot(data=best_raw_tact_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
@@ -2114,7 +2134,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # TACT bar pval plot
+    """ TACT bar pval plot """
     # tact_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Tact"])
     # tact_pval_df.insert(0, 'Raw', best_raw_tact_df.iloc[:, 0].values)
     # plt.figure()
@@ -2151,7 +2171,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # MULTI plot
+    """ MULTI plot """
     # k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Multi"], errorbar='ci', errwidth='.75', capsize=.2,
     #                   color="0", label='Syn classifier')
     # sns.pointplot(data=best_raw_multi_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75", label='Raw classifier')
@@ -2188,7 +2208,7 @@ def print_syn_results():
     #
     # plt.close()
 
-    # MULTI bar pval plot
+    """ MULTI bar pval plot """
     # multi_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Multi"])
     # multi_pval_df.insert(0, 'Raw', best_raw_multi_df.iloc[:, 0].values)
     # plt.figure()
@@ -2226,24 +2246,24 @@ def print_syn_results():
     #
     # plt.close()
 
-    # HIER plot
-    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Hier"], errorbar='ci', errwidth='.75',
-                      capsize=.2,
-                      color="0", label='Syn classifier')
-    sns.pointplot(data=best_raw_hier_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75",
-                  label='Raw classifier')
-    k.set(ylabel="Accuracy (95% ci)")
-    k.set(xlabel="Percentage of Synergies")
-    k.axhline(33, color='b', linestyle='--', label='Chance level')
-    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
-    leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
-    handles = leg.legendHandles
-    colors = ['0', '0.75']
-    for it, handle in enumerate(handles):
-        handle.set_color(colors[it])
-        handle.set_linewidth(1)
-    k.set_ylim([0, 100])
-    sns.move_legend(k, "best")
+    """ HIER plot """
+    # k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Hier"], errorbar='ci', errwidth='.75',
+    #                   capsize=.2,
+    #                   color="0", label='Syn classifier')
+    # sns.pointplot(data=best_raw_hier_df, errorbar='ci', errwidth='.75', capsize=.2, color=".75",
+    #               label='Raw classifier')
+    # k.set(ylabel="Accuracy (95% ci)")
+    # k.set(xlabel="Percentage of Synergies")
+    # k.axhline(33, color='b', linestyle='--', label='Chance level')
+    # # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    # leg = plt.legend(labels=['Syn classifier', 'Raw classifier'], labelcolor=['0', '.75'])
+    # handles = leg.legendHandles
+    # colors = ['0', '0.75']
+    # for it, handle in enumerate(handles):
+    #     handle.set_color(colors[it])
+    #     handle.set_linewidth(1)
+    # k.set_ylim([0, 100])
+    # sns.move_legend(k, "best")
     # plt.show()
     # k.set(title="Hierarchical accuracy comparison (discarding less relevant synergies)")
     # plt.savefig('./results/Syn/plots/hier_drop_syn_acc.png', dpi=600)
@@ -2261,28 +2281,28 @@ def print_syn_results():
     #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
     # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_decr.png', dpi=600)
 
-    k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc.png', dpi=600)
+    # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc.png', dpi=600)
 
     # k.set(
     #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
     # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_decr.png', dpi=600)
 
-    plt.close()
+    # plt.close()
 
-    # HIER bar pval plot
-    hier_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Hier"])
-    hier_pval_df.insert(0, 'Raw', best_raw_hier_df.iloc[:, 0].values)
-    plt.figure()
-    i = sns.barplot(data=hier_pval_df)
-    # pairs_hier = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
-    pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
-                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
-    annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    annotator_i.apply_and_annotate()
-    i.set(ylabel="Accuracy (95% ci)")
-    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    """ HIER bar pval plot """
+    # hier_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Hier"])
+    # hier_pval_df.insert(0, 'Raw', best_raw_hier_df.iloc[:, 0].values)
+    # plt.figure()
+    # i = sns.barplot(data=hier_pval_df)
+    # # pairs_hier = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    # pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+    #               ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    # annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
+    # annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    # annotator_i.apply_and_annotate()
+    # i.set(ylabel="Accuracy (95% ci)")
+    # i.axhline(33, color='b', linestyle='--', label='Chance level')
     # i.set(xlabel=None)
     # plt.xticks(rotation=45, size=4)
     # # i.axhline(20, color='r')
@@ -2304,14 +2324,14 @@ def print_syn_results():
     #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject, no clustering")
     # plt.savefig('./results/Syn/plots/subj_noclust_hier_drop_syn_acc_pval_decr.png', dpi=600)
 
-    i.set(
-        title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval.png', dpi=600)
+    # i.set(
+    #     title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
+    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval.png', dpi=600)
 
     # i.set(
     #     title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
     # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval_decr.png', dpi=600)
 
-    plt.close()
+    # plt.close()
 
 
