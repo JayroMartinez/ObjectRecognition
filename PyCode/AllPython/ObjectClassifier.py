@@ -153,7 +153,7 @@ def main():
     ###################################
     # syn_single_source_classification()
     # multisource_syn_classification()
-    # hierarchical_syn_classification()
+    hierarchical_syn_classification()
     # print_syn_results()
 
     ###################################
@@ -166,7 +166,7 @@ def main():
     # syn_single_source_classification()
     # multisource_syn_classification()
     # hierarchical_syn_classification()
-    print_syn_results()
+    # print_syn_results()
 
 
 
