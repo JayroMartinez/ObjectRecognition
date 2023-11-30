@@ -1091,11 +1091,10 @@ def hierarchical_syn_classification():
     # result_file = open('./results/Early Enclosure/accuracy/syn_results_rand.csv', 'a')  # Keep random synergies
     # best_params = pd.read_csv('./results/Early Enclosure/best_syn_params_rand.csv')
 
-    # wr = csv.writer(result_file)
-    # kin_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_kin_scores.csv', index_col=0)
-    # emg_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_emg_pca_scores.csv', index_col=0)
-    # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_tact_scores.csv', index_col=0)
-    # best_params =
+    wr = csv.writer(result_file)
+    kin_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_kin_scores.csv', index_col=0)
+    emg_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_emg_pca_scores.csv', index_col=0)
+    tact_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_tact_scores.csv', index_col=0)
 
     # extra_data = pd.read_csv('./results/Syn/extra_data.csv') # extra data for entire dataset
     extra_data = pd.read_csv('./results/Early Enclosure/early_enclosure_extra_data.csv') # extra data for early enclosure
