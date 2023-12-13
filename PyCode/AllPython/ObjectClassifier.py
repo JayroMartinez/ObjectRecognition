@@ -44,30 +44,30 @@ from synergy_pipeline import extract_early_enclosure_alt
 
 def main():
 
-    data_folder = '/BIDSData'
-    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-
-    data_df = pd.DataFrame()
-
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
-
-    for subject in subject_folders:  # load data for each subject
-        # LOAD RAW DATA
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
-
-    #     # LOAD EP TRIALS
-    #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-    #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-    #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-    #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-
-    # RAW DATA PREPROCESSING
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
+    # data_folder = '/BIDSData'
+    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+    #
+    # data_df = pd.DataFrame()
+    #
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+    #
+    # for subject in subject_folders:  # load data for each subject
+    #     # LOAD RAW DATA
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    #
+    # #     # LOAD EP TRIALS
+    # #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+    # #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+    # #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+    # #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    #
+    # # RAW DATA PREPROCESSING
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
 
     # # SELECT & SAVE EARLY ENCLOSURE DATA
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -142,11 +142,11 @@ def main():
     ## SYNERGY EXTRACTION
     ###################################
     # split_df = []
-    syn_extraction(split_df)
-    syn_extraction_subj(split_df)
+    # syn_extraction(split_df)
+    # syn_extraction_subj(split_df)
     # [syn_clustering() for x in range(0, 5)]
-    syn_clustering()
-    score_reordering()
+    # syn_clustering()
+    # score_reordering()
     # print_syn_results()
 
     ###################################
