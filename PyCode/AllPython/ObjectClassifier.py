@@ -172,7 +172,7 @@ def main():
     ###################################
     ## EARLY ENCLOSURE ALTERNATIVE (pca + ee)
     ###################################
-    extract_early_enclosure_alt()
+    # extract_early_enclosure_alt()
     syn_single_source_classification()
     multisource_syn_classification()
     # hierarchical_syn_classification()
