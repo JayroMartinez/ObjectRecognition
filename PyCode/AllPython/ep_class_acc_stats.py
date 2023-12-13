@@ -37,9 +37,9 @@ def ep_classification_plots():
     obj_label = ["given"] * len(obj_presabs_acc)
     kind_label = ["pres/abs"] * len(obj_presabs_acc)
     obj_presabs_acc_df = pd.DataFrame({"Accuracy": obj_presabs_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_presabs_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_presabs_acc_df], ignore_index=True)
     obj_presabs_rand_acc_df = pd.DataFrame({"Accuracy": obj_presabs_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_presabs_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_presabs_rand_acc_df], ignore_index=True)
 
     # GIVEN COUNT
     obj_count_acc = []
@@ -59,9 +59,9 @@ def ep_classification_plots():
     obj_label = ["given"] * len(obj_count_acc)
     kind_label = ["count"] * len(obj_count_acc)
     obj_count_acc_df = pd.DataFrame({"Accuracy": obj_count_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_count_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_count_acc_df], ignore_index=True)
     obj_count_rand_acc_df = pd.DataFrame({"Accuracy": obj_count_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_count_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_count_rand_acc_df], ignore_index=True)
 
     # GIVEN DURATION
     obj_dur_acc = []
@@ -81,9 +81,9 @@ def ep_classification_plots():
     obj_label = ["given"] * len(obj_dur_acc)
     kind_label = ["duration"] * len(obj_dur_acc)
     obj_dur_acc_df = pd.DataFrame({"Accuracy": obj_dur_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_dur_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_dur_acc_df], ignore_index=True)
     obj_dur_rand_acc_df = pd.DataFrame({"Accuracy": obj_dur_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_dur_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_dur_rand_acc_df], ignore_index=True)
 
     # BOXPLOT EP GIVEN
     # plt.figure()
@@ -117,9 +117,9 @@ def ep_classification_plots():
     obj_label = ["asked"] * len(obj_presabs_acc)
     kind_label = ["pres/abs"] * len(obj_presabs_acc)
     obj_presabs_acc_df = pd.DataFrame({"Accuracy": obj_presabs_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_presabs_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_presabs_acc_df], ignore_index=True)
     obj_presabs_rand_acc_df = pd.DataFrame({"Accuracy": obj_presabs_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_presabs_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_presabs_rand_acc_df], ignore_index=True)
 
     # ASKED COUNT
     obj_count_acc = []
@@ -139,9 +139,9 @@ def ep_classification_plots():
     obj_label = ["asked"] * len(obj_count_acc)
     kind_label = ["count"] * len(obj_count_acc)
     obj_count_acc_df = pd.DataFrame({"Accuracy": obj_count_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_count_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_count_acc_df], ignore_index=True)
     obj_count_rand_acc_df = pd.DataFrame({"Accuracy": obj_count_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_count_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_count_rand_acc_df], ignore_index=True)
 
     # ASKED DURATION
     obj_dur_acc = []
@@ -161,9 +161,9 @@ def ep_classification_plots():
     obj_label = ["asked"] * len(obj_dur_acc)
     kind_label = ["duration"] * len(obj_dur_acc)
     obj_dur_acc_df = pd.DataFrame({"Accuracy": obj_dur_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(obj_dur_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, obj_dur_acc_df], ignore_index=True)
     obj_dur_rand_acc_df = pd.DataFrame({"Accuracy": obj_dur_rand_acc, "Obj/Fam": obj_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(obj_dur_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, obj_dur_rand_acc_df], ignore_index=True)
 
     # BOXPLOT EP ASKED
     # plt.figure()
@@ -219,9 +219,9 @@ def ep_classification_plots():
     fam_label = ["family"] * len(fam_presabs_acc)
     kind_label = ["pres/abs"] * len(fam_presabs_acc)
     fam_presabs_acc_df = pd.DataFrame({"Accuracy": fam_presabs_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(fam_presabs_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, fam_presabs_acc_df], ignore_index=True)
     fam_presabs_rand_acc_df = pd.DataFrame({"Accuracy": fam_presabs_rand_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(fam_presabs_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, fam_presabs_rand_acc_df], ignore_index=True)
 
     # FAMILY COUNT
     fam_count_acc = []
@@ -241,9 +241,9 @@ def ep_classification_plots():
     fam_label = ["family"] * len(fam_count_acc)
     kind_label = ["count"] * len(fam_count_acc)
     fam_count_acc_df = pd.DataFrame({"Accuracy": fam_count_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(fam_count_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, fam_count_acc_df], ignore_index=True)
     fam_count_rand_acc_df = pd.DataFrame({"Accuracy": fam_count_rand_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(fam_count_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, fam_count_rand_acc_df], ignore_index=True)
 
     # FAMILY DURATION
     fam_dur_acc = []
@@ -262,9 +262,9 @@ def ep_classification_plots():
     fam_label = ["family"] * len(fam_dur_acc)
     kind_label = ["duration"] * len(fam_dur_acc)
     fam_dur_acc_df = pd.DataFrame({"Accuracy": fam_dur_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    accuracies_df = accuracies_df.append(fam_dur_acc_df, ignore_index=True)
+    accuracies_df = pd.concat([accuracies_df, fam_dur_acc_df], ignore_index=True)
     fam_dur_rand_acc_df = pd.DataFrame({"Accuracy": fam_dur_rand_acc, "Obj/Fam": fam_label, "Kind": kind_label})
-    rand_accuracies_df = rand_accuracies_df.append(fam_dur_rand_acc_df, ignore_index=True)
+    rand_accuracies_df = pd.concat([rand_accuracies_df, fam_dur_rand_acc_df], ignore_index=True)
 
     # BOXPLOT EP FAMILY
     # plt.figure()
@@ -293,16 +293,16 @@ def ep_classification_plots():
                    (("duration", "asked"), ("duration", "family")),
                    (("duration", "given"), ("duration", "family"))],
         test="Mann-Whitney",
-        text_format="star",
+        text_format="simple",
         show_test_name=False,
     )
     j.set(ylabel="Accuracy (95% ci)")
     plt.title('Classification Accuracy Comparison')
     sns.move_legend(j, "lower right")
-    plt.savefig('./results/EP/plots/EP_all_comp_acc_star.png', dpi=600)
-    plt.show()
+    plt.savefig('./results/EP/plots/EP_all_comp_acc.png', dpi=600)
+    # plt.show()
     plt.close()
-    a=1
+    # a=1
 
     # BOXPLOT COMPARISON ASKED-GIVEN
     # plt.figure()
