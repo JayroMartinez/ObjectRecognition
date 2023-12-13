@@ -152,13 +152,13 @@ def main():
     ###################################
     ## SYNERGY CLASSIFICATION
     ###################################
-    syn_single_source_classification()
-    multisource_syn_classification()
+    # syn_single_source_classification()
+    # multisource_syn_classification()
     # hierarchical_syn_classification()
     # print_syn_results()
 
     ###################################
-    ## EARLY ENCLOSURE
+    ## EARLY ENCLOSURE (ee + pca)
     ###################################
     # syn_extraction_early_enclosure()
     # syn_clustering_early_enclosure()
@@ -170,9 +170,13 @@ def main():
     # print_syn_results()
 
     ###################################
-    ## EARLY ENCLOSURE ALTERNATIVE
+    ## EARLY ENCLOSURE ALTERNATIVE (pca + ee)
     ###################################
-    # extract_early_enclosure_alt()
+    extract_early_enclosure_alt()
+    syn_single_source_classification()
+    multisource_syn_classification()
+    # hierarchical_syn_classification()
+    # print_syn_results()
 
 
 
