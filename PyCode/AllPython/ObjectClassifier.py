@@ -44,30 +44,38 @@ from synergy_pipeline import extract_early_enclosure_alt
 
 def main():
 
-    # data_folder = '/BIDSData'
-    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-    #
-    # data_df = pd.DataFrame()
-    #
-    # ep_presabs_df = pd.DataFrame()
-    # ep_dur_df = pd.DataFrame()
-    # ep_count_df = pd.DataFrame()
-    #
-    # for subject in subject_folders:  # load data for each subject
-    #     # LOAD RAW DATA
-    #     subject_df = load(subject)
-    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
-    #
-    # #     # LOAD EP TRIALS
-    # #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-    # #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-    # #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-    # #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    data_folder = '/BIDSData'
+    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+
+    data_df = pd.DataFrame()
+
+    ep_presabs_df = pd.DataFrame()
+    ep_dur_df = pd.DataFrame()
+    ep_count_df = pd.DataFrame()
+
+    for subject in subject_folders:  # load data for each subject
+        # LOAD RAW DATA
+        subject_df = load(subject)
+        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+
+        # LOAD EP TRIALS
+        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
     #
     # # RAW DATA PREPROCESSING
-    # split_df = split(data_df)  # split data into trials and EPs and add fields
-    # split_df['Trial num'] = split_df['Trial num'].astype('str')
-    # split_df['EP num'] = split_df['EP num'].astype('str')
+    split_df = split(data_df)  # split data into trials and EPs and add fields
+    split_df['Trial num'] = split_df['Trial num'].astype('str')
+    split_df['EP num'] = split_df['EP num'].astype('str')
+
+    # REMOVE DOUBLE EP TRIALS
+    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    split_df = split_df[~split_df['EP'].isin(to_remove)]
+    ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    ep_count_df = ep_count_df.drop(to_remove, axis=1)
+
 
     # # SELECT & SAVE EARLY ENCLOSURE DATA
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -87,26 +95,28 @@ def main():
     ###################################
     ## EP CLASSIFICATION
     ###################################
-    # # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    # ask_ep_presabs_classification(ep_presabs_df)
-    # # ASKED OBJECT CLASSIFICATION BY EP DURATION
-    # ask_ep_dur_classification(ep_dur_df)
-    # # ASKED OBJECT CLASSIFICATION BY EP COUNT
-    # ask_ep_count_classification(ep_count_df)
-    #
-    # # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    # giv_ep_presabs_classification(ep_presabs_df)
-    # # GIVEN OBJECT CLASSIFICATION BY EP DURATION
-    # giv_ep_dur_classification(ep_dur_df)
-    # # GIVEN OBJECT CLASSIFICATION BY EP COUNT
-    # giv_ep_count_classification(ep_count_df)
-    #
-    # # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
-    # fam_ep_presabs_classification(ep_presabs_df)
-    # # FAMILY CLASSIFICATION BY EP DURATION
-    # fam_ep_dur_classification(ep_dur_df)
-    # # FAMILY CLASSIFICATION BY EP COUNT
-    # fam_ep_count_classification(ep_count_df)
+    # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
+    ask_ep_presabs_classification(ep_presabs_df)
+    # ASKED OBJECT CLASSIFICATION BY EP DURATION
+    ask_ep_dur_classification(ep_dur_df)
+    # ASKED OBJECT CLASSIFICATION BY EP COUNT
+    ask_ep_count_classification(ep_count_df)
+
+    # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
+    giv_ep_presabs_classification(ep_presabs_df)
+    # GIVEN OBJECT CLASSIFICATION BY EP DURATION
+    giv_ep_dur_classification(ep_dur_df)
+    # GIVEN OBJECT CLASSIFICATION BY EP COUNT
+    giv_ep_count_classification(ep_count_df)
+
+    # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
+    fam_ep_presabs_classification(ep_presabs_df)
+    # FAMILY CLASSIFICATION BY EP DURATION
+    fam_ep_dur_classification(ep_dur_df)
+    # FAMILY CLASSIFICATION BY EP COUNT
+    fam_ep_count_classification(ep_count_df)
+
+    print("EP classification done!")
 
     # EP ACCURACY PLOTS
     # ep_classification_plots()
@@ -119,24 +129,29 @@ def main():
 
     # SINGLE SOURCE CLASSIFICATION
     # init_time = time.time()
-    # emg_classification(split_df)
+    emg_classification(split_df)
     # emg_time = time.time()
     # print("EMG elapsed time: ", round(emg_time - init_time))
-    # kinematic_classification(split_df)
+    print("EMG classification done!")
+    kinematic_classification(split_df)
     # kinematic_time = time.time()
     # print("Kinematic elapsed time: ", round(kinematic_time - emg_time))
-    # tactile_classification(split_df)
+    print("Kinematic classification done!")
+    tactile_classification(split_df)
     # tactile_time = time.time()
     # print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
+    print("Tactile classification done!")
     # # MULTIMODAL SOURCE CLASSIFICATION
-    # multiple_source_classification(split_df)
+    multiple_source_classification(split_df)
     # multimodal_time = time.time()
     # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
+    print("Multimodal classification done!")
     # print("###########################################")
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFICATION
-    # hierarchical_classification(split_df)
+    hierarchical_classification(split_df)
+    print("Hierarchical classification done!")
 
     ###################################
     ## SYNERGY EXTRACTION

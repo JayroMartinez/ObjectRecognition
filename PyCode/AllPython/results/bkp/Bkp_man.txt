@@ -64,4 +64,7 @@ Backup 12:
 - Added synergy classification discarding the most relevant synergies
 - Added synergy classification discarding random synergies
 
-
+Backup 13:
+******************************
+- Variance accounted for each synergy is computed properly
+- Partial results, since we are now discarding 'ep + ep' movements, we don't need these results anymore
