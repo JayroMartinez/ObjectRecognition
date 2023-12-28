@@ -57,24 +57,24 @@ def main():
         # LOAD RAW DATA
         subject_df = load(subject)
         data_df = pd.concat([data_df, subject_df], ignore_index=True)
-
-        # LOAD EP TRIALS
-        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
     #
-    # # RAW DATA PREPROCESSING
+    #     # LOAD EP TRIALS
+    #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+    #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+    #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+    #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    #
+    # RAW DATA PREPROCESSING
     split_df = split(data_df)  # split data into trials and EPs and add fields
     split_df['Trial num'] = split_df['Trial num'].astype('str')
     split_df['EP num'] = split_df['EP num'].astype('str')
-
-    # REMOVE DOUBLE EP TRIALS
+    #
+    # # REMOVE DOUBLE EP TRIALS
     to_remove = [x for x in split_df['EP'].unique() if '+' in x]
     split_df = split_df[~split_df['EP'].isin(to_remove)]
-    ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
 
 
     # # SELECT & SAVE EARLY ENCLOSURE DATA
@@ -96,27 +96,27 @@ def main():
     ## EP CLASSIFICATION
     ###################################
     # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    ask_ep_presabs_classification(ep_presabs_df)
+    # ask_ep_presabs_classification(ep_presabs_df)
     # ASKED OBJECT CLASSIFICATION BY EP DURATION
-    ask_ep_dur_classification(ep_dur_df)
+    # ask_ep_dur_classification(ep_dur_df)
     # ASKED OBJECT CLASSIFICATION BY EP COUNT
-    ask_ep_count_classification(ep_count_df)
+    # ask_ep_count_classification(ep_count_df)
 
     # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    giv_ep_presabs_classification(ep_presabs_df)
+    # giv_ep_presabs_classification(ep_presabs_df)
     # GIVEN OBJECT CLASSIFICATION BY EP DURATION
-    giv_ep_dur_classification(ep_dur_df)
+    # giv_ep_dur_classification(ep_dur_df)
     # GIVEN OBJECT CLASSIFICATION BY EP COUNT
-    giv_ep_count_classification(ep_count_df)
+    # giv_ep_count_classification(ep_count_df)
 
     # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
-    fam_ep_presabs_classification(ep_presabs_df)
+    # fam_ep_presabs_classification(ep_presabs_df)
     # FAMILY CLASSIFICATION BY EP DURATION
-    fam_ep_dur_classification(ep_dur_df)
+    # fam_ep_dur_classification(ep_dur_df)
     # FAMILY CLASSIFICATION BY EP COUNT
-    fam_ep_count_classification(ep_count_df)
+    # fam_ep_count_classification(ep_count_df)
 
-    print("EP classification done!")
+    # print("EP classification done!")
 
     # EP ACCURACY PLOTS
     # ep_classification_plots()
@@ -129,46 +129,49 @@ def main():
 
     # SINGLE SOURCE CLASSIFICATION
     # init_time = time.time()
-    emg_classification(split_df)
+    # emg_classification(split_df)
     # emg_time = time.time()
     # print("EMG elapsed time: ", round(emg_time - init_time))
-    print("EMG classification done!")
-    kinematic_classification(split_df)
+    # print("EMG classification done!")
+    # kinematic_classification(split_df)
     # kinematic_time = time.time()
     # print("Kinematic elapsed time: ", round(kinematic_time - emg_time))
-    print("Kinematic classification done!")
-    tactile_classification(split_df)
+    # print("Kinematic classification done!")
+    # tactile_classification(split_df)
     # tactile_time = time.time()
     # print("Tactile elapsed time: ", round(tactile_time - kinematic_time))
-    print("Tactile classification done!")
+    # print("Tactile classification done!")
     # # MULTIMODAL SOURCE CLASSIFICATION
-    multiple_source_classification(split_df)
+    # multiple_source_classification(split_df)
     # multimodal_time = time.time()
     # print("Multimodal elapsed time: ", round(multimodal_time - tactile_time))
-    print("Multimodal classification done!")
+    # print("Multimodal classification done!")
     # print("###########################################")
     # print("TOTAL elapsed time: ", round(multimodal_time - init_time))
 
     # HIERARCHICAL CLASSIFICATION
-    hierarchical_classification(split_df)
-    print("Hierarchical classification done!")
+    # hierarchical_classification(split_df)
+    # print("Hierarchical classification done!")
 
     ###################################
     ## SYNERGY EXTRACTION
     ###################################
     # split_df = []
-    # syn_extraction(split_df)
-    # syn_extraction_subj(split_df)
+    syn_extraction(split_df)
+    print("Synergy extraction for all subjects done!")
+    syn_extraction_subj(split_df)
+    print("Synergy extraction for each subject done!")
     # [syn_clustering() for x in range(0, 5)]
-    # syn_clustering()
-    # score_reordering()
+    syn_clustering()
+    print("Synergy clustering done!")
+    score_reordering()
     # print_syn_results()
 
     ###################################
     ## SYNERGY CLASSIFICATION
     ###################################
-    # syn_single_source_classification()
-    # multisource_syn_classification()
+    syn_single_source_classification()
+    multisource_syn_classification()
     # hierarchical_syn_classification()
     # print_syn_results()
 
@@ -188,8 +191,8 @@ def main():
     ## EARLY ENCLOSURE ALTERNATIVE (pca + ee)
     ###################################
     # extract_early_enclosure_alt()
-    syn_single_source_classification()
-    multisource_syn_classification()
+    # syn_single_source_classification()
+    # multisource_syn_classification()
     # hierarchical_syn_classification()
     # print_syn_results()
 
