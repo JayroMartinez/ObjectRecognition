@@ -44,19 +44,19 @@ from synergy_pipeline import extract_early_enclosure_alt
 
 def main():
 
-    data_folder = '/BIDSData'
-    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-
-    data_df = pd.DataFrame()
-
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
-
-    for subject in subject_folders:  # load data for each subject
-        # LOAD RAW DATA
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    # data_folder = '/BIDSData'
+    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+    #
+    # data_df = pd.DataFrame()
+    #
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+    #
+    # for subject in subject_folders:  # load data for each subject
+    #     # LOAD RAW DATA
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
     #
     #     # LOAD EP TRIALS
     #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
@@ -64,14 +64,14 @@ def main():
     #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
     #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
     #
-    # RAW DATA PREPROCESSING
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
+    # # RAW DATA PREPROCESSING
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
     #
     # # REMOVE DOUBLE EP TRIALS
-    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    # split_df = split_df[~split_df['EP'].isin(to_remove)]
     # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
     # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
     # ep_count_df = ep_count_df.drop(to_remove, axis=1)
@@ -157,14 +157,15 @@ def main():
     ## SYNERGY EXTRACTION
     ###################################
     # split_df = []
-    syn_extraction(split_df)
-    print("Synergy extraction for all subjects done!")
-    syn_extraction_subj(split_df)
-    print("Synergy extraction for each subject done!")
+    # syn_extraction(split_df)
+    # print("Synergy extraction for all subjects done!")
+    # syn_extraction_subj(split_df)
+    # print("Synergy extraction for each subject done!")
     # [syn_clustering() for x in range(0, 5)]
-    syn_clustering()
-    print("Synergy clustering done!")
-    score_reordering()
+    # syn_clustering()
+    # print("Synergy clustering done!")
+    # score_reordering()
+    # print("Synergy reordering done!")
     # print_syn_results()
 
     ###################################

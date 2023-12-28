@@ -1032,11 +1032,11 @@ def syn_single_source_classification():
     # result_file = open('./results/Early Enclosure/accuracy/alternative_syn_results.csv', 'a')  # Keep most relevant synergies
     # result_file = open('./results/Early Enclosure/accuracy/alternative_syn_results_decr.csv', 'a')  # Keep less relevant synergies
     # result_file = open('./results/Early Enclosure/accuracy/alternative_syn_results_rand.csv', 'a')  # Keep random synergies
-
-    wr = csv.writer(result_file)
-    kin_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_kin_scores.csv', index_col=0)
-    emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
-    tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
+    #
+    # wr = csv.writer(result_file)
+    # kin_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_kin_scores.csv', index_col=0)
+    # emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
+    # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
 
     all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins] for x in all_param]
