@@ -293,13 +293,13 @@ def ep_classification_plots():
                    (("duration", "asked"), ("duration", "family")),
                    (("duration", "given"), ("duration", "family"))],
         test="Mann-Whitney",
-        text_format="simple",
+        text_format="star",
         show_test_name=False,
     )
     j.set(ylabel="Accuracy (95% ci)")
     plt.title('Classification Accuracy Comparison')
     sns.move_legend(j, "lower right")
-    plt.savefig('./results/EP/plots/EP_all_comp_acc.png', dpi=600)
+    plt.savefig('./results/EP/plots/EP_all_comp_acc_star.png', dpi=600)
     # plt.show()
     plt.close()
     # a=1

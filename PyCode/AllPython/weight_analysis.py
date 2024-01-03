@@ -268,11 +268,10 @@ def ep_weights():
 
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
 
-    ep_labs_cols = ['contour following', 'contour following + enclosure part',
+    ep_labs_cols = ['contour following',
                     'edge following', 'enclosure', 'enclosure part',
-                    'enclosure part + function test', 'function test', 'pressure',
-                    'rotation', 'translation', 'weighting',
-                    'weighting + contour following']
+                    'function test', 'pressure',
+                    'rotation', 'translation', 'weighting']
 
     fam_obj = dict(
         Mugs=['CeramicMug', 'Glass', 'MetalMug'],
@@ -324,8 +323,14 @@ def ep_weights():
         ep_presabs_obj_w_df = ep_presabs_w_df.groupby('Object')[ep_labs_cols].sum()
         # ep_presabs_tot_w = ep_presabs_obj_w_df.sum()
         ep_presabs_tot_w = ep_presabs_obj_w_df.abs().mean()
-        ep_presabs_fin_w = ep_presabs_obj_w_df.append(
-            pd.Series(data=ep_presabs_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_presabs_fin_w = ep_presabs_obj_w_df.append(
+        #     pd.Series(data=ep_presabs_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_presabs_fin_w = pd.concat([ep_presabs_obj_w_df, pd.Series(data=ep_presabs_tot_w, index=ep_labs_cols, name='Total')])
+        ep_presabs_fin_w = pd.DataFrame(data=ep_presabs_obj_w_df)
+        idx = ep_presabs_fin_w.index.tolist()
+        idx.append('Total')
+        ep_presabs_fin_w.loc[len(ep_presabs_fin_w.index)] = pd.Series(data=ep_presabs_tot_w, index=ep_labs_cols, name='Total')
+        ep_presabs_fin_w.index = idx
 
         # heatmap weights
         # generate new colormap
@@ -385,13 +390,20 @@ def ep_weights():
         ep_dur_obj_w_df = ep_dur_w_df.groupby('Object')[ep_labs_cols].sum()
         # ep_dur_tot_w = ep_dur_obj_w_df.sum()
         ep_dur_tot_w = ep_dur_obj_w_df.abs().mean()
-        ep_dur_fin_w = ep_dur_obj_w_df.append(pd.Series(data=ep_dur_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_dur_fin_w = ep_dur_obj_w_df.append(pd.Series(data=ep_dur_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_dur_fin_w = pd.concat([ep_dur_obj_w_df, pd.Series(data=ep_dur_tot_w, index=ep_labs_cols, name='Total')])
+        ep_dur_fin_w = pd.DataFrame(data=ep_dur_obj_w_df)
+        idx = ep_dur_fin_w.index.tolist()
+        idx.append('Total')
+        ep_dur_fin_w.loc[len(ep_dur_fin_w.index)] = pd.Series(data=ep_dur_tot_w, index=ep_labs_cols,
+                                                                      name='Total')
+        ep_dur_fin_w.index = idx
 
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
+        min = ep_dur_fin_w.min().min()
+        max = ep_dur_fin_w.max().max()
         new_margin = np.maximum(min, max)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = cm.bwr
@@ -444,13 +456,20 @@ def ep_weights():
         ep_count_obj_w_df = ep_count_w_df.groupby('Object')[ep_labs_cols].sum()
         # ep_count_tot_w = ep_count_obj_w_df.sum()
         ep_count_tot_w = ep_count_obj_w_df.abs().mean()
-        ep_count_fin_w = ep_count_obj_w_df.append(pd.Series(data=ep_count_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_count_fin_w = ep_count_obj_w_df.append(pd.Series(data=ep_count_tot_w, index=ep_labs_cols, name='Total'))
+        # ep_count_fin_w = pd.concat([ep_count_obj_w_df, pd.Series(data=ep_count_tot_w, index=ep_labs_cols, name='Total')])
+        ep_count_fin_w = pd.DataFrame(data=ep_count_obj_w_df)
+        idx = ep_count_fin_w.index.tolist()
+        idx.append('Total')
+        ep_count_fin_w.loc[len(ep_count_fin_w.index)] = pd.Series(data=ep_count_tot_w, index=ep_labs_cols,
+                                                                      name='Total')
+        ep_count_fin_w.index = idx
 
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
+        min = ep_count_fin_w.min().min()
+        max = ep_count_fin_w.max().max()
         new_margin = np.maximum(min, max)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = cm.bwr
@@ -511,14 +530,21 @@ def ep_weights():
         ep_presabs_obj_w_df_fam = ep_presabs_w_df_fam.groupby('Family')[ep_labs_cols].sum()
         # ep_presabs_tot_w_fam = ep_presabs_obj_w_df_fam.sum()
         ep_presabs_tot_w_fam = ep_presabs_obj_w_df_fam.abs().mean()
-        ep_presabs_fin_w_fam = ep_presabs_obj_w_df_fam.append(
-            pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_presabs_fin_w_fam = ep_presabs_obj_w_df_fam.append(
+        #     pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_presabs_fin_w_fam = pd.concat([ep_presabs_obj_w_df_fam, pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols, name='Total')])
+        ep_presabs_fin_w_fam = pd.DataFrame(data=ep_presabs_obj_w_df_fam)
+        idx = ep_presabs_fin_w_fam.index.tolist()
+        idx.append('Total')
+        ep_presabs_fin_w_fam.loc[len(ep_presabs_fin_w_fam.index)] = pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols,
+                                                                  name='Total')
+        ep_presabs_fin_w_fam.index = idx
 
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
+        min = ep_presabs_fin_w_fam.min().min()
+        max = ep_presabs_fin_w_fam.max().max()
         new_margin = np.maximum(min, max)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = cm.bwr
@@ -579,14 +605,22 @@ def ep_weights():
         ep_dur_obj_w_df_fam = ep_dur_w_df_fam.groupby('Family')[ep_labs_cols].sum()
         # ep_dur_tot_w_fam = ep_dur_obj_w_df_fam.sum()
         ep_dur_tot_w_fam = ep_dur_obj_w_df_fam.abs().mean()
-        ep_dur_fin_w_fam = ep_dur_obj_w_df_fam.append(
-            pd.Series(data=ep_dur_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_dur_fin_w_fam = ep_dur_obj_w_df_fam.append(
+        #     pd.Series(data=ep_dur_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_dur_fin_w_fam = pd.concat([ep_dur_obj_w_df_fam, pd.Series(data=ep_dur_tot_w_fam, index=ep_labs_cols, name='Total')])
+        ep_dur_fin_w_fam = pd.DataFrame(data=ep_dur_obj_w_df_fam)
+        idx = ep_dur_fin_w_fam.index.tolist()
+        idx.append('Total')
+        ep_dur_fin_w_fam.loc[len(ep_dur_fin_w_fam.index)] = pd.Series(data=ep_dur_tot_w_fam,
+                                                                              index=ep_labs_cols,
+                                                                              name='Total')
+        ep_dur_fin_w_fam.index = idx
 
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
+        min = ep_dur_fin_w_fam.min().min()
+        max = ep_dur_fin_w_fam.max().max()
         new_margin = np.maximum(min, max)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = cm.bwr
@@ -647,14 +681,22 @@ def ep_weights():
         ep_count_obj_w_df_fam = ep_count_w_df_fam.groupby('Family')[ep_labs_cols].sum()
         # ep_count_tot_w_fam = ep_count_obj_w_df_fam.sum()
         ep_count_tot_w_fam = ep_count_obj_w_df_fam.abs().mean()
-        ep_count_fin_w_fam = ep_count_obj_w_df_fam.append(
-            pd.Series(data=ep_count_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_count_fin_w_fam = ep_count_obj_w_df_fam.append(
+        #     pd.Series(data=ep_count_tot_w_fam, index=ep_labs_cols, name='Total'))
+        # ep_count_fin_w_fam = pd.concat([ep_count_obj_w_df_fam, pd.Series(data=ep_count_tot_w_fam, index=ep_labs_cols, name='Total')])
+        ep_count_fin_w_fam = pd.DataFrame(data=ep_count_obj_w_df_fam)
+        idx = ep_count_fin_w_fam.index.tolist()
+        idx.append('Total')
+        ep_count_fin_w_fam.loc[len(ep_count_fin_w_fam.index)] = pd.Series(data=ep_count_tot_w_fam,
+                                                                              index=ep_labs_cols,
+                                                                              name='Total')
+        ep_count_fin_w_fam.index = idx
 
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
+        min = ep_count_fin_w_fam.min().min()
+        max = ep_count_fin_w_fam.max().max()
         new_margin = np.maximum(min, max)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = cm.bwr
