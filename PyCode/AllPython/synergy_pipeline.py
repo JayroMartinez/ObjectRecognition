@@ -1179,11 +1179,11 @@ def hierarchical_syn_classification():
     # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/reordered_tact_scores.csv', index_col=0)
 
     """SYNERGIES FROM ALTERNATIVE EARLY ENCLOSURE"""
-    result_file = open('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_hier_results.csv', 'a')  # Keep most relevant synergies
-    best_params = pd.read_csv('./results/Early Enclosure/alternative_best_syn_params.csv')  # All subjects together with clust
+    # result_file = open('./results/Early Enclosure/accuracy/alternative_syn_hier_results.csv', 'a')  # Keep most relevant synergies
+    # best_params = pd.read_csv('./results/Early Enclosure/alternative_best_syn_params.csv')  # All subjects together with clust
 
-    # result_file = open('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
-    # best_params = pd.read_csv('./results/Early Enclosure/alternative_best_syn_params_decr.csv')
+    result_file = open('./results/Early Enclosure/accuracy/alternative_syn_hier_results_decr.csv', 'a')  # Keep less relevant synergies
+    best_params = pd.read_csv('./results/Early Enclosure/alternative_best_syn_params_decr.csv')
 
     # result_file = open('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_hier_results_rand.csv', 'a')  # Keep random synergies
     # best_params = pd.read_csv('./results/Early Enclosure/alternative_best_syn_params_rand.csv')
@@ -1204,34 +1204,34 @@ def hierarchical_syn_classification():
             num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
 
             """Keeps most relevant synergies"""
-            extra_data.reset_index(inplace=True, drop=True)
-
-            kin_score_df.reset_index(inplace=True, drop=True)
-            kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
-            kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
-
-            emg_score_df.reset_index(inplace=True, drop=True)
-            emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
-            emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
-
-            tact_score_df.reset_index(inplace=True, drop=True)
-            tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
-            tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
-
-            """Discards most relevant synergies"""
             # extra_data.reset_index(inplace=True, drop=True)
             #
             # kin_score_df.reset_index(inplace=True, drop=True)
-            # kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
-            # kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+            # kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
+            # kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
             #
             # emg_score_df.reset_index(inplace=True, drop=True)
-            # emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
-            # emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+            # emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
+            # emg_scores.columns = list(emg_score_df.columns[:int(num_syn_emg)]) + list(extra_data.columns)
             #
             # tact_score_df.reset_index(inplace=True, drop=True)
-            # tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
-            # tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
+            # tact_scores = pd.concat([tact_score_df.iloc[:, :int(num_syn_tact)], extra_data], axis=1, ignore_index=True)
+            # tact_scores.columns = list(tact_score_df.columns[:int(num_syn_tact)]) + list(extra_data.columns)
+
+            """Discards most relevant synergies"""
+            extra_data.reset_index(inplace=True, drop=True)
+
+            kin_score_df.reset_index(inplace=True, drop=True)
+            kin_scores = pd.concat([kin_score_df.iloc[:, -int(num_syn_kin):], extra_data], axis=1, ignore_index=True)
+            kin_scores.columns = list(kin_score_df.columns[-int(num_syn_kin):]) + list(extra_data.columns)
+
+            emg_score_df.reset_index(inplace=True, drop=True)
+            emg_scores = pd.concat([emg_score_df.iloc[:, -int(num_syn_emg):], extra_data], axis=1, ignore_index=True)
+            emg_scores.columns = list(emg_score_df.columns[-int(num_syn_emg):]) + list(extra_data.columns)
+
+            tact_score_df.reset_index(inplace=True, drop=True)
+            tact_scores = pd.concat([tact_score_df.iloc[:, -int(num_syn_tact):], extra_data], axis=1, ignore_index=True)
+            tact_scores.columns = list(tact_score_df.columns[-int(num_syn_tact):]) + list(extra_data.columns)
 
             """Select random synergies"""
             # extra_data.reset_index(inplace=True, drop=True)
@@ -1853,19 +1853,19 @@ def print_syn_results():
     """Variance"""
     kin_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_kin_var_tot.csv')
     kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
-    emg_pca_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_emg_pca_var_tot.csv.csv')
+    emg_pca_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_emg_pca_var_tot.csv')
     emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
-    tact_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_tact_var_tot.csv.csv')
+    tact_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_tact_var_tot.csv')
     tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
 
     """ Keep most relevant synergies"""
-    results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_results.csv', header=None) # Keep more relevant
-    multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_multi_results.csv', header=None) # Keep more relevant
+    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_results.csv', header=None) # Keep more relevant
+    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_multi_results.csv', header=None) # Keep more relevant
     # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results.csv', header=None) # Keep more relevant
 
     """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_early_enclosure_syn_multi_results_decr.csv', header=None)  # Keep less relevant
+    results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_results_decr.csv', header=None)  # Keep less relevant
+    multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_multi_results_decr.csv', header=None)  # Keep less relevant
     # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results_decr.csv', header=None)  # Keep less relevant
 
     """VARIANCE CALCULATIONS"""
@@ -1882,14 +1882,14 @@ def print_syn_results():
         tact_syns = int(np.ceil(len(tact_var) * p / 100))
 
         """Keep most relevant synergies"""
-        kin_cum_var.append(kin_var.iloc[:kin_syns].sum()[0]*100)
-        emg_pca_cum_var.append(emg_pca_var.iloc[:emg_pca_syns].sum()[0]*100)
-        tact_cum_var.append(tact_var.iloc[:tact_syns].sum()[0]*100)
+        # kin_cum_var.append(kin_var.iloc[:kin_syns].sum()[0]*100)
+        # emg_pca_cum_var.append(emg_pca_var.iloc[:emg_pca_syns].sum()[0]*100)
+        # tact_cum_var.append(tact_var.iloc[:tact_syns].sum()[0]*100)
 
         """Keep less relevant synergies"""
-        # kin_cum_var.append(kin_var.iloc[-kin_syns:].sum()[0]*100)
-        # emg_pca_cum_var.append(emg_pca_var.iloc[-emg_pca_syns:].sum()[0]*100)
-        # tact_cum_var.append(tact_var.iloc[-tact_syns:].sum()[0]*100)
+        kin_cum_var.append(kin_var.iloc[-kin_syns:].sum()[0]*100)
+        emg_pca_cum_var.append(emg_pca_var.iloc[-emg_pca_syns:].sum()[0]*100)
+        tact_cum_var.append(tact_var.iloc[-tact_syns:].sum()[0]*100)
 
     combined_cum_var = [statistics.mean(k) for k in zip(kin_cum_var, emg_pca_cum_var, tact_cum_var)]
     kin_cum_var = pd.DataFrame(kin_cum_var)
@@ -2078,8 +2078,8 @@ def print_syn_results():
     # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     """SYNERGIES FROM ALTERNATIVE EARLY ENCLOSURE"""
-    syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params.csv', index=False)  # Keep most relevant
-    # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params_decr.csv', index=False)  # Keep less relevant
+    # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params.csv', index=False)  # Keep most relevant
+    syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params_decr.csv', index=False)  # Keep less relevant
     # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     ## LOAD RAW BEST RESULTS
