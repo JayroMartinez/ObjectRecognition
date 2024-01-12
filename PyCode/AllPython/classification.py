@@ -105,12 +105,12 @@ def emg_aux_classif(input_data):
             [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
-            random.shuffle(train_labels)
-            random.shuffle(test_labels)
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-            random_score.append(rnd_sc)
+            # random.shuffle(train_labels)
+            # random.shuffle(test_labels)
+            # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            # rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            # random_score.append(rnd_sc)
 
     # model weight file close
     weight_file.close()
@@ -122,12 +122,13 @@ def emg_aux_classif(input_data):
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
     # print("RESULT:", result)
-    random_result = ['EMG_Rand']
-    random_result.extend(params)
-    random_result.append(random_score)
-    random_result.append(round(np.mean(random_score), 2))
+    # random_result = ['EMG_Rand']
+    # random_result.extend(params)
+    # random_result.append(random_score)
+    # random_result.append(round(np.mean(random_score), 2))
 
-    return [result, random_result]
+    # return [result, random_result]
+    return result
 
 
 def kin_aux_classif(input_data):
@@ -228,12 +229,12 @@ def kin_aux_classif(input_data):
             [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
-            random.shuffle(train_labels)
-            random.shuffle(test_labels)
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-            random_score.append(rnd_sc)
+            # random.shuffle(train_labels)
+            # random.shuffle(test_labels)
+            # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            # rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            # random_score.append(rnd_sc)
 
     # model weight file close
     weight_file.close()
@@ -243,12 +244,13 @@ def kin_aux_classif(input_data):
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
     # print("RESULT:", result)
-    random_result = ['Kin_Rand']
-    random_result.extend(params)
-    random_result.append(random_score)
-    random_result.append(round(np.mean(random_score), 2))
+    # random_result = ['Kin_Rand']
+    # random_result.extend(params)
+    # random_result.append(random_score)
+    # random_result.append(round(np.mean(random_score), 2))
 
-    return [result, random_result]
+    # return [result, random_result]
+    return result
 
 
 def tact_aux_classif(input_data):
@@ -345,12 +347,12 @@ def tact_aux_classif(input_data):
             [weight_wr.writerow(x) for x in log_model.coef_]
 
             # random shuffle model
-            random.shuffle(train_labels)
-            random.shuffle(test_labels)
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-            rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
-            random_score.append(rnd_sc)
+            # random.shuffle(train_labels)
+            # random.shuffle(test_labels)
+            # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            # rnd_sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            # random_score.append(rnd_sc)
 
     # model weight file close
     weight_file.close()
@@ -360,12 +362,13 @@ def tact_aux_classif(input_data):
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
     # print("RESULT:", result)
-    random_result = ['Tact_Rand']
-    random_result.extend(params)
-    random_result.append(random_score)
-    random_result.append(round(np.mean(random_score), 2))
+    # random_result = ['Tact_Rand']
+    # random_result.extend(params)
+    # random_result.append(random_score)
+    # random_result.append(round(np.mean(random_score), 2))
 
-    return [result, random_result]
+    # return [result, random_result]
+    return result
 
 
 def multiple_source_aux_classif(input_data):
@@ -400,17 +403,17 @@ def multiple_source_aux_classif(input_data):
     #########
     ## TEST NOT ALL SOURCES
     #########
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        try:
-            part_data = data.drop(columns=kin_cols)
-        except:
-            print("Error dropping Tact Cols with params:", params)
+    # with warnings.catch_warnings():
+    #     warnings.filterwarnings('error')
+    #     try:
+    #         part_data = data.drop(columns=kin_cols)
+    #     except:
+    #         print("Error dropping Tact Cols with params:", params)
 
     total_score = []
     random_score = []
 
-    selected_df = part_data.loc[data['Family'] == family]  # select particular family
+    selected_df = data.loc[data['Family'] == family]  # select particular family
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
@@ -508,7 +511,7 @@ def multiple_source_aux_classif(input_data):
                 total_score.append(sc)
                 # random_score.append(sc)
 
-    result = ['Multimodal_ET']
+    result = ['Multimodal']
     result.extend(params)
     result.append(total_score)
     result.append(round(np.mean(total_score), 2))
@@ -787,7 +790,7 @@ def emg_classification(data):
 
         for res in result.get():
             wr.writerow(res[0])
-            wr.writerow(res[1])
+            # wr.writerow(res[1])
             # a=1
 
     result_file.close()
@@ -821,7 +824,7 @@ def kinematic_classification(data):
 
         for res in result.get():
             wr.writerow(res[0])
-            wr.writerow(res[1])
+            # wr.writerow(res[1])
             # a=1
 
     result_file.close()
@@ -855,7 +858,7 @@ def tactile_classification(data):
 
         for res in result.get():
             wr.writerow(res[0])
-            wr.writerow(res[1])
+            # wr.writerow(res[1])
             # a=1
 
     result_file.close()

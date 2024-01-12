@@ -68,3 +68,9 @@ Backup 13:
 ******************************
 - Variance accounted for each synergy is computed properly
 - Partial results, since we are now discarding 'ep + ep' movements, we don't need these results anymore
+
+Backup 14:
+******************************
+- Early Enclosure is now computed as "PCA, clustering and then extraction of early enclosure"
+- Raw results are not right. Wrong execution
+- Not computed the hierarchical results for each subject + clustering discarding the most relevant synergies
