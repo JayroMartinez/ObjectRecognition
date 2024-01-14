@@ -185,8 +185,8 @@ def main():
     # multisource_syn_classification('all', 'most')
     # print("Multisource classification for all subjects discarding the most relevant DONE!")
     # call to get best params
-    # get_best_params_multi('all', 'less')
-    # get_best_params_multi('all', 'most')
+    get_best_params_multi('all', 'less')
+    get_best_params_multi('all', 'most')
 
     # hierarchical
     hierarchical_syn_classification('all', 'less')

@@ -82,7 +82,7 @@ def get_best_params_hier(type, discard):
     else:
         best_file_name += '_decr.csv'
 
-    syn_best_param_df.to_csv(best_file_name, index=False)
+    syn_best_param_df.to_csv(best_file_name, mode='a', index=False)
 
 
 def get_best_params_multi(type, discard):
@@ -140,7 +140,7 @@ def get_best_params_multi(type, discard):
     else:
         best_file_name += '_decr.csv'
 
-    syn_best_param_df.to_csv(best_file_name, index=False)
+    syn_best_param_df.to_csv(best_file_name, mode='a', index=False)
 
 
 def get_best_params_single(type, discard):
@@ -244,7 +244,7 @@ def get_best_params_single(type, discard):
     else:
         best_file_name += '_decr.csv'
 
-    syn_best_param_df.to_csv(best_file_name, index=False)
+    syn_best_param_df.to_csv(best_file_name, mode='a', index=False)
 
 
 def extract_early_enclosure_alt():
@@ -1489,7 +1489,7 @@ def hierarchical_syn_classification(type, discard):
                         # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
 
                         # build kinematic model
-                        kin_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)][0]
+                        kin_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)].values[0]
                         kin_l1, kin_c = kin_iter_param.split(',')
                         kin_l1 = float(re.sub('[, | \s | \[ | \]]', '', kin_l1))
                         kin_c = float(re.sub('[, | \s | \[ | \]]', '', kin_c))
@@ -1502,7 +1502,7 @@ def hierarchical_syn_classification(type, discard):
                         kin_log_model.fit(X=kin_train_data, y=train_labels)
 
                         # build EMG model
-                        emg_iter_param = best_params.loc[best_params['Source'] == 'EMG PCA'][str(p)][0]
+                        emg_iter_param = best_params.loc[best_params['Source'] == 'EMG PCA'][str(p)].values[0]
                         emg_l1, emg_c = emg_iter_param.split(',')
                         emg_l1 = float(re.sub('[, | \s | \[ | \]]', '', emg_l1))
                         emg_c = float(re.sub('[, | \s | \[ | \]]', '', emg_c))
@@ -1518,7 +1518,7 @@ def hierarchical_syn_classification(type, discard):
 
 
                         # build Tactile model
-                        tact_iter_param = best_params.loc[best_params['Source'] == 'Tact'][str(p)][0]
+                        tact_iter_param = best_params.loc[best_params['Source'] == 'Tact'][str(p)].values[0]
                         tact_l1, tact_c = tact_iter_param.split(',')
                         tact_l1 = float(re.sub('[, | \s | \[ | \]]', '', tact_l1))
                         tact_c = float(re.sub('[, | \s | \[ | \]]', '', tact_c))
