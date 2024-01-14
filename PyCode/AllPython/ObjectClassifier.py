@@ -47,45 +47,45 @@ from synergy_pipeline import get_best_params_hier
 
 def main():
 
-    data_folder = '/BIDSData'
-    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-
-    data_df = pd.DataFrame()
-
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
-
-    for subject in subject_folders:  # load data for each subject
-        # LOAD RAW DATA
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
-
-        # LOAD EP TRIALS
-        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-
-    print("DATA LOADED")
+    # data_folder = '/BIDSData'
+    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+    #
+    # data_df = pd.DataFrame()
+    #
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+    #
+    # for subject in subject_folders:  # load data for each subject
+    #     # LOAD RAW DATA
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    #
+    #     # LOAD EP TRIALS
+    #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+    #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+    #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+    #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    #
+    # print("DATA LOADED")
 
     # RAW DATA PREPROCESSING
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
-    print("DATA PREPROCESSED")
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
+    # print("DATA PREPROCESSED")
 
     # REMOVE DOUBLE EP TRIALS
-    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    split_df = split_df[~split_df['EP'].isin(to_remove)]
-    ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    ep_count_df = ep_count_df.drop(to_remove, axis=1)
-    print("REMOVED DOUBLE EPs")
+    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    # split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    # print("REMOVED DOUBLE EPs")
 
     # REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING
-    split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
-    print("REPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
+    # split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+    # print("REPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
 
     # # SELECT & SAVE EARLY ENCLOSURE DATA
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -106,87 +106,87 @@ def main():
     ## EP CLASSIFICATION
     ###################################
     # ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    ask_ep_presabs_classification(ep_presabs_df)
+    # ask_ep_presabs_classification(ep_presabs_df)
     # ASKED OBJECT CLASSIFICATION BY EP DURATION
-    ask_ep_dur_classification(ep_dur_df)
+    # ask_ep_dur_classification(ep_dur_df)
     # ASKED OBJECT CLASSIFICATION BY EP COUNT
-    ask_ep_count_classification(ep_count_df)
+    # ask_ep_count_classification(ep_count_df)
 
     # GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE
-    giv_ep_presabs_classification(ep_presabs_df)
+    # giv_ep_presabs_classification(ep_presabs_df)
     # GIVEN OBJECT CLASSIFICATION BY EP DURATION
-    giv_ep_dur_classification(ep_dur_df)
+    # giv_ep_dur_classification(ep_dur_df)
     # GIVEN OBJECT CLASSIFICATION BY EP COUNT
-    giv_ep_count_classification(ep_count_df)
+    # giv_ep_count_classification(ep_count_df)
 
     # FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE
-    fam_ep_presabs_classification(ep_presabs_df)
+    # fam_ep_presabs_classification(ep_presabs_df)
     # FAMILY CLASSIFICATION BY EP DURATION
-    fam_ep_dur_classification(ep_dur_df)
+    # fam_ep_dur_classification(ep_dur_df)
     # FAMILY CLASSIFICATION BY EP COUNT
-    fam_ep_count_classification(ep_count_df)
-
-    print("EP classification done!")
+    # fam_ep_count_classification(ep_count_df)
+    #
+    # print("EP classification done!")
 
     # EP ACCURACY PLOTS
-    ep_classification_plots()
+    # ep_classification_plots()
     # EP WEIGHT PLOTS
-    ep_weights()
-
-    print("EP PLOTS DONE")
+    # ep_weights()
+    #
+    # print("EP PLOTS DONE")
 
     ###################################
     ## RAW DATA CLASSIFICATION
     ###################################
 
     # SINGLE SOURCE CLASSIFICATION
-    emg_classification(split_df)
-    print("EMG classification done!")
-    kinematic_classification(split_df)
-    print("Kinematic classification done!")
-    tactile_classification(split_df)
-    print("Tactile classification done!")
+    # emg_classification(split_df)
+    # print("EMG classification done!")
+    # kinematic_classification(split_df)
+    # print("Kinematic classification done!")
+    # tactile_classification(split_df)
+    # print("Tactile classification done!")
 
     # MULTIMODAL SOURCE CLASSIFICATION
-    multiple_source_classification(split_df)
-    print("Multimodal classification done!")
+    # multiple_source_classification(split_df)
+    # print("Multimodal classification done!")
 
     # HIERARCHICAL CLASSIFICATION
-    hierarchical_classification(split_df)
-    print("Hierarchical classification done!")
+    # hierarchical_classification(split_df)
+    # print("Hierarchical classification done!")
 
     ###################################
     ## SYNERGY EXTRACTION
     ###################################
-    syn_extraction(split_df)
-    print("Synergy extraction for all subjects done!")
-    syn_extraction_subj(split_df)
-    print("Synergy extraction for each subject done!")
-    syn_clustering()
-    print("Synergy clustering done!")
-    score_reordering()
-    print("Synergy reordering done!")
+    # syn_extraction(split_df)
+    # print("Synergy extraction for all subjects done!")
+    # syn_extraction_subj(split_df)
+    # print("Synergy extraction for each subject done!")
+    # syn_clustering()
+    # print("Synergy clustering done!")
+    # score_reordering()
+    # print("Synergy reordering done!")
 
     ###########################################################
     ## SYNERGY CLASSIFICATION ALL SUBJECTS
     ###########################################################
     # single source
-    syn_single_source_classification('all', 'less')
-    print("Single source classification for all subjects discarding the less relevant DONE!")
-    syn_single_source_classification('all', 'most')
-    print("Single source classification for all subjects discarding the most relevant DONE!")
+    # syn_single_source_classification('all', 'less')
+    # print("Single source classification for all subjects discarding the less relevant DONE!")
+    # syn_single_source_classification('all', 'most')
+    # print("Single source classification for all subjects discarding the most relevant DONE!")
     # call to get best params
     get_best_params_single('all', 'less')
     get_best_params_single('all', 'most')
 
     # multisource
-    multisource_syn_classification('all', 'less')
-    print("Multisource classification for all subjects discarding the less relevant DONE!")
-    multisource_syn_classification('all', 'most')
-    print("Multisource classification for all subjects discarding the most relevant DONE!")
+    # multisource_syn_classification('all', 'less')
+    # print("Multisource classification for all subjects discarding the less relevant DONE!")
+    # multisource_syn_classification('all', 'most')
+    # print("Multisource classification for all subjects discarding the most relevant DONE!")
     # call to get best params
-    get_best_params_multi('all', 'less')
-    get_best_params_multi('all', 'most')
+    # get_best_params_multi('all', 'less')
+    # get_best_params_multi('all', 'most')
 
     # hierarchical
     hierarchical_syn_classification('all', 'less')
