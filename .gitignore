@@ -23,6 +23,7 @@ AllPython/BIDSData/
 PyCode/.DS_Store
 PyCode/AllPython/BIDSData
 PyCode/AllPython/results/EP/weights
+PyCode/AllPython/results/EP/plots
 PyCode/AllPython/results/Raw/weights
 PyCode/AllPython/results/bkp
 PyCode/AllPython/results/Syn
