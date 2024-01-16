@@ -789,7 +789,7 @@ def emg_classification(data):
         result = pool.map_async(emg_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res[0])
+            wr.writerow(res)
             # wr.writerow(res[1])
             # a=1
 
@@ -823,7 +823,7 @@ def kinematic_classification(data):
         result = pool.map_async(kin_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res[0])
+            wr.writerow(res)
             # wr.writerow(res[1])
             # a=1
 
@@ -857,7 +857,7 @@ def tactile_classification(data):
         result = pool.map_async(tact_aux_classif, data_and_iter)
 
         for res in result.get():
-            wr.writerow(res[0])
+            wr.writerow(res)
             # wr.writerow(res[1])
             # a=1
 

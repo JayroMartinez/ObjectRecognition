@@ -1303,7 +1303,7 @@ def hierarchical_syn_classification(type, discard):
         best_params_file = './results/Syn/subj_clust_best_syn_params'
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn_hier_results'
-        best_params_file = './results/Early Enclosure/best_syn_params'
+        best_params_file = './results/Early Enclosure/alternative_best_syn_params'
 
     if discard == 'less':
         res_file_name += '.csv'
@@ -1823,159 +1823,61 @@ def multisource_syn_classification(type, discard):
     print("MULTIMODAL DONE !!!")
 
 
-def print_syn_results():
+def print_syn_results(type, discard):
 
     plt.close()
     plt.clf()
     cols = ['Kind', 'Perc', 'Family', 'L1vsL2', 'C', 'Acc', 'Mean']
 
-    """SYNERGIES FROM ALL SUBJECTS """
-    """Variance files"""
-    # kin_var = pd.read_csv('./results/Syn/variance/kin_var.csv')
-    # kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
-    # emg_pca_var = pd.read_csv('./results/Syn/variance/emg_pca_var.csv')
-    # emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
-    # tact_var = pd.read_csv('./results/Syn/variance/tact_var.csv')
-    # tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
+    # VARIANCE
+    if type == 'all':
+        kin_var = pd.read_csv('./results/Syn/variance/kin_var.csv')
+        kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
+        emg_pca_var = pd.read_csv('./results/Syn/variance/emg_pca_var.csv')
+        emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
+        tact_var = pd.read_csv('./results/Syn/variance/tact_var.csv')
+        tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
+    elif type == 'clustering':
+        kin_var = pd.read_csv('./results/Syn/variance/overall_var_kin.csv')
+        kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
+        emg_pca_var = pd.read_csv('./results/Syn/variance/overall_var_emg_pca.csv')
+        emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
+        tact_var = pd.read_csv('./results/Syn/variance/overall_var_tact.csv')
+        tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
+    else:  # early enclosure
+        kin_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_kin_var_tot.csv')
+        kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
+        emg_pca_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_emg_pca_var_tot.csv')
+        emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
+        tact_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_tact_var_tot.csv')
+        tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
 
-    """ Keep most relevant synergies"""
-    results_df = pd.read_csv('./results/Syn/accuracy/syn_results.csv', header=None)  # Keep more relevant
-    multi_res_df = pd.read_csv('./results/Syn/accuracy/syn_multi_results.csv', header=None)  # Keep more relevant
-    hier_res_df = pd.read_csv('./results/Syn/accuracy/syn_hier_results.csv', header=None)  # Keep more relevant
+    # RESUL FILE LOADING
+    if type == 'all':
+        res_file_name = './results/Syn/accuracy/syn_results'
+        multi_file_name = './results/Syn/accuracy/syn_multi_results'
+        hier_file_name = './results/Syn/accuracy/syn_hier_results'
+    elif type == 'clustering':
+        res_file_name = './results/Syn/accuracy/subj_clust_syn_results'
+        multi_file_name = './results/Syn/accuracy/subj_clust_syn_multi_results'
+        hier_file_name = './results/Syn/accuracy/subj_clust_syn_hier_results'
+    else:  # early enclosure
+        res_file_name = './results/Early Enclosure/accuracy/alternative_syn_results'
+        multi_file_name = './results/Early Enclosure/accuracy/alternative_syn_multi_results'
+        hier_file_name = './results/Early Enclosure/accuracy/alternative_syn_hier_results'
 
-    """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/syn_hier_results_decr.csv', header=None)  # Keep less relevant
+    if discard == 'less':
+        res_file_name += '.csv'
+        multi_file_name += '.csv'
+        hier_file_name += '.csv'
+    else:
+        res_file_name += '_decr.csv'
+        multi_file_name += '_decr.csv'
+        hier_file_name += '_decr.csv'
 
-    """Keep random synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/syn_results_rand.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/syn_multi_results_rand.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/syn_hier_results_rand.csv', header=None)  # Keep less relevant
-
-
-    """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
-    """ Keep most relevant synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results.csv', header=None) # Keep more relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_multi_results.csv', header=None) # Keep more relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results.csv', header=None) # Keep more relevant
-
-    """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results_decr.csv', header=None)  # Keep less relevant
-
-    """Keep random synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_results_rand.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_multi_results_rand.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_noclust_syn_hier_results_rand.csv', header=None)  # Keep less relevant
-
-    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
-    """Variance"""
-    # kin_var = pd.read_csv('./results/Syn/variance/overall_var_kin.csv')
-    # kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
-    # emg_pca_var = pd.read_csv('./results/Syn/variance/overall_var_emg_pca.csv')
-    # emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
-    # tact_var = pd.read_csv('./results/Syn/variance/overall_var_tact.csv')
-    # tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
-
-    """ Keep most relevant synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results.csv', header=None) # Keep more relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results.csv', header=None) # Keep more relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results.csv', header=None) # Keep more relevant
-
-    """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results_decr.csv', header=None)  # Keep less relevant
-
-    """Keep random synergies"""
-    # results_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_results_rand.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_multi_results_rand.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Syn/accuracy/subj_clust_syn_hier_results_rand.csv', header=None)  # Keep less relevant
-
-    """SYNERGIES FROM EARLY ENCLOSURE WITH CLUSTERING"""
-    """Variance"""
-    # kin_var = pd.read_csv('./results/Early Enclosure/variance/overall_var_kin.csv')
-    # kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
-    # emg_pca_var = pd.read_csv('./results/Early Enclosure/variance/overall_var_emg_pca.csv')
-    # emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
-    # tact_var = pd.read_csv('./results/Early Enclosure/variance/overall_var_tact.csv')
-    # tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
-
-    """ Keep most relevant synergies"""
-    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_results.csv', header=None) # Keep more relevant
-    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_multi_results.csv', header=None) # Keep more relevant
-    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results.csv', header=None) # Keep more relevant
-
-    """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results_decr.csv', header=None)  # Keep less relevant
-
-    """SYNERGIES FROM ALTERNATIVE EARLY ENCLOSURE"""
-    """Variance"""
-    # kin_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_kin_var_tot.csv')
-    # kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
-    # emg_pca_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_emg_pca_var_tot.csv')
-    # emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
-    # tact_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_tact_var_tot.csv')
-    # tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
-
-    """ Keep most relevant synergies"""
-    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_results.csv', header=None) # Keep more relevant
-    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_multi_results.csv', header=None) # Keep more relevant
-    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results.csv', header=None) # Keep more relevant
-
-    """Keep less relevant synergies"""
-    # results_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_results_decr.csv', header=None)  # Keep less relevant
-    # multi_res_df = pd.read_csv('./results/Early Enclosure/accuracy/alternative_syn_multi_results_decr.csv', header=None)  # Keep less relevant
-    # hier_res_df = pd.read_csv('./results/Early Enclosure/accuracy/syn_hier_results_decr.csv', header=None)  # Keep less relevant
-
-    """VARIANCE CALCULATIONS"""
-    # perc = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
-    #
-    # kin_cum_var = []
-    # emg_pca_cum_var = []
-    # tact_cum_var = []
-    # combined_cum_var = []
-    #
-    # for p in perc:
-    #     kin_syns = int(np.ceil(len(kin_var) * p / 100))
-    #     emg_pca_syns = int(np.ceil(len(emg_pca_var) * p / 100))
-    #     tact_syns = int(np.ceil(len(tact_var) * p / 100))
-    #
-    #     """Keep most relevant synergies"""
-    #     kin_cum_var.append(kin_var.iloc[:kin_syns].sum()[0]*100)
-    #     emg_pca_cum_var.append(emg_pca_var.iloc[:emg_pca_syns].sum()[0]*100)
-    #     tact_cum_var.append(tact_var.iloc[:tact_syns].sum()[0]*100)
-    #
-    #     """Keep less relevant synergies"""
-    #     # kin_cum_var.append(kin_var.iloc[-kin_syns:].sum()[0]*100)
-    #     # emg_pca_cum_var.append(emg_pca_var.iloc[-emg_pca_syns:].sum()[0]*100)
-    #     # tact_cum_var.append(tact_var.iloc[-tact_syns:].sum()[0]*100)
-    #
-    # combined_cum_var = [statistics.mean(k) for k in zip(kin_cum_var, emg_pca_cum_var, tact_cum_var)]
-    # kin_cum_var = pd.DataFrame(kin_cum_var)
-    # emg_pca_cum_var = pd.DataFrame(emg_pca_cum_var)
-    # tact_cum_var = pd.DataFrame(tact_cum_var)
-    # combined_cum_var = pd.DataFrame(combined_cum_var)
-    #
-    # # RESCALE VARIANCES
-    # scaler = MinMaxScaler(feature_range=(0,100))
-    # kin_cum_var = scaler.fit_transform(kin_cum_var)
-    # emg_pca_cum_var = scaler.fit_transform(emg_pca_cum_var)
-    # tact_cum_var = scaler.fit_transform(tact_cum_var)
-    # combined_cum_var = scaler.fit_transform(combined_cum_var)
-    #
-    # extended_kin_cum_var = kin_cum_var[:]
-    # extended_kin_cum_var = np.insert(extended_kin_cum_var, 0, extended_kin_cum_var[0])
-    # extended_emg_pca_cum_var = emg_pca_cum_var[:]
-    # extended_emg_pca_cum_var = np.insert(extended_emg_pca_cum_var, 0, extended_emg_pca_cum_var[0])
-    # extended_tact_cum_var = tact_cum_var[:]
-    # extended_tact_cum_var = np.insert(extended_tact_cum_var, 0, extended_tact_cum_var[0])
-    # extended_combined_cum_var = combined_cum_var[:]
-    # extended_combined_cum_var = np.insert(extended_combined_cum_var, 0, extended_combined_cum_var[0])
+    results_df = pd.read_csv(res_file_name, header=None)
+    multi_res_df = pd.read_csv(multi_file_name, header=None)
+    hier_res_df = pd.read_csv(hier_file_name, header=None)
 
     results_df.columns = cols
     multi_cols = ['Kind', 'Family', 'Perc', 'L1vsL2', 'C', 'Acc']
@@ -1985,10 +1887,47 @@ def print_syn_results():
 
     kin_results_df = results_df.loc[results_df['Kind'] == 'Kin']
     emg_pca_results_df = results_df.loc[results_df['Kind'] == 'EMG PCA']
-    # emg_nmf_results_df = results_df.loc[results_df['Kind'] == 'EMG NMF']
     tact_results_df = results_df.loc[results_df['Kind'] == 'Tact']
     multi_results_df = multi_res_df.loc[multi_res_df['Kind'] == 'Multimodal']
     hier_results_df = hier_res_df.loc[hier_res_df['Kind'] == 'Hierarchical']
+
+    """VARIANCE CALCULATIONS"""
+    perc = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+
+    kin_cum_var = []
+    emg_pca_cum_var = []
+    tact_cum_var = []
+    combined_cum_var = []
+
+    for p in perc:
+        kin_syns = int(np.ceil(len(kin_var) * p / 100))
+        emg_pca_syns = int(np.ceil(len(emg_pca_var) * p / 100))
+        tact_syns = int(np.ceil(len(tact_var) * p / 100))
+
+        if discard == 'less':
+            kin_cum_var.append(kin_var.iloc[:kin_syns].sum()[0] * 100)
+            emg_pca_cum_var.append(emg_pca_var.iloc[:emg_pca_syns].sum()[0] * 100)
+            tact_cum_var.append(tact_var.iloc[:tact_syns].sum()[0] * 100)
+        else:  # discard most relevant
+            kin_cum_var.append(kin_var.iloc[-kin_syns:].sum()[0] * 100)
+            emg_pca_cum_var.append(emg_pca_var.iloc[-emg_pca_syns:].sum()[0]*100)
+            tact_cum_var.append(tact_var.iloc[-tact_syns:].sum()[0]*100)
+
+    combined_cum_var = [statistics.mean(k) for k in zip(kin_cum_var, emg_pca_cum_var, tact_cum_var)]
+    kin_cum_var = pd.DataFrame(kin_cum_var)
+    emg_pca_cum_var = pd.DataFrame(emg_pca_cum_var)
+    tact_cum_var = pd.DataFrame(tact_cum_var)
+    combined_cum_var = pd.DataFrame(combined_cum_var)
+
+    # not sure what have done here
+    extended_kin_cum_var = kin_cum_var[:]
+    extended_kin_cum_var = np.insert(extended_kin_cum_var, 0, extended_kin_cum_var[0][0])
+    extended_emg_pca_cum_var = emg_pca_cum_var[:]
+    extended_emg_pca_cum_var = np.insert(extended_emg_pca_cum_var, 0, extended_emg_pca_cum_var[0][0])
+    extended_tact_cum_var = tact_cum_var[:]
+    extended_tact_cum_var = np.insert(extended_tact_cum_var, 0, extended_tact_cum_var[0][0])
+    extended_combined_cum_var = combined_cum_var[:]
+    extended_combined_cum_var = np.insert(extended_combined_cum_var, 0, extended_combined_cum_var[0][0])
 
     ## GET SYNERGIES BEST RESULTS
 
@@ -2001,9 +1940,6 @@ def print_syn_results():
 
     emg_pca_best_acc = np.zeros((len(perc_values),5))
     emg_pca_best_params = [[[], []]] * len(perc_values)
-
-    # emg_nmf_best_acc = np.zeros((len(perc_values),))
-    # emg_nmf_best_params = [[[], []]] * len(perc_values)
 
     tact_best_acc = np.zeros((len(perc_values),5))
     tact_best_params = [[[], []]] * len(perc_values)
@@ -2035,15 +1971,6 @@ def print_syn_results():
                 if emg_pca_sel_mean_acc > emg_pca_best_acc[iter_perc].mean():
                     emg_pca_best_acc[iter_perc] = emg_pca_sel['Mean']
                     emg_pca_best_params[iter_perc] = [l1, c]
-
-                # emg_nmf_sel = emg_nmf_results_df.loc[
-                #     (emg_nmf_results_df['Perc'] == perc_values[iter_perc]) & (emg_nmf_results_df['L1vsL2'] == l1) & (
-                #                 emg_nmf_results_df['C'] == c)]
-                # emg_nmf_sel_mean_acc = emg_nmf_sel['Mean'].mean()
-                #
-                # if emg_nmf_sel_mean_acc > emg_nmf_best_acc[iter_perc].mean():
-                #     emg_nmf_best_acc[iter_perc] = emg_nmf_sel['Mean']
-                #     emg_nmf_best_params[iter_perc] = [l1, c]
 
                 tact_sel = tact_results_df.loc[
                     (tact_results_df['Perc'] == perc_values[iter_perc]) & (tact_results_df['L1vsL2'] == l1) & (
@@ -2095,56 +2022,32 @@ def print_syn_results():
     syn_best_acc_df = pd.concat([syn_best_acc_df, emg_pca_aux_df])
     syn_best_acc_df = pd.concat([syn_best_acc_df, tact_aux_df])
     syn_best_acc_df = pd.concat([syn_best_acc_df, multi_aux_df])
-    # syn_best_acc_df = pd.concat([syn_best_acc_df, hier_aux_df])
+    syn_best_acc_df = pd.concat([syn_best_acc_df, hier_aux_df])
 
     # BEST HYPERPARAMETERS
-    syn_best_param_df = pd.DataFrame(columns=syn_cols)
-
-    kin_l1c_param = pd.DataFrame(data=[kin_best_params], columns=perc_values)
-    kin_l1c_param.insert(0, "Source", ["Kin"])
-
-    emg_pca_l1c_param = pd.DataFrame(data=[emg_pca_best_params], columns=perc_values)
-    emg_pca_l1c_param.insert(0, "Source", ["EMG PCA"])
-
-    tact_l1c_param = pd.DataFrame(data=[tact_best_params], columns=perc_values)
-    tact_l1c_param.insert(0, "Source", ["Tact"])
-
-    multi_l1c_param = pd.DataFrame(data=[multi_best_params], columns=perc_values)
-    multi_l1c_param.insert(0, "Source", ["Multi"])
-
-    hier_l1c_param = pd.DataFrame(data=[hier_best_params], columns=perc_values)
-    hier_l1c_param.insert(0, "Source", ["Hier"])
-
-    syn_best_param_df = pd.concat([syn_best_param_df, kin_l1c_param])
-    syn_best_param_df = pd.concat([syn_best_param_df, emg_pca_l1c_param])
-    syn_best_param_df = pd.concat([syn_best_param_df, tact_l1c_param])
-    syn_best_param_df = pd.concat([syn_best_param_df, multi_l1c_param])
+    # syn_best_param_df = pd.DataFrame(columns=syn_cols)
+    #
+    # kin_l1c_param = pd.DataFrame(data=[kin_best_params], columns=perc_values)
+    # kin_l1c_param.insert(0, "Source", ["Kin"])
+    #
+    # emg_pca_l1c_param = pd.DataFrame(data=[emg_pca_best_params], columns=perc_values)
+    # emg_pca_l1c_param.insert(0, "Source", ["EMG PCA"])
+    #
+    # tact_l1c_param = pd.DataFrame(data=[tact_best_params], columns=perc_values)
+    # tact_l1c_param.insert(0, "Source", ["Tact"])
+    #
+    # multi_l1c_param = pd.DataFrame(data=[multi_best_params], columns=perc_values)
+    # multi_l1c_param.insert(0, "Source", ["Multi"])
+    #
+    # hier_l1c_param = pd.DataFrame(data=[hier_best_params], columns=perc_values)
+    # hier_l1c_param.insert(0, "Source", ["Hier"])
+    #
+    # syn_best_param_df = pd.concat([syn_best_param_df, kin_l1c_param])
+    # syn_best_param_df = pd.concat([syn_best_param_df, emg_pca_l1c_param])
+    # syn_best_param_df = pd.concat([syn_best_param_df, tact_l1c_param])
+    # syn_best_param_df = pd.concat([syn_best_param_df, multi_l1c_param])
     # syn_best_param_df = pd.concat([syn_best_param_df, hier_l1c_param])
 
-    """SYNERGIES FROM ALL SUBJECTS"""
-    syn_best_param_df.to_csv('./results/Syn/best_syn_params.csv', index=False)  # Keep most relevant
-    syn_best_param_df.to_csv('./results/Syn/best_syn_params_decr.csv', index=False)  # Keep less relevant
-    syn_best_param_df.to_csv('./results/Syn/best_syn_params_rand.csv', index=False)  # Keep random synergies
-
-    """SYNERGIES FROM EACH SUBJECT WITHOUT CLUSTERING"""
-    # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params.csv', index=False)  # Keep most relevant
-    # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_decr.csv', index=False)  # Keep less relevant
-    # syn_best_param_df.to_csv('./results/Syn/subj_noclust_best_syn_params_rand.csv', index=False)  # Keep random synergies
-
-    """SYNERGIES FROM EACH SUBJECT WITH CLUSTERING"""
-    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params.csv', index=False)  # Keep most relevant
-    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_decr.csv', index=False)  # Keep less relevant
-    # syn_best_param_df.to_csv('./results/Syn/subj_clust_best_syn_params_rand.csv', index=False)  # Keep random synergies
-
-    """SYNERGIES FROM EARLY ENCLOSURE WITH CLUSTERING"""
-    # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params.csv', index=False)  # Keep most relevant
-    # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params_decr.csv', index=False)  # Keep less relevant
-    # syn_best_param_df.to_csv('./results/Early Enclosure/best_syn_params_rand.csv', index=False)  # Keep random synergies
-
-    """SYNERGIES FROM ALTERNATIVE EARLY ENCLOSURE"""
-    # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params.csv', index=False)  # Keep most relevant
-    # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params_decr.csv', index=False)  # Keep less relevant
-    # syn_best_param_df.to_csv('./results/Early Enclosure/alternative_best_syn_params_rand.csv', index=False)  # Keep random synergies
 
     ## LOAD RAW BEST RESULTS
     raw_cols = ['Kind', 'Family', 'bins', 'L1vsL2', 'C', 'Acc', 'Mean']
@@ -2237,8 +2140,28 @@ def print_syn_results():
     sns.move_legend(i, "best")
     # plt.show()
 
-    i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
+    if type == 'all':
+        title = 'Kinematic accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/kin_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Kinematic accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
     #
     # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
@@ -2282,8 +2205,28 @@ def print_syn_results():
     # plt.xticks(rotation=45, size=4)
     # # i.axhline(20, color='r')
 
-    i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Kinematic accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/kin_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Kinematic accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
     #
     # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
@@ -2318,12 +2261,32 @@ def print_syn_results():
     for it, handle in enumerate(handles):
         handle.set_color(colors[it])
         handle.set_linewidth(1)
-    i.set_ylim([0, 100])
-    sns.move_legend(i, "best")
+    j.set_ylim([0, 100])
+    sns.move_legend(j, "best")
     # plt.show()
 
-    j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'EMG PCA accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/emg_pca_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'EMG PCA accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_emg_pca_drop_syn_acc'
+    else:  # early enclosure
+        title = 'EMG PCA accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    j.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
     #
     # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
@@ -2364,8 +2327,28 @@ def print_syn_results():
         handle.set_linewidth(1)
     sns.move_legend(i, "center right")
 
-    i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'EMG PCA accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/emg_pca_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'EMG PCA accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'EMG PCA accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
     #
     # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
@@ -2401,11 +2384,31 @@ def print_syn_results():
         handle.set_color(colors[it])
         handle.set_linewidth(1)
     k.set_ylim([0, 100])
-    sns.move_legend(i, "best")
+    sns.move_legend(k, "best")
     # plt.show()
 
-    k.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/tact_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Tactile accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/tact_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Tactile accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_tact_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Tactile accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # k.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
     #
     # k.set(title="Tactile accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
@@ -2449,8 +2452,28 @@ def print_syn_results():
     # plt.xticks(rotation=45, size=4)
     # # i.axhline(20, color='r')
 
-    i.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Tactile accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/tact_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Tactile accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_tact_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Tactile accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
     #
     # i.set(title="Tactile accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
@@ -2486,11 +2509,31 @@ def print_syn_results():
         handle.set_color(colors[it])
         handle.set_linewidth(1)
     k.set_ylim([0, 100])
-    sns.move_legend(i, "best")
+    sns.move_legend(k, "best")
     # plt.show()
 
-    k.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/multi_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Multimodal accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/multi_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Multimodal accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_multi_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Multimodal accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # k.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
     #
     # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
@@ -2534,8 +2577,28 @@ def print_syn_results():
     plt.xticks(rotation=45, size=4)
     # i.axhline(20, color='r')
 
-    i.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Multimodal accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/multi_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Multimodal accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_multi_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Multimodal accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
     #
     # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
@@ -2574,10 +2637,30 @@ def print_syn_results():
         handle.set_linewidth(1)
     k.set_ylim([0, 100])
     sns.move_legend(k, "best")
-    plt.show()
+    # plt.show()
 
-    k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/hier_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Hierarchical accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/hier_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Hierarchical accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_hier_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Hierarchical accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
     #
     # k.set(title="Hierarchical accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
@@ -2623,8 +2706,28 @@ def print_syn_results():
     # plt.xticks(rotation=45, size=4)
     # # i.axhline(20, color='r')
 
-    i.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
+    if type == 'all':
+        title = 'Hierarchical accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/hier_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Hierarchical accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_hier_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Hierarchical accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += ' discarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += ' discarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+
+    # i.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
+    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
     #
     # i.set(title="Hierarchical accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
     # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies

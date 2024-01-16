@@ -12,7 +12,8 @@ def main():
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
 
-    kinds = ["Kin", "EMG", "Tactile", "Multimodal", "Multimodal_KE", "Multimodal_KT", "Multimodal_ET", "Hierarchical", "Hierarchical_KE", "Hierarchical_KT", "Hierarchical_ET"]
+    # kinds = ["Kin", "EMG", "Tactile", "Multimodal", "Multimodal_KE", "Multimodal_KT", "Multimodal_ET", "Hierarchical", "Hierarchical_KE", "Hierarchical_KT", "Hierarchical_ET"]
+    kinds = ["Kin", "EMG", "Tactile", "Multimodal", "Hierarchical"]
     pairs = list(combinations(kinds, r=2))
 
     plt.close('all')  # to clean the screen
@@ -32,13 +33,13 @@ def main():
     kin_df = res_df.loc[res_df['Source'] == 'Kin']
     tact_df = res_df.loc[res_df['Source'] == 'Tactile']
     multi_df = res_df.loc[res_df['Source'] == 'Multimodal']
-    multi_KE_df = res_df.loc[res_df['Source'] == 'Multimodal_KE']
-    multi_KT_df = res_df.loc[res_df['Source'] == 'Multimodal_KT']
-    multi_ET_df = res_df.loc[res_df['Source'] == 'Multimodal_ET']
+    # multi_KE_df = res_df.loc[res_df['Source'] == 'Multimodal_KE']
+    # multi_KT_df = res_df.loc[res_df['Source'] == 'Multimodal_KT']
+    # multi_ET_df = res_df.loc[res_df['Source'] == 'Multimodal_ET']
     hierarchical_df = res_df.loc[res_df['Source'] == 'Hierarchical']
-    hierarchical_KE_df = res_df.loc[res_df['Source'] == 'Hierarchical_KE']
-    hierarchical_KT_df = res_df.loc[res_df['Source'] == 'Hierarchical_KT']
-    hierarchical_ET_df = res_df.loc[res_df['Source'] == 'Hierarchical_ET']
+    # hierarchical_KE_df = res_df.loc[res_df['Source'] == 'Hierarchical_KE']
+    # hierarchical_KT_df = res_df.loc[res_df['Source'] == 'Hierarchical_KT']
+    # hierarchical_ET_df = res_df.loc[res_df['Source'] == 'Hierarchical_ET']
 
     ###############
     # BEST ACC
@@ -101,29 +102,29 @@ def main():
                     multi_max_acc = multi_sel_mean_acc
                     multi_max_param = [b, l, c]
 
-                multi_KE_sel_res = multi_KE_df.loc[
-                    (multi_KE_df['Bins'] == b) & (multi_KE_df['L1'] == l) & (multi_KE_df['C'].astype(str) == str(c))]
-                multi_KE_sel_mean_acc = multi_KE_sel_res['Mean Score'].mean()
-
-                if multi_KE_sel_mean_acc > multi_KE_max_acc:
-                    multi_KE_max_acc = multi_KE_sel_mean_acc
-                    multi_KE_max_param = [b, l, c]
-
-                multi_KT_sel_res = multi_KT_df.loc[
-                    (multi_KT_df['Bins'] == b) & (multi_KT_df['L1'] == l) & (multi_KT_df['C'].astype(str) == str(c))]
-                multi_KT_sel_mean_acc = multi_KT_sel_res['Mean Score'].mean()
-
-                if multi_KT_sel_mean_acc > multi_KT_max_acc:
-                    multi_KT_max_acc = multi_KT_sel_mean_acc
-                    multi_KT_max_param = [b, l, c]
-
-                multi_ET_sel_res = multi_ET_df.loc[
-                    (multi_ET_df['Bins'] == b) & (multi_ET_df['L1'] == l) & (multi_ET_df['C'].astype(str) == str(c))]
-                multi_ET_sel_mean_acc = multi_ET_sel_res['Mean Score'].mean()
-
-                if multi_ET_sel_mean_acc > multi_ET_max_acc:
-                    multi_ET_max_acc = multi_ET_sel_mean_acc
-                    multi_ET_max_param = [b, l, c]
+                # multi_KE_sel_res = multi_KE_df.loc[
+                #     (multi_KE_df['Bins'] == b) & (multi_KE_df['L1'] == l) & (multi_KE_df['C'].astype(str) == str(c))]
+                # multi_KE_sel_mean_acc = multi_KE_sel_res['Mean Score'].mean()
+                #
+                # if multi_KE_sel_mean_acc > multi_KE_max_acc:
+                #     multi_KE_max_acc = multi_KE_sel_mean_acc
+                #     multi_KE_max_param = [b, l, c]
+                #
+                # multi_KT_sel_res = multi_KT_df.loc[
+                #     (multi_KT_df['Bins'] == b) & (multi_KT_df['L1'] == l) & (multi_KT_df['C'].astype(str) == str(c))]
+                # multi_KT_sel_mean_acc = multi_KT_sel_res['Mean Score'].mean()
+                #
+                # if multi_KT_sel_mean_acc > multi_KT_max_acc:
+                #     multi_KT_max_acc = multi_KT_sel_mean_acc
+                #     multi_KT_max_param = [b, l, c]
+                #
+                # multi_ET_sel_res = multi_ET_df.loc[
+                #     (multi_ET_df['Bins'] == b) & (multi_ET_df['L1'] == l) & (multi_ET_df['C'].astype(str) == str(c))]
+                # multi_ET_sel_mean_acc = multi_ET_sel_res['Mean Score'].mean()
+                #
+                # if multi_ET_sel_mean_acc > multi_ET_max_acc:
+                #     multi_ET_max_acc = multi_ET_sel_mean_acc
+                #     multi_ET_max_param = [b, l, c]
 
     for c in c_param:
 
@@ -135,49 +136,49 @@ def main():
             hier_max_acc = hier_sel_mean_acc
             hier_max_c = c
 
-        hier_KE_sel_res = hierarchical_KE_df.loc[
-            (hierarchical_KE_df['C'].astype(str) == str(c))]
-        hier_KE_sel_mean_acc = hier_KE_sel_res['Mean Score'].mean()
-
-        if hier_KE_sel_mean_acc > hier_KE_max_acc:
-            hier_KE_max_acc = hier_KE_sel_mean_acc
-            hier_KE_max_c = c
-
-        hier_KT_sel_res = hierarchical_KT_df.loc[
-            (hierarchical_KT_df['C'].astype(str) == str(c))]
-        hier_KT_sel_mean_acc = hier_KT_sel_res['Mean Score'].mean()
-
-        if hier_KT_sel_mean_acc > hier_KT_max_acc:
-            hier_KT_max_acc = hier_KT_sel_mean_acc
-            hier_KT_max_c = c
-
-        hier_ET_sel_res = hierarchical_ET_df.loc[
-            (hierarchical_ET_df['C'].astype(str) == str(c))]
-        hier_ET_sel_mean_acc = hier_ET_sel_res['Mean Score'].mean()
-
-        if hier_ET_sel_mean_acc > hier_ET_max_acc:
-            hier_ET_max_acc = hier_ET_sel_mean_acc
-            hier_ET_max_c = c
+        # hier_KE_sel_res = hierarchical_KE_df.loc[
+        #     (hierarchical_KE_df['C'].astype(str) == str(c))]
+        # hier_KE_sel_mean_acc = hier_KE_sel_res['Mean Score'].mean()
+        #
+        # if hier_KE_sel_mean_acc > hier_KE_max_acc:
+        #     hier_KE_max_acc = hier_KE_sel_mean_acc
+        #     hier_KE_max_c = c
+        #
+        # hier_KT_sel_res = hierarchical_KT_df.loc[
+        #     (hierarchical_KT_df['C'].astype(str) == str(c))]
+        # hier_KT_sel_mean_acc = hier_KT_sel_res['Mean Score'].mean()
+        #
+        # if hier_KT_sel_mean_acc > hier_KT_max_acc:
+        #     hier_KT_max_acc = hier_KT_sel_mean_acc
+        #     hier_KT_max_c = c
+        #
+        # hier_ET_sel_res = hierarchical_ET_df.loc[
+        #     (hierarchical_ET_df['C'].astype(str) == str(c))]
+        # hier_ET_sel_mean_acc = hier_ET_sel_res['Mean Score'].mean()
+        #
+        # if hier_ET_sel_mean_acc > hier_ET_max_acc:
+        #     hier_ET_max_acc = hier_ET_sel_mean_acc
+        #     hier_ET_max_c = c
 
     # a=1
 
 
 
-    # print("Best accuracy for EMG data: ", round(emg_max_acc, 2), "% with", emg_max_param[0], "bins, L1 =",
-    #       emg_max_param[1], "and C =", emg_max_param[2])
-    # print("Best accuracy for Kinematic data: ", round(kin_max_acc, 2), "% with", kin_max_param[0], "bins, L1 =",
-    #       kin_max_param[1], "and C =", kin_max_param[2])
-    # print("Best accuracy for Tactile data: ", round(tact_max_acc, 2), "% with", tact_max_param[0], "bins, L1 =",
-    #       tact_max_param[1], "and C =", tact_max_param[2])
-    # print("Best accuracy for Multisource data: ", round(multi_max_acc, 2), "% with", multi_max_param[0], "bins, L1 =",
-    #       multi_max_param[1], "and C =", multi_max_param[2])
+    print("Best accuracy for EMG data: ", round(emg_max_acc, 2), "% with", emg_max_param[0], "bins, L1 =",
+          emg_max_param[1], "and C =", emg_max_param[2])
+    print("Best accuracy for Kinematic data: ", round(kin_max_acc, 2), "% with", kin_max_param[0], "bins, L1 =",
+          kin_max_param[1], "and C =", kin_max_param[2])
+    print("Best accuracy for Tactile data: ", round(tact_max_acc, 2), "% with", tact_max_param[0], "bins, L1 =",
+          tact_max_param[1], "and C =", tact_max_param[2])
+    print("Best accuracy for Multisource data: ", round(multi_max_acc, 2), "% with", multi_max_param[0], "bins, L1 =",
+          multi_max_param[1], "and C =", multi_max_param[2])
     # print("Best accuracy for Multisource KE data: ", round(multi_KE_max_acc, 2), "% with", multi_KE_max_param[0], "bins, L1 =",
     #       multi_KE_max_param[1], "and C =", multi_KE_max_param[2])
     # print("Best accuracy for Multisource KT data: ", round(multi_KT_max_acc, 2), "% with", multi_KT_max_param[0], "bins, L1 =",
     #       multi_KT_max_param[1], "and C =", multi_KT_max_param[2])
     # print("Best accuracy for Multisource ET data: ", round(multi_ET_max_acc, 2), "% with", multi_ET_max_param[0], "bins, L1 =",
     #       multi_ET_max_param[1], "and C =", multi_ET_max_param[2])
-    # print("Best accuracy for Hierarchical data: ", round(hier_max_acc, 2), "% with C = ", hier_max_c)
+    print("Best accuracy for Hierarchical data: ", round(hier_max_acc, 2), "% with C = ", hier_max_c)
     # print("Best accuracy for Hierarchical KE data: ", round(hier_KE_max_acc, 2), "% with C = ", hier_KE_max_c)
     # print("Best accuracy for Hierarchical KT data: ", round(hier_KT_max_acc, 2), "% with C = ", hier_KT_max_c)
     # print("Best accuracy for Hierarchical ET data: ", round(hier_ET_max_acc, 2), "% with C = ", hier_ET_max_c)
@@ -466,45 +467,45 @@ def main():
     ###############
     # ALL  vs Multi_KE COMPARISON PLOTS
     ###############
-    all_sources_df = pd.concat([emg_df, kin_df, tact_df, multi_df, multi_KE_df, multi_KT_df, multi_ET_df, hierarchical_df, hierarchical_KE_df, hierarchical_KT_df, hierarchical_ET_df])
-    plt.figure()
-    i = sns.barplot(data=all_sources_df, x="Source", y="Mean Score")
-    pairs_vs_multKE = [("Multimodal_KE","Hierarchical"),("Multimodal_KE","Hierarchical_KT"),("Multimodal_KE","Hierarchical_KE")]
-    annotator_i = Annotator(i, pairs_vs_multKE, data=all_sources_df, x="Source", y="Mean Score")
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    annotator_i.apply_and_annotate()
-    i.set(ylabel="Accuracy (95% ci)")
-    i.set(xlabel=None)
-    plt.xticks(rotation=45, size=4)
-    # i.axhline(20, color='r')
-    plt.title('Given Object classification accuracy comparison')
-    plt.savefig('./results/Raw/plots/class_acc_vs_multiKE_comp.png', dpi=600)
-    plt.tight_layout()
-    # plt.show()
-    plt.close()
+    # all_sources_df = pd.concat([emg_df, kin_df, tact_df, multi_df, multi_KE_df, multi_KT_df, multi_ET_df, hierarchical_df, hierarchical_KE_df, hierarchical_KT_df, hierarchical_ET_df])
+    # plt.figure()
+    # i = sns.barplot(data=all_sources_df, x="Source", y="Mean Score")
+    # pairs_vs_multKE = [("Multimodal_KE","Hierarchical"),("Multimodal_KE","Hierarchical_KT"),("Multimodal_KE","Hierarchical_KE")]
+    # annotator_i = Annotator(i, pairs_vs_multKE, data=all_sources_df, x="Source", y="Mean Score")
+    # annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    # annotator_i.apply_and_annotate()
+    # i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    # plt.title('Given Object classification accuracy comparison')
+    # plt.savefig('./results/Raw/plots/class_acc_vs_multiKE_comp.png', dpi=600)
+    # plt.tight_layout()
+    # # plt.show()
+    # plt.close()
 
     ###############
     # ALL  vs Kinematic COMPARISON PLOTS
     ###############
-    all_sources_df = pd.concat(
-        [emg_df, kin_df, tact_df, multi_df, multi_KE_df, multi_KT_df, multi_ET_df, hierarchical_df, hierarchical_KE_df,
-         hierarchical_KT_df, hierarchical_ET_df])
-    plt.figure()
-    i = sns.barplot(data=all_sources_df, x="Source", y="Mean Score")
-    pairs_vs_kin = [("Kin", "Hierarchical"), ("Kin", "Hierarchical_KT"),
-                     ("Kin", "Hierarchical_KE")]
-    annotator_i = Annotator(i, pairs_vs_kin, data=all_sources_df, x="Source", y="Mean Score")
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    annotator_i.apply_and_annotate()
-    i.set(ylabel="Accuracy (95% ci)")
-    i.set(xlabel=None)
-    plt.xticks(rotation=45, size=4)
-    # i.axhline(20, color='r')
-    plt.title('Given Object classification accuracy comparison')
-    plt.savefig('./results/Raw/plots/class_acc_vs_Kin_comp.png', dpi=600)
-    plt.tight_layout()
-    # plt.show()
-    plt.close()
+    # all_sources_df = pd.concat(
+    #     [emg_df, kin_df, tact_df, multi_df, multi_KE_df, multi_KT_df, multi_ET_df, hierarchical_df, hierarchical_KE_df,
+    #      hierarchical_KT_df, hierarchical_ET_df])
+    # plt.figure()
+    # i = sns.barplot(data=all_sources_df, x="Source", y="Mean Score")
+    # pairs_vs_kin = [("Kin", "Hierarchical"), ("Kin", "Hierarchical_KT"),
+    #                  ("Kin", "Hierarchical_KE")]
+    # annotator_i = Annotator(i, pairs_vs_kin, data=all_sources_df, x="Source", y="Mean Score")
+    # annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    # annotator_i.apply_and_annotate()
+    # i.set(ylabel="Accuracy (95% ci)")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+    # plt.title('Given Object classification accuracy comparison')
+    # plt.savefig('./results/Raw/plots/class_acc_vs_Kin_comp.png', dpi=600)
+    # plt.tight_layout()
+    # # plt.show()
+    # plt.close()
 
     # ##############
     # # COMPARISON MULTI PLOTS
