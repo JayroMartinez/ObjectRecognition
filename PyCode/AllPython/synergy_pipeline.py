@@ -27,6 +27,8 @@ from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
 
+from classification import get_raw_best_params
+
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -82,7 +84,7 @@ def get_best_params_hier(type, discard):
     else:
         best_file_name += '_decr.csv'
 
-    syn_best_param_df.to_csv(best_file_name, mode='a', index=False)
+    syn_best_param_df.to_csv(best_file_name, mode='a', index=False, header=False)
 
 
 def get_best_params_multi(type, discard):
@@ -140,7 +142,7 @@ def get_best_params_multi(type, discard):
     else:
         best_file_name += '_decr.csv'
 
-    syn_best_param_df.to_csv(best_file_name, mode='a', index=False)
+    syn_best_param_df.to_csv(best_file_name, mode='a', index=False, header=False)
 
 
 def get_best_params_single(type, discard):
@@ -737,7 +739,7 @@ def syn_extraction_subj(data):
         pd.DataFrame(tact_subj_var).to_csv('./results/Syn/variance/' + subj + '_tact_var.csv')
         pd.DataFrame(tact_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_tact_var_tot.csv')
 
-    print("Individual synergy extraction done!")
+    # print("Individual synergy extraction done!")
 
 
 def syn_extraction_early_enclosure():
@@ -790,7 +792,7 @@ def syn_extraction_early_enclosure():
         pd.DataFrame(tact_subj_syns).to_csv('./results/Early Enclosure/synergies/' + subj + '_tact_syns.csv')
         pd.DataFrame(tact_subj_var).to_csv('./results/Early Enclosure/variance/' + subj + '_tact_var.csv')
 
-    print("Early enclosure individual synergy extraction done!")
+    # print("Early enclosure individual synergy extraction done!")
 
 
     a=1
@@ -882,7 +884,7 @@ def kin_syn_classif(input_data):
 
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -985,7 +987,7 @@ def emg_pca_syn_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -1091,8 +1093,8 @@ def emg_nmf_syn_classif(input_data):
             log_model.fit(X=train_data, y=train_labels)
             sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
-            print(log_model.n_iter_)
-            print(sc)
+            # print(log_model.n_iter_)
+            # print(sc)
 
     result = ['EMG NMF']
     result.extend(input_data[0])
@@ -1190,7 +1192,7 @@ def tact_syn_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -1209,13 +1211,19 @@ def tact_syn_classif(input_data):
 def syn_single_source_classification(type, discard):
 
     cv = 3
-    kin_bins = 40
-    emg_bins = 10
-    tact_bins = 5
+    [kin_params, emg_params, tact_params] = get_raw_best_params()
+    kin_bins = kin_params[0]
+    emg_bins = emg_params[0]
+    tact_bins = tact_params[0]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+    # TEST
+    # perc_syns = [100, 90]
+    # l1VSl2 = [0, 0.25]
+    # c_param = [0.01, 0.1]
 
     # LOAD EXTRA DATA
     if type == 'early':
@@ -1268,17 +1276,17 @@ def syn_single_source_classification(type, discard):
 
         for res_kin in result_kin.get():
             wr.writerow(res_kin)
-        print("Kinematic classification done!")
+        # print("Kinematic classification done!")
 
         for res_emg_pca in result_emg_pca.get():
             wr.writerow(res_emg_pca)
-        print("EMG PCA classification done!")
+        # print("EMG PCA classification done!")
 
         for res_tact in result_tact.get():
             wr.writerow(res_tact)
-        print("Tactile classification done!")
+        # print("Tactile classification done!")
 
-    print("Single source classification done!!")
+    # print("Single source classification done!!")
     result_file.close()
 
 
@@ -1287,9 +1295,7 @@ def hierarchical_syn_classification(type, discard):
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     cv = 3
 
-    kin_bins = 40
-    emg_bins = 10
-    tact_bins = 5
+    [[kin_bins, kin_l1, kin_c], [emg_bins, emg_l1, emg_c], [tact_bins, tact_l1, tact_c]] = get_raw_best_params()
 
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
@@ -1489,27 +1495,17 @@ def hierarchical_syn_classification(type, discard):
                         # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
 
                         # build kinematic model
-                        kin_iter_param = best_params.loc[best_params['Source'] == 'Kin'][str(p)].values[0]
-                        kin_l1, kin_c = kin_iter_param.split(',')
-                        kin_l1 = float(re.sub('[, | \s | \[ | \]]', '', kin_l1))
-                        kin_c = float(re.sub('[, | \s | \[ | \]]', '', kin_c))
-
                         kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, random_state=rnd_st,
-                                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                                            l1_ratio=kin_l1)
 
                         # train kinematic model
                         kin_log_model.fit(X=kin_train_data, y=train_labels)
 
                         # build EMG model
-                        emg_iter_param = best_params.loc[best_params['Source'] == 'EMG PCA'][str(p)].values[0]
-                        emg_l1, emg_c = emg_iter_param.split(',')
-                        emg_l1 = float(re.sub('[, | \s | \[ | \]]', '', emg_l1))
-                        emg_c = float(re.sub('[, | \s | \[ | \]]', '', emg_c))
-
                         emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c,
                                                            random_state=rnd_st,
-                                                           solver='saga', max_iter=25000, multi_class='ovr',
+                                                           solver='saga', max_iter=50000, multi_class='ovr',
                                                            n_jobs=-1,
                                                            l1_ratio=emg_l1)
 
@@ -1518,14 +1514,9 @@ def hierarchical_syn_classification(type, discard):
 
 
                         # build Tactile model
-                        tact_iter_param = best_params.loc[best_params['Source'] == 'Tact'][str(p)].values[0]
-                        tact_l1, tact_c = tact_iter_param.split(',')
-                        tact_l1 = float(re.sub('[, | \s | \[ | \]]', '', tact_l1))
-                        tact_c = float(re.sub('[, | \s | \[ | \]]', '', tact_c))
-
                         tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c,
                                                             random_state=rnd_st,
-                                                            solver='saga', max_iter=25000, multi_class='ovr',
+                                                            solver='saga', max_iter=50000, multi_class='ovr',
                                                             n_jobs=-1,
                                                             l1_ratio=tact_l1)
 
@@ -1542,7 +1533,7 @@ def hierarchical_syn_classification(type, discard):
 
                         # build & train top layer classifier
                         top_log_model = LogisticRegression(C=top_c, random_state=rnd_st, solver='saga',
-                                                           max_iter=25000,
+                                                           max_iter=50000,
                                                            multi_class='ovr', n_jobs=-1)
                         top_log_model.fit(X=pred_proba, y=train_labels)
 
@@ -1565,7 +1556,7 @@ def hierarchical_syn_classification(type, discard):
                         # print(res)
 
     result_file.close()
-    print("HIERARCHICAL DONE !!!")
+    # print("HIERARCHICAL DONE !!!")
 
 
 def multi_aux_classification(input_data):
@@ -1580,9 +1571,7 @@ def multi_aux_classification(input_data):
     type = input_data[1]
     discard = input_data[2]
 
-    kin_bins = 40
-    emg_bins = 10
-    tact_bins = 5
+    [[kin_bins, kin_l1, kin_c], [emg_bins, emg_l1, emg_c], [tact_bins, tact_l1, tact_c]] = get_raw_best_params()
 
     # LOAD EXTRA DATA
     if type == 'early':
@@ -1762,7 +1751,7 @@ def multi_aux_classification(input_data):
         test_df.apply(zscore)
 
         log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
-                                       random_state=rnd_st, solver='saga', max_iter=25000,
+                                       random_state=rnd_st, solver='saga', max_iter=50000,
                                        multi_class='ovr',
                                        n_jobs=-1, l1_ratio=l1_param)
         # train model
@@ -1820,7 +1809,7 @@ def multisource_syn_classification(type, discard):
             # print(res)
 
     result_file.close()
-    print("MULTIMODAL DONE !!!")
+    # print("MULTIMODAL DONE !!!")
 
 
 def print_syn_results(type, discard):
@@ -2151,34 +2140,16 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
-    plt.savefig(fig_file, dpi=600)
-
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/kin_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/kin_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    # plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
 
     """ KIN bar pval plot """
     kin_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:,1:].loc[syn_best_acc_df["Source"] == "Kin"])
@@ -2189,9 +2160,10 @@ def print_syn_results(type, discard):
     # pairs_kin = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
     pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
-    annotator_i = Annotator(i, pairs_kin, data=kin_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i = Annotator(i, pairs_kin[::-1], data=kin_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
+
     i.axhline(33, color='b', linestyle='--', label='Chance level')
     i.set(ylabel="Accuracy (95% ci)")
     leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
@@ -2216,34 +2188,18 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc_pval'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
+    i.set_ylim(0, 200)
     plt.savefig(fig_file, dpi=600)
-
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/kin_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_kin_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="Kinematic accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/kin_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-
-    # i.set(title="Kinematic accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/kin_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    # plt.show()
+    plt.close()
+    plt.clf()
 
     """  EMG PCA plot """
     sns.pointplot(data=pd.DataFrame(emg_pca_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
@@ -2276,34 +2232,16 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     j.set(title=title)
     plt.savefig(fig_file, dpi=600)
-
-    # j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
-    #
-    # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # j.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/emg_pca_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-
-    # j.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/emg_pca_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ EMG PCA bar pval plot """
     emg_pca_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "EMG PCA"])
@@ -2315,7 +2253,7 @@ def print_syn_results(type, discard):
     pairs_emg_pca = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                      ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_emg_pca, data=emg_pca_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2338,34 +2276,17 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc_pval'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
+    i.set_ylim(0, 200)
     plt.savefig(fig_file, dpi=600)
-
-    # i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
-    #
-    # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/emg_pca_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="EMG PCA accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/emg_pca_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-
-    # i.set(title="EMG PCA accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/emg_pca_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ TACT plot """
     sns.pointplot(data=pd.DataFrame(tact_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
@@ -2398,34 +2319,16 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     k.set(title=title)
     plt.savefig(fig_file, dpi=600)
-
-    # k.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
-    #
-    # k.set(title="Tactile accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # k.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # k.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # k.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/tact_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-
-    # k.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/tact_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ TACT bar pval plot """
     tact_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Tact"])
@@ -2437,7 +2340,7 @@ def print_syn_results(type, discard):
     pairs_tact = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                   ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_tact, data=tact_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2463,34 +2366,17 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc_pval'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
+    i.set_ylim(0, 200)
     plt.savefig(fig_file, dpi=600)
-
-    # i.set(title="Tactile accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
-    #
-    # i.set(title="Tactile accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/tact_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_tact_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="Tactile accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/tact_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-
-    # i.set(title="Tactile accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/tact_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ MULTI plot """
     sns.pointplot(data=pd.DataFrame(combined_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
@@ -2523,34 +2409,16 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     k.set(title=title)
     plt.savefig(fig_file, dpi=600)
-
-    # k.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
-    #
-    # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # k.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # k.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/multi_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-
-    # k.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/multi_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ MULTI bar pval plot """
     multi_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Multi"])
@@ -2562,7 +2430,7 @@ def print_syn_results(type, discard):
     pairs_multi = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                    ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_multi, data=multi_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2588,34 +2456,17 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc_pval'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
+    i.set_ylim(0, 200)
     plt.savefig(fig_file, dpi=600)
-
-    # i.set(title="Multimodal accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
-    #
-    # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/multi_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_multi_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="Multimodal accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/multi_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-
-    # i.set(title="Multimodal accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/multi_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ HIER plot """
     sns.pointplot(data=pd.DataFrame(combined_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
@@ -2650,34 +2501,16 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     k.set(title=title)
     plt.savefig(fig_file, dpi=600)
-
-    # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc.png', dpi=600) # Keep most relevant synergies
-    #
-    # k.set(title="Hierarchical accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-    #
-    # k.set(title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # k.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/hier_drop_syn_acc.png', dpi=600)  # Keep most relevant synergies
-
-    # k.set(title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/hier_drop_syn_acc_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+    plt.close()
+    plt.clf()
 
     """ HIER bar pval plot """
     hier_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Hier"])
@@ -2689,7 +2522,7 @@ def print_syn_results(type, discard):
     pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                   ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2717,33 +2550,69 @@ def print_syn_results(type, discard):
         fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc_pval'
 
     if discard == 'less':
-        title += ' discarding less relevant synergies'
+        title += '\ndiscarding less relevant synergies'
         fig_file += '.png'
     else:  # discard the most
-        title += ' discarding most relevant synergies'
+        title += '\ndiscarding most relevant synergies'
         fig_file += '_decr.png'
 
     i.set(title=title)
+    i.set_ylim(0, 200)
     plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
 
-    # i.set(title="Hierarchical accuracy comparison, discarding less relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval.png', dpi=600) # Keep most relevant synergies
-    #
-    # i.set(title="Hierarchical accuracy comparison, discarding most relevant synergies, \nsyns for all subjects")
-    # plt.savefig('./results/Syn/plots/hier_drop_syn_acc_pval_decr.png', dpi=600) # Keep less relevant synergies
-    #
-    # i.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
-    #
-    # i.set(title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns per subject with clustering")
-    # plt.savefig('./results/Syn/plots/subj_clust_hier_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # i.set(title="Hierarchical accuracy comparison, discarding less relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/hier_drop_syn_acc_pval.png', dpi=600)  # Keep most relevant synergies
 
-    # i.set(title="Hierarchical accuracy comparison, discarding most relevant synergies,\nsyns from Early Enclosure")
-    # plt.savefig('./results/Early Enclosure/plots/hier_drop_syn_acc_pval_decr.png', dpi=600)  # Keep less relevant synergies
-    #
-    # plt.close()
+def early_fine_vs_coarse():
 
+    plt.close()
+    plt.clf()
+
+    # open scores
+    kin_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_kin_scores.csv', index_col=0)
+
+    selected_df = kin_score_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+
+    i = sns.boxplot(data=selected_df)
+    i.set(title='Kinematic score comparison Low vs. High order synergies\nfor Early Enclosure')
+    i.set(ylabel="Z-score (absolute value)")
+    i.set(xlabel="Synergies")
+    # plt.show()
+    plt.savefig('./results/Early Enclosure/plots/fine_vs_coarse.png', dpi=600)
+
+
+def syn_fine_vs_coarse():
+
+    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+    fine_eps = ['edge following', 'function test', 'enclosure part']
+    coarse_eps = ['enclosure', 'weighting', 'pressure']
+
+    fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
+    fine_df = kin_score_df.iloc[fine_idx.index]
+    selected_fine = fine_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+
+    coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
+    coarse_df = kin_score_df.iloc[coarse_idx.index]
+    selected_coarse = coarse_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+
+    plt.close()
+    plt.clf()
+    i = sns.boxplot(data=selected_fine)
+    i.set(title='Kinematic score comparison Low vs. High order synergies\nFine EPs for each subject')
+    i.set(ylabel="Z-score (absolute value)")
+    i.set(xlabel="Synergies")
+    # plt.show()
+    plt.savefig('./results/Syn/plots/fine.png', dpi=600)
+
+    plt.close()
+    plt.clf()
+    j = sns.boxplot(data=selected_coarse)
+    j.set(title='Kinematic score comparison Low vs. High order synergies\nCoarse EPs for each subject')
+    j.set(ylabel="Z-score (absolute value)")
+    j.set(xlabel="Synergies")
+    # plt.show()
+    plt.savefig('./results/Syn/plots/coarse.png', dpi=600)
 

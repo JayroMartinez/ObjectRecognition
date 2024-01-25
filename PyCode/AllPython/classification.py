@@ -962,8 +962,8 @@ def ask_ep_presabs_classification(data):
                                            selected_df.iloc[test]['Asked'].sample(frac = 1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(ASKED) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
-              [round(x, 2) for x in acc])
+        # print("(ASKED) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+        #       [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1017,7 +1017,7 @@ def ask_ep_dur_classification(data):
                                            selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(ASKED) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
+        # print("(ASKED) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1072,8 +1072,8 @@ def ask_ep_count_classification(data):
                                            selected_df.iloc[test]['Asked'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(ASKED) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
-              [round(x, 2) for x in acc])
+        # print("(ASKED) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+        #       [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1128,8 +1128,8 @@ def giv_ep_presabs_classification(data):
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(GIVEN) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
-              [round(x, 2) for x in acc])
+        # print("(GIVEN) Pre/Abs Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+        #       [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1182,7 +1182,7 @@ def giv_ep_dur_classification(data):
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(GIVEN) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
+        # print("(GIVEN) Dur Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ", [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1237,8 +1237,8 @@ def giv_ep_count_classification(data):
                                            selected_df.iloc[test]['Given'].sample(frac=1)) * 100, 2)
                 rand_acc.append(rnd_sc)
 
-        print("(GIVEN) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
-              [round(x, 2) for x in acc])
+        # print("(GIVEN) Count Mean accuracy for family", family, "is", round(np.mean(acc), 2), "%. All acc: ",
+        #       [round(x, 2) for x in acc])
         wr = csv.writer(result_file)
         wr.writerow([acc, family])
         wr.writerow([rand_acc, 'Random'])
@@ -1287,8 +1287,8 @@ def fam_ep_presabs_classification(data):
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
 
-    print("Pre/Abs Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
-          [round(x, 2) for x in acc])
+    # print("Pre/Abs Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+    #       [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
     wr.writerow([rand_acc, 'Random'])
@@ -1337,8 +1337,8 @@ def fam_ep_dur_classification(data):
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
 
-    print("Dur Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
-          [round(x, 2) for x in acc])
+    # print("Dur Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+    #       [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
     wr.writerow([rand_acc, 'Random'])
@@ -1387,8 +1387,8 @@ def fam_ep_count_classification(data):
                                        data.iloc[test]['Family'].sample(frac=1)) * 100, 2)
             rand_acc.append(rnd_sc)
 
-    print("Count Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
-          [round(x, 2) for x in acc])
+    # print("Count Mean accuracy for family classification is", round(np.mean(acc), 2), "%. All acc: ",
+    #       [round(x, 2) for x in acc])
     wr = csv.writer(result_file)
     wr.writerow([acc, 'Family'])
     wr.writerow([rand_acc, 'Random'])
@@ -1396,3 +1396,58 @@ def fam_ep_count_classification(data):
     # model weight file close
     weight_file.close()
     result_file.close()
+
+
+def get_raw_best_params():
+
+    sources = ['kin', 'EMG PCA', 'Tact']
+
+    results = pd.read_csv('./results/Raw/accuracy/raw_results.csv')
+
+    results.columns = ['Source', 'Family', 'Bins', 'L1', 'C', 'Acc', 'Mean']
+
+    kin_results = results.loc[results['Source'] == 'Kin']
+    emg_results = results.loc[results['Source'] == 'EMG']
+    tact_results = results.loc[results['Source'] == 'Tactile']
+
+    iter_bins = kin_results['Bins'].unique()
+    iter_l1 = kin_results['L1'].unique()
+    iter_c = kin_results['C'].unique()
+
+    best_kin_acc = 0
+    best_kin_params = [-1, -1, -1]
+
+    best_emg_acc = 0
+    best_emg_params = [-1, -1, -1]
+
+    best_tact_acc = 0
+    best_tact_params = [-1, -1, -1]
+
+    for it_bins in iter_bins:
+        for it_l1 in iter_l1:
+            for it_c in iter_c:
+
+                aux_kin_sel = kin_results.loc[(kin_results['Bins'] == it_bins) & (kin_results['L1'] == it_l1) & (kin_results['C'] == it_c)]
+                aux_kin_res = aux_kin_sel['Mean'].mean()
+
+                if aux_kin_res > best_kin_acc:
+                    best_kin_params = [it_bins, it_l1, it_c]
+                    best_kin_acc = aux_kin_res
+
+                aux_emg_sel = emg_results.loc[
+                    (emg_results['Bins'] == it_bins) & (emg_results['L1'] == it_l1) & (emg_results['C'] == it_c)]
+                aux_emg_res = aux_emg_sel['Mean'].mean()
+
+                if aux_emg_res > best_emg_acc:
+                    best_emg_params = [it_bins, it_l1, it_c]
+                    best_emg_acc = aux_emg_res
+
+                aux_tact_sel = tact_results.loc[
+                    (tact_results['Bins'] == it_bins) & (tact_results['L1'] == it_l1) & (tact_results['C'] == it_c)]
+                aux_tact_res = aux_tact_sel['Mean'].mean()
+
+                if aux_tact_res > best_tact_acc:
+                    best_tact_params = [it_bins, it_l1, it_c]
+                    best_tact_acc = aux_tact_res
+
+    return [best_kin_params, best_emg_params, best_tact_params]
