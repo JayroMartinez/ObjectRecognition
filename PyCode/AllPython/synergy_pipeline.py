@@ -822,17 +822,19 @@ def kin_syn_classif(input_data):
     else:
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
 
-    selected_df = data_df.loc[data_df['Family'] == family]
+    # selected_df = data_df.loc[data_df['Family'] == family]
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
-    to_kfold = selected_df.drop_duplicates(
-        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    selected_df = data_df
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -856,7 +858,8 @@ def kin_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -877,7 +880,8 @@ def kin_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -924,17 +928,19 @@ def emg_pca_syn_classif(input_data):
     else:
         data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
 
-    selected_df = data_df.loc[data_df['Family'] == family]
+    # selected_df = data_df.loc[data_df['Family'] == family]
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
-    to_kfold = selected_df.drop_duplicates(
-        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    selected_df = data_df
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -958,7 +964,8 @@ def emg_pca_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -979,7 +986,8 @@ def emg_pca_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -1129,17 +1137,19 @@ def tact_syn_classif(input_data):
     else:
         data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
 
-    selected_df = data_df.loc[data_df['Family'] == family]
+    # selected_df = data_df.loc[data_df['Family'] == family]
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
-    to_kfold = selected_df.drop_duplicates(
-        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    selected_df = data_df
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1163,7 +1173,8 @@ def tact_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -1184,7 +1195,8 @@ def tact_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -1376,12 +1388,16 @@ def hierarchical_syn_classification(type, discard):
 
                 total_score = []
 
-                kin_dat = kin_scores.loc[kin_scores['Family'] == family]
-                emg_dat = emg_scores.loc[emg_scores['Family'] == family]
-                tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+                # kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+                # emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+                # tact_dat = tact_scores.loc[tact_scores['Family'] == family]
 
-                to_kfold = kin_dat.drop_duplicates(
-                    subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+                kin_dat = kin_scores
+                emg_dat = emg_scores
+                tact_dat = tact_scores
+
+                # to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Given Object'])
+                to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Family'])
 
                 random_states = [42, 43, 44]
 
@@ -1389,7 +1405,8 @@ def hierarchical_syn_classification(type, discard):
 
                     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
                     # WARNING: the skf.split returns the indexes
-                    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+                    # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+                    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
                         train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
                         test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1435,7 +1452,8 @@ def hierarchical_syn_classification(type, discard):
                                     kin_train_data.append(flat_kin_mean)
                                     emg_train_data.append(flat_emg_mean)
                                     tact_train_data.append(flat_tact_mean)
-                                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                                    # train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
 
                                 except RuntimeWarning:
                                     # print("Dropped EP", trn_iter, "from family ", family)
@@ -1485,7 +1503,8 @@ def hierarchical_syn_classification(type, discard):
                                     kin_test_data.append(flat_kin_mean)
                                     emg_test_data.append(flat_emg_mean)
                                     tact_test_data.append(flat_tact_mean)
-                                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                                    # test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
 
                                 except RuntimeWarning:
                                     # print("Dropped EP", tst_iter, "from family ", family)
@@ -1552,7 +1571,7 @@ def hierarchical_syn_classification(type, discard):
                         res.extend([family, p, top_c])
                         res.append(sc)
                         # res.append(round(np.mean(total_score), 2))
-                        wr.writerow(res)
+                        # wr.writerow(res)
                         # print(res)
 
     result_file.close()
@@ -1620,17 +1639,21 @@ def multi_aux_classification(input_data):
 
     total_score = []
 
-    kin_dat = kin_scores.loc[kin_scores['Family'] == family]
-    emg_dat = emg_scores.loc[emg_scores['Family'] == family]
-    tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+    # kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+    # emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+    # tact_dat = tact_scores.loc[tact_scores['Family'] == family]
 
-    to_kfold = kin_dat.drop_duplicates(
-        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    kin_dat = kin_scores
+    emg_dat = emg_scores
+    tact_dat = tact_scores
+
+    # to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Given Object'])
+    to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Family'])
 
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
     # WARNING: the skf.split returns the indexes
-    for train, test in skf.split(to_kfold['Trial num'].astype(int),
-                                 to_kfold['Given Object'].astype(str)):
+    # for train, test in skf.split(to_kfold['Trial num'].astype(int),to_kfold['Given Object'].astype(str)):
+    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
         train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
         test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1682,7 +1705,8 @@ def multi_aux_classification(input_data):
                     kin_train_data.append(flat_kin_mean)
                     emg_train_data.append(flat_emg_mean)
                     tact_train_data.append(flat_tact_mean)
-                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                    # train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
 
                 except RuntimeWarning:
                     # print("Dropped EP", trn_iter, "from family ", family)
@@ -1738,7 +1762,8 @@ def multi_aux_classification(input_data):
                     kin_test_data.append(flat_kin_mean)
                     emg_test_data.append(flat_emg_mean)
                     tact_test_data.append(flat_tact_mean)
-                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                    # test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
+                    test_labels.append(np.unique(ep_kin_data['Family'])[0])
 
                 except RuntimeWarning:
                     # print("Dropped EP", tst_iter, "from family ", family)
@@ -1761,6 +1786,7 @@ def multi_aux_classification(input_data):
 
     res = ['Multimodal']
     res.extend([family, perc, l1_param, c_param])
+    # need to add weights
     res.append(total_score)
 
     # print(res)
@@ -1773,6 +1799,10 @@ def multisource_syn_classification(type, discard):
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+    # TO TEST
+    # l1VSl2 = 0.25
+    # c_values = 1.5
 
     # SET AND OPEN RESULT FILE
     if type == 'all':
@@ -1796,6 +1826,10 @@ def multisource_syn_classification(type, discard):
     all_param = list(itertools.product(families, l1VSl2, c_values, perc_syns, random_states))
     data_and_iter = [[x, type, discard] for x in all_param]
 
+    # TO TEST
+    # all_param = list(itertools.product(families, perc_syns, random_states))
+    # data_and_iter = [[[x[0], l1VSl2, c_values, x[1], x[2]], type, discard] for x in all_param]
+
     # multiprocessing
     with Pool() as pool:
 
@@ -1806,6 +1840,7 @@ def multisource_syn_classification(type, discard):
             wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][0]])
             wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][1]])
             wr.writerow([res[0], res[1], res[2], res[3], res[4], res[5][2]])
+
             # print(res)
 
     result_file.close()

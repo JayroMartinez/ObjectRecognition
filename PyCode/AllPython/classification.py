@@ -33,11 +33,13 @@ def emg_aux_classif(input_data):
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
     emg_cols = [col for col in selected_df.columns if ('flexion' in col) or ('extension' in col)]
     selected_df.dropna(subset=emg_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])  # only way I found to avoid overlapping
 
     random_states = [42, 43, 44]
 
@@ -45,7 +47,8 @@ def emg_aux_classif(input_data):
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -68,7 +71,8 @@ def emg_aux_classif(input_data):
                         tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
                         flat_tr_mean = list(itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -88,13 +92,14 @@ def emg_aux_classif(input_data):
                         tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
                         flat_tst_mean = list(itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
 
             # build model
-            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st, solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+            log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st, solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
             # compute weights (because unbalanced dataset)
             weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             # train model
@@ -151,7 +156,8 @@ def kin_aux_classif(input_data):
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
                 'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
                 'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
@@ -159,14 +165,16 @@ def kin_aux_classif(input_data):
                 'Thumb_Proj_J1_Z']
     selected_df.dropna(subset=kin_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -190,7 +198,8 @@ def kin_aux_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -211,14 +220,15 @@ def kin_aux_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
 
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
             # compute weights (because unbalanced dataset)
             weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             # train model
@@ -273,18 +283,21 @@ def tact_aux_classif(input_data):
     weight_file = open(weight_filename, 'a')  # Open file in append mode
     weight_wr = csv.writer(weight_file)
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm', 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm', 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop', 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo', 'pdl', 'pdr', 'pdlo', 'lpo']
     # selected_df.dropna(subset=tact_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -308,7 +321,8 @@ def tact_aux_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -329,14 +343,15 @@ def tact_aux_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X num_sensors] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
 
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1, l1_ratio=l1_param)
             # compute weights (because unbalanced dataset)
             weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             # train model
@@ -413,7 +428,8 @@ def multiple_source_aux_classif(input_data):
     total_score = []
     random_score = []
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
@@ -422,14 +438,16 @@ def multiple_source_aux_classif(input_data):
             print("Error dropping NaNs with params:", params)
 
 
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -453,7 +471,8 @@ def multiple_source_aux_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -474,7 +493,8 @@ def multiple_source_aux_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))
                         test_data.append(flat_tst_mean)
-                        test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -488,7 +508,7 @@ def multiple_source_aux_classif(input_data):
             if test_df.shape[0] > 0:
                 # build model
                 log_model = LogisticRegression(penalty='elasticnet', C=c_par, class_weight='balanced',
-                                               random_state=rnd_st, solver='saga', max_iter=25000,
+                                               random_state=rnd_st, solver='saga', max_iter=50000,
                                                multi_class='ovr',
                                                n_jobs=-1, l1_ratio=l1_param)
                 # compute weights (because unbalanced dataset)
@@ -550,7 +570,8 @@ def hierarchical_aux_classif(input_data):
     total_score = []
     random_score = []
 
-    selected_df = data.loc[data['Family'] == family]  # select particular family
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
 
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
                 'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
@@ -566,8 +587,8 @@ def hierarchical_aux_classif(input_data):
 
     selected_df.dropna(axis=0, inplace=True)  # drop rows containing NaN values
 
-    to_kfold = selected_df.drop_duplicates(
-        subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
 
     random_states = [42, 43, 44]
 
@@ -575,7 +596,8 @@ def hierarchical_aux_classif(input_data):
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
 
             train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -620,7 +642,8 @@ def hierarchical_aux_classif(input_data):
                         kin_train_data.append(flat_kin_mean)
                         emg_train_data.append(flat_emg_mean)
                         tact_train_data.append(flat_tact_mean)
-                        train_labels.append(np.unique(train_ep['Given Object'])[0])
+                        # train_labels.append(np.unique(train_ep['Given Object'])[0])
+                        train_labels.append(np.unique(train_ep['Family'])[0])
 
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
@@ -664,7 +687,8 @@ def hierarchical_aux_classif(input_data):
                         kin_test_data.append(flat_kin_mean)
                         emg_test_data.append(flat_emg_mean)
                         tact_test_data.append(flat_tact_mean)
-                        test_labels.append(np.unique(test_ep['Given Object'])[0])
+                        # test_labels.append(np.unique(test_ep['Given Object'])[0])
+                        test_labels.append(np.unique(test_ep['Family'])[0])
 
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
@@ -676,7 +700,7 @@ def hierarchical_aux_classif(input_data):
             # build kinematic model
             kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, class_weight='balanced',
                                                random_state=rnd_st,
-                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                                l1_ratio=kin_l1)
 
             # train kinematic model
@@ -687,7 +711,7 @@ def hierarchical_aux_classif(input_data):
             # build EMG model
             emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c, class_weight='balanced',
                                                random_state=rnd_st,
-                                               solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                               solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                                l1_ratio=emg_l1)
 
             # train EMG model
@@ -698,7 +722,7 @@ def hierarchical_aux_classif(input_data):
             # build Tactile model
             tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c, class_weight='balanced',
                                                 random_state=rnd_st,
-                                                solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                                solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                                 l1_ratio=tact_l1)
 
             # train EMG model
@@ -714,7 +738,7 @@ def hierarchical_aux_classif(input_data):
 
             # build & train top layer classifier
             top_log_model = LogisticRegression(C=top_C, class_weight='balanced', random_state=rnd_st, solver='saga',
-                                               max_iter=25000,
+                                               max_iter=50000,
                                                multi_class='ovr', n_jobs=-1)
             top_log_model.fit(X=pred_proba, y=train_labels, sample_weight=weights)
 
