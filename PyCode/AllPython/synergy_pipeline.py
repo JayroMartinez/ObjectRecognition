@@ -822,19 +822,15 @@ def kin_syn_classif(input_data):
     else:
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
 
-    # selected_df = data_df.loc[data_df['Family'] == family]
-    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
-
-    selected_df = data_df
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
+    selected_df = data_df.loc[data_df['Family'] == family]
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -858,8 +854,7 @@ def kin_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
-                        train_labels.append(np.unique(train_tri['Family'])[0])
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -880,15 +875,14 @@ def kin_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
-                        test_labels.append(np.unique(test_tri['Family'])[0])
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
 
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -928,19 +922,15 @@ def emg_pca_syn_classif(input_data):
     else:
         data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
 
-    # selected_df = data_df.loc[data_df['Family'] == family]
-    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
-
-    selected_df = data_df
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
+    selected_df = data_df.loc[data_df['Family'] == family]
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -964,8 +954,7 @@ def emg_pca_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
-                        train_labels.append(np.unique(train_tri['Family'])[0])
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -986,8 +975,7 @@ def emg_pca_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
-                        test_labels.append(np.unique(test_tri['Family'])[0])
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -995,7 +983,7 @@ def emg_pca_syn_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -1137,19 +1125,15 @@ def tact_syn_classif(input_data):
     else:
         data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
 
-    # selected_df = data_df.loc[data_df['Family'] == family]
-    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
-
-    selected_df = data_df
-    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
+    selected_df = data_df.loc[data_df['Family'] == family]
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
             train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
             test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1173,8 +1157,7 @@ def tact_syn_classif(input_data):
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         train_data.append(flat_tr_mean)
-                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
-                        train_labels.append(np.unique(train_tri['Family'])[0])
+                        train_labels.append(np.unique(train_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", trn_iter, "from family ", family)
                         dropped += 1
@@ -1195,8 +1178,7 @@ def tact_syn_classif(input_data):
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
                         test_data.append(flat_tst_mean)
-                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
-                        test_labels.append(np.unique(test_tri['Family'])[0])
+                        test_labels.append(np.unique(test_tri['Given Object'])[0])
                     except RuntimeWarning:
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
@@ -1204,7 +1186,7 @@ def tact_syn_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -1333,8 +1315,6 @@ def hierarchical_syn_classification(type, discard):
     result_file = open(res_file_name, 'a')
     wr = csv.writer(result_file)
 
-    best_params = pd.read_csv(best_params_file)
-
     # GET SCORES
     if type == 'all':
         kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
@@ -1388,15 +1368,10 @@ def hierarchical_syn_classification(type, discard):
 
                 total_score = []
 
-                # kin_dat = kin_scores.loc[kin_scores['Family'] == family]
-                # emg_dat = emg_scores.loc[emg_scores['Family'] == family]
-                # tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+                kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+                emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+                tact_dat = tact_scores.loc[tact_scores['Family'] == family]
 
-                kin_dat = kin_scores
-                emg_dat = emg_scores
-                tact_dat = tact_scores
-
-                # to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Given Object'])
                 to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Family'])
 
                 random_states = [42, 43, 44]
@@ -1405,8 +1380,7 @@ def hierarchical_syn_classification(type, discard):
 
                     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
                     # WARNING: the skf.split returns the indexes
-                    # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
-                    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+                    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
 
                         train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
                         test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1452,8 +1426,7 @@ def hierarchical_syn_classification(type, discard):
                                     kin_train_data.append(flat_kin_mean)
                                     emg_train_data.append(flat_emg_mean)
                                     tact_train_data.append(flat_tact_mean)
-                                    # train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-                                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
+                                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
 
                                 except RuntimeWarning:
                                     # print("Dropped EP", trn_iter, "from family ", family)
@@ -1503,8 +1476,7 @@ def hierarchical_syn_classification(type, discard):
                                     kin_test_data.append(flat_kin_mean)
                                     emg_test_data.append(flat_emg_mean)
                                     tact_test_data.append(flat_tact_mean)
-                                    # test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-                                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
+                                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
 
                                 except RuntimeWarning:
                                     # print("Dropped EP", tst_iter, "from family ", family)
@@ -1515,7 +1487,7 @@ def hierarchical_syn_classification(type, discard):
 
                         # build kinematic model
                         kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, random_state=rnd_st,
-                                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                                            l1_ratio=kin_l1)
 
                         # train kinematic model
@@ -1524,7 +1496,7 @@ def hierarchical_syn_classification(type, discard):
                         # build EMG model
                         emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c,
                                                            random_state=rnd_st,
-                                                           solver='saga', max_iter=50000, multi_class='ovr',
+                                                           solver='saga', max_iter=25000, multi_class='ovr',
                                                            n_jobs=-1,
                                                            l1_ratio=emg_l1)
 
@@ -1535,7 +1507,7 @@ def hierarchical_syn_classification(type, discard):
                         # build Tactile model
                         tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c,
                                                             random_state=rnd_st,
-                                                            solver='saga', max_iter=50000, multi_class='ovr',
+                                                            solver='saga', max_iter=25000, multi_class='ovr',
                                                             n_jobs=-1,
                                                             l1_ratio=tact_l1)
 
@@ -1552,7 +1524,7 @@ def hierarchical_syn_classification(type, discard):
 
                         # build & train top layer classifier
                         top_log_model = LogisticRegression(C=top_c, random_state=rnd_st, solver='saga',
-                                                           max_iter=50000,
+                                                           max_iter=25000,
                                                            multi_class='ovr', n_jobs=-1)
                         top_log_model.fit(X=pred_proba, y=train_labels)
 
@@ -1639,21 +1611,15 @@ def multi_aux_classification(input_data):
 
     total_score = []
 
-    # kin_dat = kin_scores.loc[kin_scores['Family'] == family]
-    # emg_dat = emg_scores.loc[emg_scores['Family'] == family]
-    # tact_dat = tact_scores.loc[tact_scores['Family'] == family]
+    kin_dat = kin_scores.loc[kin_scores['Family'] == family]
+    emg_dat = emg_scores.loc[emg_scores['Family'] == family]
+    tact_dat = tact_scores.loc[tact_scores['Family'] == family]
 
-    kin_dat = kin_scores
-    emg_dat = emg_scores
-    tact_dat = tact_scores
-
-    # to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Given Object'])
-    to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Family'])
+    to_kfold = kin_dat.drop_duplicates(subset=['Trial num', 'Given Object'])
 
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
     # WARNING: the skf.split returns the indexes
-    # for train, test in skf.split(to_kfold['Trial num'].astype(int),to_kfold['Given Object'].astype(str)):
-    for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+    for train, test in skf.split(to_kfold['Trial num'].astype(int),to_kfold['Given Object'].astype(str)):
 
         train_eps = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
         test_eps = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
@@ -1705,8 +1671,7 @@ def multi_aux_classification(input_data):
                     kin_train_data.append(flat_kin_mean)
                     emg_train_data.append(flat_emg_mean)
                     tact_train_data.append(flat_tact_mean)
-                    # train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-                    train_labels.append(np.unique(ep_kin_data['Family'])[0])
+                    train_labels.append(np.unique(ep_kin_data['Given Object'])[0])
 
                 except RuntimeWarning:
                     # print("Dropped EP", trn_iter, "from family ", family)
@@ -1762,8 +1727,7 @@ def multi_aux_classification(input_data):
                     kin_test_data.append(flat_kin_mean)
                     emg_test_data.append(flat_emg_mean)
                     tact_test_data.append(flat_tact_mean)
-                    # test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
-                    test_labels.append(np.unique(ep_kin_data['Family'])[0])
+                    test_labels.append(np.unique(ep_kin_data['Given Object'])[0])
 
                 except RuntimeWarning:
                     # print("Dropped EP", tst_iter, "from family ", family)
@@ -1776,7 +1740,7 @@ def multi_aux_classification(input_data):
         test_df.apply(zscore)
 
         log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
-                                       random_state=rnd_st, solver='saga', max_iter=50000,
+                                       random_state=rnd_st, solver='saga', max_iter=25000,
                                        multi_class='ovr',
                                        n_jobs=-1, l1_ratio=l1_param)
         # train model
@@ -2622,32 +2586,39 @@ def syn_fine_vs_coarse():
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
-    fine_eps = ['edge following', 'function test', 'enclosure part']
-    coarse_eps = ['enclosure', 'weighting', 'pressure']
+    # fine_eps = ['edge following', 'function test', 'enclosure part']
+    # coarse_eps = ['enclosure', 'weighting', 'pressure']
 
-    fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
+    fine_families = ['Cutlery', 'Geometric']
+    coarse_families = ['Ball', 'Plates']
+
+    # fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
+    # coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
+
+    fine_idx = extra_data.loc[extra_data['Family'].isin(fine_families)]
+    coarse_idx = extra_data.loc[extra_data['Family'].isin(coarse_families)]
+
     fine_df = kin_score_df.iloc[fine_idx.index]
     selected_fine = fine_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
 
-    coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
     coarse_df = kin_score_df.iloc[coarse_idx.index]
     selected_coarse = coarse_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
 
     plt.close()
     plt.clf()
     i = sns.boxplot(data=selected_fine)
-    i.set(title='Kinematic score comparison Low vs. High order synergies\nFine EPs for each subject')
+    i.set(title='Kinematic score comparison Low vs. High order synergies\nin Cutlery and Geometric trials for each subject')
     i.set(ylabel="Z-score (absolute value)")
     i.set(xlabel="Synergies")
     # plt.show()
-    plt.savefig('./results/Syn/plots/fine.png', dpi=600)
+    plt.savefig('./results/Syn/plots/fine_fam.png', dpi=600)
 
     plt.close()
     plt.clf()
     j = sns.boxplot(data=selected_coarse)
-    j.set(title='Kinematic score comparison Low vs. High order synergies\nCoarse EPs for each subject')
+    j.set(title='Kinematic score comparison Low vs. High order synergies\nin Ball and Plates trials for each subject')
     j.set(ylabel="Z-score (absolute value)")
     j.set(xlabel="Synergies")
     # plt.show()
-    plt.savefig('./results/Syn/plots/coarse.png', dpi=600)
+    plt.savefig('./results/Syn/plots/coarse_fam.png', dpi=600)
 

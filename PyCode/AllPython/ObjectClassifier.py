@@ -46,6 +46,7 @@ from synergy_pipeline import get_best_params_multi
 from synergy_pipeline import get_best_params_hier
 from synergy_pipeline import early_fine_vs_coarse
 from synergy_pipeline import syn_fine_vs_coarse
+from family_pipeline import fam_syn_single_source_classification
 
 
 def main():
@@ -53,16 +54,16 @@ def main():
     data_folder = '/BIDSData'
     subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
 
-    """WE ARE REMOVING SUBJECTS 7 TO 9"""
-    ##########################################################################################################################
-    [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
-    ##########################################################################################################################
+    # """WE ARE REMOVING SUBJECTS 7 TO 9"""
+    # ##########################################################################################################################
+    # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
+    # ##########################################################################################################################
 
     data_df = pd.DataFrame()
 
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
 
     for subject in subject_folders:  # load data for each subject
         """LOAD RAW DATA"""
@@ -83,19 +84,27 @@ def main():
     split_df['EP num'] = split_df['EP num'].astype('str')
     print("\nDATA PREPROCESSED")
 
+    # """CHECK MIDDLE FINGER VALUES"""
+    # plt.figure()
+    # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
+    # plt.xticks(rotation=45, size=5)
+    # plt.show()
+    # plt.savefig('./MiddleMPJ.png')
+    # plt.close()
+
     """REMOVE DOUBLE EP TRIALS"""
     to_remove = [x for x in split_df['EP'].unique() if '+' in x]
     split_df = split_df[~split_df['EP'].isin(to_remove)]
-    ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
     print("\nREMOVED DOUBLE EPs")
 
     """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
     split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
     print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
 
-    """SELECT & SAVE EARLY ENCLOSURE DATA"""
+    # """SELECT & SAVE EARLY ENCLOSURE DATA"""
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
     # early_enclosure.to_csv('./results/Early Enclosure/early_enclosure_data.csv')
 
@@ -147,27 +156,28 @@ def main():
     ## RAW DATA CLASSIFICATION
     ###################################
 
-    """SINGLE SOURCE CLASSIFICATION"""
-    emg_classification(split_df)
-    print("\nEMG classification done!")
-
-    kinematic_classification(split_df)
-    print("\nKinematic classification done!")
-
-    tactile_classification(split_df)
-    print("\nTactile classification done!")
-
-    """MULTIMODAL SOURCE CLASSIFICATION"""
-    multiple_source_classification(split_df)
-    print("\nMultimodal classification done!")
-
-    """HIERARCHICAL CLASSIFICATION"""
-    hierarchical_classification(split_df)
-    print("\nHierarchical classification done!")
+    # """SINGLE SOURCE CLASSIFICATION"""
+    # emg_classification(split_df)
+    # print("\nEMG classification done!")
+    #
+    # kinematic_classification(split_df)
+    # print("\nKinematic classification done!")
+    #
+    # tactile_classification(split_df)
+    # print("\nTactile classification done!")
+    #
+    # """MULTIMODAL SOURCE CLASSIFICATION"""
+    # multiple_source_classification(split_df)
+    # print("\nMultimodal classification done!")
+    #
+    # """HIERARCHICAL CLASSIFICATION"""
+    # hierarchical_classification(split_df)
+    # print("\nHierarchical classification done!")
 
     ###################################
     ## SYNERGY EXTRACTION
     ###################################
+    
     syn_extraction(split_df)
     print("\nSynergy extraction for all subjects done!")
 
@@ -183,70 +193,67 @@ def main():
     ###########################################################
     ## SYNERGY CLASSIFICATION ALL SUBJECTS
     ###########################################################
-    """single source"""
 
-    syn_single_source_classification('all', 'less')
-    get_best_params_single('all', 'less')
-    print("\nSingle source classification for all subjects discarding the less relevant DONE!")
-
-    syn_single_source_classification('all', 'most')
-    get_best_params_single('all', 'most')
-    print("\nSingle source classification for all subjects discarding the most relevant DONE!")
-
-    """multisource"""
-
-    multisource_syn_classification('all', 'less')
-    get_best_params_multi('all', 'less')
-    print("\nMultisource classification for all subjects discarding the less relevant DONE!")
-
-    multisource_syn_classification('all', 'most')
-    get_best_params_multi('all', 'most')
-    print("\nMultisource classification for all subjects discarding the most relevant DONE!")
-
-    """hierarchical"""
-    hierarchical_syn_classification('all', 'less')
-    get_best_params_hier('all', 'less')
-    print("\nHierarchical classification for all subjects discarding the less relevant DONE!")
-
-    hierarchical_syn_classification('all', 'most')
-    get_best_params_hier('all', 'most')
-    print("\nHierarchical classification for all subjects discarding the most relevant DONE!")
-
+    # """single source"""
+    # syn_single_source_classification('all', 'less')
+    # get_best_params_single('all', 'less')
+    # print("\nSingle source classification for all subjects discarding the less relevant DONE!")
+    #
+    # syn_single_source_classification('all', 'most')
+    # get_best_params_single('all', 'most')
+    # print("\nSingle source classification for all subjects discarding the most relevant DONE!")
+    #
+    # """multisource"""
+    # multisource_syn_classification('all', 'less')
+    # get_best_params_multi('all', 'less')
+    # print("\nMultisource classification for all subjects discarding the less relevant DONE!")
+    #
+    # multisource_syn_classification('all', 'most')
+    # get_best_params_multi('all', 'most')
+    # print("\nMultisource classification for all subjects discarding the most relevant DONE!")
+    #
+    # """hierarchical"""
+    # hierarchical_syn_classification('all', 'less')
+    # get_best_params_hier('all', 'less')
+    # print("\nHierarchical classification for all subjects discarding the less relevant DONE!")
+    #
+    # hierarchical_syn_classification('all', 'most')
+    # get_best_params_hier('all', 'most')
+    # print("\nHierarchical classification for all subjects discarding the most relevant DONE!")
+    #
     # print_syn_results('all', 'less')
     # print_syn_results('all', 'most')
 
     ###########################################################
     ## SYNERGY CLASSIFICATION SINGLE SUBJECT + CLUSTERING
     ###########################################################
-    """single source"""
 
-    syn_single_source_classification('clustering', 'less')
-    get_best_params_single('clustering', 'less')
-    print("\nSingle source classification for each subject with clustering discarding the less relevant DONE!")
-
-    syn_single_source_classification('clustering', 'most')
-    get_best_params_single('clustering', 'most')
-    print("\nSingle source classification for each subject with clustering discarding the most relevant DONE!")
-
-    """multisource"""
-
-    multisource_syn_classification('clustering', 'less')
-    get_best_params_multi('clustering', 'less')
-    print("\nMultisource classification for each subject with clustering discarding the less relevant DONE!")
-
-    multisource_syn_classification('clustering', 'most')
-    get_best_params_multi('clustering','most')
-    print("\nMultisource classification for each subject with clustering discarding the most relevant DONE!")
-
-    """hierarchical"""
-
-    hierarchical_syn_classification('clustering', 'less')
-    get_best_params_hier('clustering', 'less')
-    print("\nHierarchical classification for each subject with clustering discarding the less relevant DONE!")
-
-    hierarchical_syn_classification('clustering', 'most')
-    get_best_params_hier('clustering', 'most')
-    print("\nHierarchical classification for each subject with clustering discarding the most relevant DONE!")
+    # """single source"""
+    # syn_single_source_classification('clustering', 'less')
+    # get_best_params_single('clustering', 'less')
+    # print("\nSingle source classification for each subject with clustering discarding the less relevant DONE!")
+    #
+    # syn_single_source_classification('clustering', 'most')
+    # get_best_params_single('clustering', 'most')
+    # print("\nSingle source classification for each subject with clustering discarding the most relevant DONE!")
+    #
+    # """multisource"""
+    # multisource_syn_classification('clustering', 'less')
+    # get_best_params_multi('clustering', 'less')
+    # print("\nMultisource classification for each subject with clustering discarding the less relevant DONE!")
+    #
+    # multisource_syn_classification('clustering', 'most')
+    # get_best_params_multi('clustering','most')
+    # print("\nMultisource classification for each subject with clustering discarding the most relevant DONE!")
+    #
+    # """hierarchical"""
+    # hierarchical_syn_classification('clustering', 'less')
+    # get_best_params_hier('clustering', 'less')
+    # print("\nHierarchical classification for each subject with clustering discarding the less relevant DONE!")
+    #
+    # hierarchical_syn_classification('clustering', 'most')
+    # get_best_params_hier('clustering', 'most')
+    # print("\nHierarchical classification for each subject with clustering discarding the most relevant DONE!")
 
     # print_syn_results('clustering', 'less')
     # print_syn_results('clustering', 'most')
@@ -254,45 +261,47 @@ def main():
     ###########################################################
     ## EARLY ENCLOSURE ALTERNATIVE (pca + ee)
     ###########################################################
-    extract_early_enclosure_alt()
 
-    """single source"""
-
-    syn_single_source_classification('early', 'less')
-    get_best_params_single('early', 'less')
-    print("\nSingle source classification for early enclosure discarding the less relevant DONE!")
-
-    syn_single_source_classification('early', 'most')
-    get_best_params_single('early', 'most')
-    print("\nSingle source classification for early enclosure discarding the most relevant DONE!")
-
-    """multisource"""
-
-    multisource_syn_classification('early', 'less')
-    get_best_params_multi('early', 'less')
-    print("\nMultisource classification for early enclosure discarding the less relevant DONE!")
-
-    multisource_syn_classification('early', 'most')
-    get_best_params_multi('early', 'most')
-    print("\nMultisource classification for early enclosure discarding the most relevant DONE!")
-
-    """hierarchical"""
-
-    hierarchical_syn_classification('early', 'less')
-    get_best_params_hier('early', 'less')
-    print("\nHierarchical classification for early enclosure discarding the less relevant DONE!")
-
-    hierarchical_syn_classification('early', 'most')
-    get_best_params_hier('early', 'most')
-    print("\nHierarchical classification for early enclosure discarding the most relevant DONE!")
-
+    # extract_early_enclosure_alt()
+    #
+    # """single source"""
+    # syn_single_source_classification('early', 'less')
+    # get_best_params_single('early', 'less')
+    # print("\nSingle source classification for early enclosure discarding the less relevant DONE!")
+    #
+    # syn_single_source_classification('early', 'most')
+    # get_best_params_single('early', 'most')
+    # print("\nSingle source classification for early enclosure discarding the most relevant DONE!")
+    #
+    # """multisource"""
+    # multisource_syn_classification('early', 'less')
+    # get_best_params_multi('early', 'less')
+    # print("\nMultisource classification for early enclosure discarding the less relevant DONE!")
+    #
+    # multisource_syn_classification('early', 'most')
+    # get_best_params_multi('early', 'most')
+    # print("\nMultisource classification for early enclosure discarding the most relevant DONE!")
+    #
+    # """hierarchical"""
+    # hierarchical_syn_classification('early', 'less')
+    # get_best_params_hier('early', 'less')
+    # print("\nHierarchical classification for early enclosure discarding the less relevant DONE!")
+    #
+    # hierarchical_syn_classification('early', 'most')
+    # get_best_params_hier('early', 'most')
+    # print("\nHierarchical classification for early enclosure discarding the most relevant DONE!")
+    #
     # print_syn_results('early', 'less')
     # print_syn_results('early', 'most')
 
-    # """FINE VS COARSE CHECKS"""
+    """FINE VS COARSE CHECKS"""
     # early_fine_vs_coarse()
     # syn_fine_vs_coarse()
 
+    ###########################################################
+    ## TARGETING FAMILY
+    ###########################################################
+    fam_syn_single_source_classification('clustering', 'less')
 
 if __name__ == "__main__":
     main()
