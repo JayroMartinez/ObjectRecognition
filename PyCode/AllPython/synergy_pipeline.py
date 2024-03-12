@@ -26,11 +26,140 @@ from sklearn import metrics
 from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
+from itertools import combinations
+from statsmodels.multivariate.manova import MANOVA
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from scipy.stats import mannwhitneyu
+from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import cdist
+from numpy import std, mean, sqrt
+from sklearn.metrics.pairwise import cosine_similarity
 
 from classification import get_raw_best_params
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def all_subjects_comp():
+
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        score_file = './results/Syn/scores/' + source + '_scores.csv'
+        score_df = pd.read_csv(score_file)
+        score_df = score_df.drop(score_df.columns[0], axis=1)
+
+        extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+        score_df.columns = ['Syn' + x for x in score_df.columns]
+        # selected_data = pd.concat([score_df, extra_data['EP'], extra_data['Subject'], extra_data['Family']], axis=1)
+        # selected_data = pd.concat([score_df, extra_data['EP'], extra_data['Subject'], extra_data['Given Object']], axis=1)
+        selected_data = pd.concat([score_df, extra_data['EP'], extra_data['Subject'], extra_data['Given Object'], extra_data['Family']], axis=1)
+
+        """MANOVA"""
+        # cols = list(selected_data.columns)
+        # cols.remove('EP')
+        # cols.remove('Subject')
+        # # cols.remove('Family')
+        # cols.remove('Given Object')
+        # # form = f"{' + '.join(cols)} ~ EP + Subject + Family"
+        # form = f"{' + '.join(cols)} ~ EP + Subject + Q('Given Object')"
+        # manova = MANOVA.from_formula(formula=form, data=selected_data)
+        # result = manova.mv_test()
+        # print(result.summary())
+
+
+        """MIXED EFFECTS MODEL"""
+        # cols = list(selected_data.columns)
+        # cols.remove('EP')
+        # cols.remove('Subject')
+        # cols.remove('Family')
+        # cols.remove('Given Object')
+        #
+        # # Reshape the data to have each synergy score component as a separate row
+        # melted_data = pd.melt(selected_data, id_vars=['Subject', 'EP', 'Given Object', 'Family'],
+        #                       value_vars=cols, var_name='Synergy_Component', value_name='Synergy_Score')
+        #
+        # # Define the formula string with the reshaped data
+        # form = "Synergy_Score ~ EP + Family + Q('Given Object')"
+        #
+        # # Define and fit the mixed effects model
+        # # model = smf.mixedlm(form, data=melted_data, groups=melted_data['Subject']).fit()
+        # model = smf.mixedlm(form, data=melted_data, groups=melted_data['Subject']).fit()
+        #
+        # # Print model summary
+        # print(model.summary())
+
+        a=1
+
+        # i = sns.boxplot(data=selected_data, x='EP', y='Syn')
+        # pairs = list(combinations(extra_data['EP'].unique(), 2))
+        # test_results = add_stat_annotation(i,
+        #                                    data=selected_data,
+        #                                    x='EP',
+        #                                    y='Syn',
+        #                                    box_pairs=pairs,
+        #                                    test='Kruskal',
+        #                                    text_format='star',
+        #                                    loc='inside',
+        #                                    verbose=2,
+        #                                    line_offset=0.1,
+        #                                    fontsize='x-small')
+        # i.set(title=source.upper() + ' Syn ' + str(iter))
+        # i.set(ylabel='Scores')
+        # _, xlabels = plt.xticks()
+        # i.set_xticklabels(xlabels, size=5)
+        # plt.xticks(rotation=45)
+        # plt.tight_layout()
+        # # plt.show()
+        # plt.savefig('./results/Syn/plots/all_subj_syns/' + source + '_synergy_' + str(iter)+'.png', dpi=600, bbox_inches='tight')
+        # plt.close()
+        # plt.clf()
+
+
+def clustered_comp():
+
+    sources = ['kin', 'emg_pca', 'tact']
+
+    for source in sources:
+
+        score_file = './results/Syn/scores/reordered_' + source + '_scores.csv'
+        score_df = pd.read_csv(score_file)
+        score_df = score_df.drop(score_df.columns[0], axis=1)
+
+        extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+        for iter in range(0, len(score_df.columns)):
+            selected_syn = score_df[str(iter)]
+            selected_data = pd.DataFrame({'Syn': selected_syn, 'EP': extra_data['EP']})
+
+            i = sns.boxplot(data=selected_data, x='EP', y='Syn')
+            pairs = list(combinations(extra_data['EP'].unique(), 2))
+            test_results = add_stat_annotation(i,
+                                               data=selected_data,
+                                               x='EP',
+                                               y='Syn',
+                                               box_pairs=pairs,
+                                               test='Kruskal',
+                                               text_format='star',
+                                               loc='inside',
+                                               verbose=2,
+                                               line_offset=0.1,
+                                               fontsize='x-small')
+            i.set(title=source.upper() + ' Syn ' + str(iter))
+            i.set(ylabel='Scores')
+            _, xlabels = plt.xticks()
+            i.set_xticklabels(xlabels, size=5)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            # plt.show()
+            plt.savefig('./results/Syn/plots/clustered_syns/' + source + '_synergy_' + str(iter) + '.png',
+                        dpi=600, bbox_inches='tight')
+            plt.close()
+            plt.clf()
 
 
 def get_best_params_hier(type, discard):
@@ -283,13 +412,18 @@ def extract_early_enclosure_alt():
         ratio_var_df.to_csv('./results/Early Enclosure/variance/alternative_reordered_' + source + '_var_tot.csv')
 
 
-def score_reordering():
+def score_reordering(type):
 
-    sources = ['kin', 'emg_pca', 'tact']
+    # sources = ['kin', 'emg_pca', 'tact']
+    sources = ['kin', 'tact']
 
     for source in sources:
 
-        source_clusters = pd.read_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv')
+        if type == 'agglomerative':
+            source_clusters = pd.read_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv')
+        else:  # alternative
+            source_clusters = pd.read_csv('./results/Syn/resulting_components/alternative_' + source + '.csv')
+
         source_clusters.drop(source_clusters.columns[0], axis=1, inplace=True)
 
         score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
@@ -351,12 +485,22 @@ def score_reordering():
         variance = [x / source_tot_var.sum() for x in sum_var]
         var = pd.DataFrame(variance)
         var_sort = var.sort_values(by='0', ascending=False)
-        var_sort.to_csv('./results/Syn/variance/overall_var_' + source + '.csv')
 
-        # print('Source:', source, 'Var explained:', var_sort.sum())
+        if type == 'agglomerative':
+            var_sort.to_csv('./results/Syn/variance/overall_var_' + source + '.csv')
+        else:  # alternative
+            var_sort.to_csv('./results/Syn/variance/alternative_overall_var_' + source + '.csv')
 
+        source_clusters.columns = [int(x) for x in source_clusters.columns]
+        reordered_clusters = source_clusters.iloc[:, var_sort.index]
         reordered_scores = pd.DataFrame(imp_data[:, var_sort.index])
-        reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
+
+        if type == 'agglomerative':
+            reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_' + source + '.csv')
+            reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
+        else:  # alternative
+            reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_alternative_' + source + '.csv')
+            reordered_scores.to_csv('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
 
 
 def score_reordering_early_enclosure():
@@ -427,6 +571,7 @@ def syn_clustering_early_enclosure():
     for source in sources:
 
         selected_files = glob.glob('./results/Early Enclosure/synergies/*' + source + '_syns.csv')
+        selected_files = [x for x in selected_files if 'sub' in x]  # selects only subject files
         selected_files.sort()
 
         all_data = pd.DataFrame()
@@ -507,6 +652,7 @@ def syn_clustering():
     for source in sources:
 
         selected_files = glob.glob('./results/Syn/synergies/*' + source + '_syns.csv')
+        selected_files = [x for x in selected_files if 'sub' in x]  # selects only subject files
         selected_files.sort()
 
         all_data = pd.DataFrame()
@@ -535,7 +681,8 @@ def syn_clustering():
 
             # model = KMeans(n_clusters=remaining_clusters, init='k-means++', algorithm='lloyd', n_init=1000, max_iter=100000)
 
-            model = AgglomerativeClustering(n_clusters=remaining_clusters, metric='cosine', linkage='average')
+            model = AgglomerativeClustering(n_clusters=remaining_clusters, metric='cosine', linkage='average', compute_distances=True)
+            # model = AgglomerativeClustering(n_clusters=remaining_clusters, affinity=custom_metric, linkage='average')
 
             numerical_data = all_data.select_dtypes(include='float64')
             model.fit(numerical_data)
@@ -576,6 +723,182 @@ def syn_clustering():
 
         resulting_clusters_df = pd.DataFrame(resulting_clusters)
         resulting_clusters_df.to_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv', mode='a')
+
+
+def syn_clustering_alternative():
+
+    # sources = ['kin', 'emg_pca', 'tact']
+    sources = ['kin', 'tact']
+
+    for source in sources:
+
+        selected_files = glob.glob('./results/Syn/synergies/*' + source + '_syns.csv')
+        selected_files = [x for x in selected_files if 'sub' in x]  # selects only subject files
+        selected_files.sort()
+
+        all_data = pd.DataFrame()
+
+        for file in selected_files:
+            suj_dat = pd.read_csv(file)
+            components = suj_dat.pop('Unnamed: 0').to_list()
+            suj_dat = suj_dat.T
+            suj_dat['Component'] = components
+            aux_sub = file.replace('./results/Syn/synergies/', '')
+            subject = aux_sub.replace('_' + source + '_syns.csv', '')
+            suj_dat['Subject'] = np.repeat(subject, suj_dat.shape[0])
+
+            all_data = pd.concat([all_data, pd.DataFrame(suj_dat)], ignore_index=True)
+
+
+        results_index = np.unique(all_data['Subject'])
+        cols = np.unique(all_data['Component'])
+        # results_columns = ['Syn ' + str(x) for x in cols]
+        empty = np.empty((len(results_index), len(cols),))
+        empty[:] = np.nan
+        results = pd.DataFrame(data=empty)
+        results.index = results_index
+        results.columns = cols
+
+        numerical_data = all_data.select_dtypes(include='float64')
+        num_clust = len(numerical_data.columns) + 1  # we include an extra cluster to drop "garbage" components
+
+        resulting_clusters = np.empty((len(selected_files), len(numerical_data.columns)))
+        resulting_clusters[:] = np.nan  # fill array with NaNs
+
+        for iter_clust in range(0, num_clust - 1):  # -1 because makes no sense to ask for 1 cluster
+
+            remaining_clusters = num_clust - iter_clust
+            numerical_data = all_data.select_dtypes(include='float64')
+
+            syns = numerical_data.T
+            syns_corr = syns.corr().abs()
+            # mask = np.tril(np.ones_like(syns_corr, dtype=bool))
+            # tri_syns_corr = syns_corr.where(mask)
+            # np.fill_diagonal(tri_syns_corr.values, 0)
+
+            distances = 1 - syns_corr.to_numpy()
+            clustering_model = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=remaining_clusters)
+            cluster_labels = clustering_model.fit_predict(distances)
+            # reshaped_clusters = np.reshape(cluster_labels, (-1, remaining_clusters-1))
+            silh_score = metrics.silhouette_samples(numerical_data, cluster_labels)
+
+
+            components_df = all_data[['Component', 'Subject']]
+            components_df['Label'] = cluster_labels
+            components_df['Score'] = silh_score
+
+            """checking for best cluster after removing duplicates [subject-label]"""
+            aux_df = components_df.sort_values(by='Score', ascending=False)
+            aux_df.drop_duplicates(subset=['Subject', 'Label'], keep='first', inplace=True)
+            score_per_clust = aux_df.groupby(by=['Label'])['Score'].mean()
+            best_clust = score_per_clust.idxmax()
+
+            subjects = np.unique(components_df['Subject'])
+
+            for it_subj in range(len(subjects)):
+
+                select_components = components_df.loc[
+                    (components_df['Subject'] == str(subjects[it_subj])) & (components_df['Label'] == int(best_clust))]
+
+                if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
+
+                    best_suj_component = select_components.loc[select_components['Score'].idxmax()]['Component']
+
+                    """SAVE THE CLUSTERED SYNERGIES [rows=subjects, columns=this cluster {clusters still not ordered}]"""
+                    resulting_clusters[it_subj, iter_clust] = int(best_suj_component)
+
+                    """WE DROP THE ALREADY CLUSTERED SYNERGIES"""
+                    all_data.drop(all_data.loc[(all_data["Subject"] == subjects[it_subj]) & (all_data["Component"] == best_suj_component)].index, inplace=True)
+                # else:
+                #     a=1
+
+        resulting_clusters_df = pd.DataFrame(resulting_clusters)
+        resulting_clusters_df.to_csv('./results/Syn/resulting_components/alternative_' + source + '.csv', mode='a')
+
+        """OLD CODE"""
+        # for iter in cols:
+        #
+        #     subjects = np.unique(all_data['Subject'])
+        #
+        #     max_pos = tri_syns_corr.stack().idxmax()  # Get coordinates with max value
+        #
+        #     # That coordinates correspond to (SujA-CompX vs SujB-CompY)
+        #     suj_a = all_data.iloc[[max_pos[0]]]['Subject']
+        #     comp_a = all_data.iloc[[max_pos[0]]]['Component']
+        #
+        #     suj_b = all_data.iloc[[max_pos[1]]]['Subject']
+        #     comp_b = all_data.iloc[[max_pos[1]]]['Component']
+        #
+        #     # Remove these two subjects from the list to search for the other subjects
+        #     subjects = np.delete(subjects, np.where(subjects == suj_a.values))
+        #     subjects = np.delete(subjects, np.where(subjects == suj_b.values))
+        #
+        #     # Save the selected components in a synergy
+        #     results.loc[suj_a.values, iter] = comp_a.values
+        #     results.loc[suj_b.values, iter] = comp_b.values
+        #
+        #     a_comps = []
+        #     b_comps = []
+        #
+        #     a_corr = []
+        #     b_corr = []
+        #
+        #     # Select correlations for both selected subjects
+        #     suj_a_idx = all_data.loc[all_data['Subject'] == suj_a.values[0]].index
+        #     suj_a_data = tri_syns_corr.iloc[suj_a_idx]
+        #
+        #     suj_b_idx = all_data.loc[all_data['Subject'] == suj_b.values[0]].index
+        #     suj_b_data = tri_syns_corr.iloc[suj_b_idx]
+        #
+        #     # for each subject find best match to each component
+        #     for suj in subjects:
+        #
+        #         sel_idx = all_data.loc[all_data['Subject'] == suj].index
+        #
+        #         sel_data_suj_a = suj_a_data.iloc[:, sel_idx]
+        #
+        #         sel_data_suj_b = suj_b_data.iloc[:, sel_idx]
+        #
+        #         # # Now we check the correlation of SujA-CompA to the components of the selected subject
+        #         # # If the best match is also the best match for the selected component of the selected subject we save it
+        #         # column_a = sel_data_suj_a.columns[comp_a.values]
+        #         # if sel_data_suj_a.loc[max_pos[0], column_a].item() >= sel_data_suj_a.loc[:, column_a].max().item():
+        #         #     a_comps.append(column_a)  # Save the component
+        #         #     a_corr.append(sel_data_suj_a.loc[max_pos[0], column_a])  # Save the correlation value
+        #         #
+        #         # column_b = sel_data_suj_b.columns[comp_b.values]
+        #         # if sel_data_suj_b.loc[max_pos[1], column_b].item() >= sel_data_suj_b.loc[:, column_b].max().item():
+        #         #     b_comps.append(column_b)  # Save the component
+        #         #     b_corr.append(sel_data_suj_b.loc[max_pos[1], column_b])  # Save the correlation value
+        #
+        #         column_a = sel_data_suj_a.columns[comp_a.values]
+        #         a_comps.append(column_a)  # Save the component
+        #         a_corr.append(sel_data_suj_a.loc[max_pos[0], column_a])  # Save the correlation value
+        #         column_b = sel_data_suj_b.columns[comp_b.values]
+        #         b_comps.append(column_b)  # Save the component
+        #         b_corr.append(sel_data_suj_b.loc[max_pos[1], column_b])  # Save the correlation value
+        #
+        #     if np.mean(a_corr) > np.mean(b_corr):
+        #         comps = a_comps
+        #     else:
+        #         comps = b_comps
+        #
+        #     for comp in comps:
+        #         subject = all_data.loc[comp]['Subject']
+        #         component = all_data.loc[comp]['Component']
+        #
+        #         results.loc[subject.values, iter] = component.values
+        #
+        #         tri_syns_corr.loc[comp] = np.nan
+        #         tri_syns_corr.loc[:, comp] = np.nan
+        #
+        #     tri_syns_corr.loc[max_pos[0]] = np.nan
+        #     tri_syns_corr.loc[:, max_pos[0]] = np.nan
+        #
+        #     tri_syns_corr.loc[max_pos[1]] = np.nan
+        #     tri_syns_corr.loc[:, max_pos[1]] = np.nan
+
+        a = 1
 
 
 def kin_syn_extraction(data):
@@ -809,7 +1132,7 @@ def kin_syn_classif(input_data):
     cv = input_data[3]
     kin_bins = input_data[4]
 
-    discard = input_data[5]
+    # discard = input_data[5]
 
     total_score = []
 
@@ -2160,7 +2483,7 @@ def print_syn_results(type, discard):
     pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_kin[::-1], data=kin_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
 
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2252,7 +2575,7 @@ def print_syn_results(type, discard):
     pairs_emg_pca = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                      ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_emg_pca, data=emg_pca_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2339,7 +2662,7 @@ def print_syn_results(type, discard):
     pairs_tact = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                   ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_tact, data=tact_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2429,7 +2752,7 @@ def print_syn_results(type, discard):
     pairs_multi = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                    ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_multi, data=multi_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2521,7 +2844,7 @@ def print_syn_results(type, discard):
     pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                   ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
     i.set(ylabel="Accuracy (95% ci)")
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -2580,21 +2903,17 @@ def early_fine_vs_coarse():
     plt.savefig('./results/Early Enclosure/plots/fine_vs_coarse.png', dpi=600)
 
 
-def syn_fine_vs_coarse():
+def syn_fine_vs_coarse_fam(type):
 
-    kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    if type == 'cluster':
+        kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    else:
+        kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
-    # fine_eps = ['edge following', 'function test', 'enclosure part']
-    # coarse_eps = ['enclosure', 'weighting', 'pressure']
-
     fine_families = ['Cutlery', 'Geometric']
     coarse_families = ['Ball', 'Plates']
-
-    # fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
-    # coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
-
     fine_idx = extra_data.loc[extra_data['Family'].isin(fine_families)]
     coarse_idx = extra_data.loc[extra_data['Family'].isin(coarse_families)]
 
@@ -2604,21 +2923,220 @@ def syn_fine_vs_coarse():
     coarse_df = kin_score_df.iloc[coarse_idx.index]
     selected_coarse = coarse_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
 
-    plt.close()
-    plt.clf()
-    i = sns.boxplot(data=selected_fine)
-    i.set(title='Kinematic score comparison Low vs. High order synergies\nin Cutlery and Geometric trials for each subject')
-    i.set(ylabel="Z-score (absolute value)")
-    i.set(xlabel="Synergies")
-    # plt.show()
-    plt.savefig('./results/Syn/plots/fine_fam.png', dpi=600)
+    selected_fine['Condition'] = 'Fine'
+    selected_coarse['Condition'] = 'Coarse'
+    combined_df = pd.concat([selected_fine, selected_coarse], ignore_index=True)
 
+    # Melt the DataFrame for seaborn plotting
+    melted_df = combined_df.melt(id_vars='Condition', var_name='Column', value_name='Value')
+
+    # Step 2: Plotting
     plt.close()
     plt.clf()
-    j = sns.boxplot(data=selected_coarse)
-    j.set(title='Kinematic score comparison Low vs. High order synergies\nin Ball and Plates trials for each subject')
-    j.set(ylabel="Z-score (absolute value)")
-    j.set(xlabel="Synergies")
+    plt.figure(figsize=(12, 6))
+    ax = sns.violinplot(x='Column', y='Value', hue='Condition', data=melted_df, split=True, inner='quartile')
+    ax.legend(loc='center right', title='Condition')
+    plt.xlabel("Synergies")
+    plt.ylabel("Z-score (absolute value)")
+
+    # Step 3: Statistical Test and Step 4: Annotation
+    # Perform statistical tests, check direction, and annotate
+    columns = ['0', '1', '2', '3', '15', '16', '17', '18']
+    for i, column in enumerate(columns):
+        groupA = selected_fine[column]  # Fine group
+        groupB = selected_coarse[column]  # Coarse group
+        stat, p_value = mannwhitneyu(groupA, groupB, alternative='two-sided')
+
+        # Check for significance
+        if p_value < 0.05:
+            # Set color based on the direction of the difference
+            if column in ['0', '1', '2', '3']:  # Expecting groupB > groupA
+                color = 'black' if groupB.median() > groupA.median() else 'red'
+            else:  # For columns 15-18, expecting groupA > groupB
+                color = 'black' if groupA.median() > groupB.median() else 'red'
+
+            # Annotate the plot with colored asterisks
+            plt.text(i, melted_df['Value'].max() * 1.05, '*', ha='center', fontsize=14, color=color)
+
+    tit = 'Kinematic score comparison Low vs. High order synergies\nfor Fine vs. Coarse families'
+    if type == 'cluster':
+        tit += '. Each subject + clustering'
+    else:
+        tit += '. All subjects'
+    plt.title(tit)
+    plt.tight_layout()
     # plt.show()
-    plt.savefig('./results/Syn/plots/coarse_fam.png', dpi=600)
+
+    if type == 'cluster':
+        plt.savefig('./results/Syn/plots/clust_fine_vs_coarse_fam.png', dpi=600)
+    else:
+        plt.savefig('./results/Syn/plots/all_fine_vs_coarse_fam.png', dpi=600)
+
+
+def syn_fine_vs_coarse_ep(type):
+
+    if type == 'cluster':
+        kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
+    else:
+        kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
+
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+
+    fine_eps = ['edge following', 'function test']
+    coarse_eps = ['enclosure', 'weighting', 'pressure', 'enclosure part']
+    fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
+    coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
+
+    fine_df = kin_score_df.iloc[fine_idx.index]
+    selected_fine = fine_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+
+    coarse_df = kin_score_df.iloc[coarse_idx.index]
+    selected_coarse = coarse_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+
+    selected_fine['Condition'] = 'Fine'
+    selected_coarse['Condition'] = 'Coarse'
+    combined_df = pd.concat([selected_fine, selected_coarse], ignore_index=True)
+
+    # Melt the DataFrame for seaborn plotting
+    melted_df = combined_df.melt(id_vars='Condition', var_name='Column', value_name='Value')
+
+    # Step 2: Plotting
+    plt.close()
+    plt.clf()
+    plt.figure(figsize=(12, 6))
+    ax = sns.violinplot(x='Column', y='Value', hue='Condition', data=melted_df, split=True, inner='quartile')
+    ax.legend(loc='center right', title='Condition')
+    plt.xlabel("Synergies")
+    plt.ylabel("Z-score (absolute value)")
+
+    # Step 3: Statistical Test and Step 4: Annotation
+    # Perform statistical tests, check direction, and annotate
+    columns = ['0', '1', '2', '3', '15', '16', '17', '18']
+    for i, column in enumerate(columns):
+        groupA = selected_fine[column]  # Fine group
+        groupB = selected_coarse[column]  # Coarse group
+        stat, p_value = mannwhitneyu(groupA, groupB, alternative='two-sided')
+
+        # Check for significance
+        if p_value < 0.05:
+            # Set color based on the direction of the difference
+            if column in ['0', '1', '2', '3']:  # Expecting groupB > groupA
+                color = 'black' if groupB.median() > groupA.median() else 'red'
+            else:  # For columns 15-18, expecting groupA > groupB
+                color = 'black' if groupA.median() > groupB.median() else 'red'
+
+            # Annotate the plot with colored asterisks
+            plt.text(i, melted_df['Value'].max() * 1.05, '*', ha='center', fontsize=14, color=color)
+
+    tit = 'Kinematic score comparison Low vs. High order synergies\nfor Fine vs. Coarse EPs'
+    if type == 'cluster':
+        tit += '. Each subject + clustering'
+    else:
+        tit += '. All subjects'
+    plt.title(tit)
+    plt.tight_layout()
+    # plt.show()
+
+    if type == 'cluster':
+        plt.savefig('./results/Syn/plots/clust_fine_vs_coarse_ep.png', dpi=600)
+    else:
+        plt.savefig('./results/Syn/plots/all_fine_vs_coarse_ep.png', dpi=600)
+
+
+def calculate_centroid_distances(df, group_column):
+
+    aux_df = df.iloc[:, 0:19]
+    aux_df[group_column] = df[group_column]
+    centroids = aux_df.groupby(group_column).mean()  # Calculate centroids
+
+    distances = []
+    # Iterate over each group to calculate distances from points to their group's centroid
+    for group, group_df in df.groupby(group_column):
+        group_centroid = centroids.loc[group]  # Get the centroid for the current group
+        group_distances = np.sqrt(
+            ((group_df.iloc[:, 0:19] - group_centroid) ** 2).sum(axis=1))  # Euclidean distance to centroid
+        distances.extend(group_distances)
+
+    # Add the distances back to the original DataFrame (or to a new one if preferred)
+    df['Distance'] = distances
+    return df[[group_column, 'Distance']]
+
+
+def cohen_d(x, y):
+
+    nx = len(x)
+    ny = len(y)
+    dof = nx + ny - 2
+
+    return (mean(x) - mean(y)) / sqrt(((nx-1)*std(x, ddof=1) ** 2 + (ny-1)*std(y, ddof=1) ** 2) / dof)
+
+
+def distances(type):
+
+    if type == 'cluster':
+        score_file = './results/Syn/scores/reordered_kin_scores.csv'
+    else:
+        score_file = './results/Syn/scores/kin_scores.csv'
+
+    kin_scores_df = pd.read_csv(score_file)
+    kin_scores_df = kin_scores_df.drop(kin_scores_df.columns[0], axis=1)
+
+    extra_data_df = pd.read_csv('./results/Syn/extra_data.csv')
+
+    # Assuming 'extra_data_df' and 'kin_scores_df' are already loaded and have the same length
+    combined_df = kin_scores_df.join(extra_data_df)
+
+    intra_subject_distances = calculate_centroid_distances(combined_df.copy(), 'Subject')
+    intra_EP_distances = calculate_centroid_distances(combined_df.copy(), 'EP')
+
+    distances_df = pd.concat([
+        intra_subject_distances.rename(columns={'Distance': 'Value'}).assign(Type='Intra-Subject'),
+        intra_EP_distances.rename(columns={'Distance': 'Value'}).assign(Type='Intra-EP')
+    ])
+
+    # Statistical Analysis
+    stat, p_value = mannwhitneyu(
+        distances_df[distances_df['Type'] == 'Intra-Subject']['Value'],
+        distances_df[distances_df['Type'] == 'Intra-EP']['Value']
+    )
+
+    # Calculate effect size
+    d = cohen_d(distances_df[distances_df['Type'] == 'Intra-Subject']['Value'],
+                distances_df[distances_df['Type'] == 'Intra-EP']['Value'])
+
+    # print(f"Cohen's d: {d}")
+
+    # Plotting
+    plt.close()
+    plt.clf()
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Type', y='Value', data=distances_df)
+
+    tit = 'Intra-Subject vs. Intra-EP Distances'
+    if type == 'cluster':
+        tit += '. Each subject + clustering'
+    else:
+        tit += '. All subjects'
+
+    plt.title(tit)
+    plt.ylabel('Euclidean distance to Centroid (z-score)')
+
+    # Calculate the maximum value for y-axis to place annotations correctly
+    max_y_value = distances_df['Value'].max()
+    # Annotate with the p-value
+    plt.text(0.5, max_y_value * 0.97, f'p-value: {p_value:.2e}', ha='center', va='bottom', fontsize=10)
+    # Annotate with Cohen's d
+    plt.text(0.5, max_y_value * 0.94, f"Cohen's d: {d:.3f}", ha='center', va='bottom', fontsize=10)
+
+    plt.tight_layout()
+    # plt.show()
+
+    save_file = './results/Syn/plots/'
+    if type == 'cluster':
+        save_file += 'clust_subj_vs_ep.png'
+    else:
+        save_file += 'all_subj_vs_ep.png'
+
+    plt.savefig(save_file, dpi=600)
+
 

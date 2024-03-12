@@ -45,8 +45,14 @@ from synergy_pipeline import get_best_params_single
 from synergy_pipeline import get_best_params_multi
 from synergy_pipeline import get_best_params_hier
 from synergy_pipeline import early_fine_vs_coarse
-from synergy_pipeline import syn_fine_vs_coarse
+from synergy_pipeline import syn_fine_vs_coarse_fam
+from synergy_pipeline import syn_fine_vs_coarse_ep
 from family_pipeline import fam_syn_single_source_classification
+from synergy_pipeline import all_subjects_comp
+from synergy_pipeline import clustered_comp
+from synergy_pipeline import distances
+from ep_modelling import ep_from_scores_classif
+from synergy_pipeline import syn_clustering_alternative
 
 
 def main():
@@ -177,18 +183,29 @@ def main():
     ###################################
     ## SYNERGY EXTRACTION
     ###################################
-    
     syn_extraction(split_df)
     print("\nSynergy extraction for all subjects done!")
 
     syn_extraction_subj(split_df)
     print("\nSynergy extraction for each subject done!")
 
-    syn_clustering()
-    print("\nSynergy clustering done!")
+    # syn_clustering()
+    # print("\nSynergy clustering done!")
 
-    score_reordering()
+    syn_clustering_alternative()
+    print("\nSynergy alternative clustering done!")
+
+    # score_reordering('agglomerative')
+    score_reordering('alternative')
     print("\nSynergy reordering done!")
+
+
+    ###################################
+    ## SYNERGY COMPARISON
+    ###################################
+
+    # all_subjects_comp()
+    # clustered_comp()
 
     ###########################################################
     ## SYNERGY CLASSIFICATION ALL SUBJECTS
@@ -294,14 +311,33 @@ def main():
     # print_syn_results('early', 'less')
     # print_syn_results('early', 'most')
 
-    """FINE VS COARSE CHECKS"""
+    ###########################################################
+    ## FINE vs COARSE CHECKS
+    ###########################################################
     # early_fine_vs_coarse()
-    # syn_fine_vs_coarse()
+
+    # syn_fine_vs_coarse_fam('cluster')
+    # syn_fine_vs_coarse_fam('all')
+    #
+    # syn_fine_vs_coarse_ep('cluster')
+    # syn_fine_vs_coarse_ep('all')
+
+    ###########################################################
+    ## DISTANCE CHECK
+    ###########################################################
+
+    # distances('cluster')
+    # distances('all')
 
     ###########################################################
     ## TARGETING FAMILY
     ###########################################################
-    fam_syn_single_source_classification('clustering', 'less')
+    # fam_syn_single_source_classification('clustering', 'less')
+
+    ###########################################################
+    ## TARGETING EP
+    ###########################################################
+    ep_from_scores_classif()
 
 if __name__ == "__main__":
     main()

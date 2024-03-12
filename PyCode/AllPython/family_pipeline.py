@@ -26,6 +26,7 @@ from sklearn import metrics
 from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import SGDClassifier
 
 from classification import get_raw_best_params
 
@@ -330,12 +331,15 @@ def fam_kin_syn_classif(input_data):
                         dropped += 1
 
             # build model
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, tol=0.000001, multi_class='multinomial', n_jobs=-1,
                                            l1_ratio=l1VSl2)
+            # log_model = SGDClassifier(loss="log_loss", penalty='elasticnet', alpha=c_param, l1_ratio=l1VSl2, max_iter=25000, n_jobs=-1, random_state=rnd_st, class_weight='balanced')
             # train model
-            log_model.fit(X=train_data, y=train_labels)
-            sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            weights_test = compute_sample_weight(class_weight='balanced', y=test_labels)
+            sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=weights_test) * 100, 2)
             total_score.append(sc)
 
     result = ['Kin']
@@ -431,7 +435,7 @@ def emg_pca_syn_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, multi_class='multinomial', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             log_model.fit(X=train_data, y=train_labels)
@@ -447,7 +451,7 @@ def emg_pca_syn_classif(input_data):
     return result
 
 
-def tact_syn_classif(input_data):
+def fam_tact_syn_classif(input_data):
 
     tact_scores = input_data[0]
     extra_data = input_data[1]
@@ -529,12 +533,13 @@ def tact_syn_classif(input_data):
                         dropped += 1
 
             # build model
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=25000, multi_class='multinomial', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
-            log_model.fit(X=train_data, y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
             sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
 
@@ -598,14 +603,14 @@ def fam_syn_single_source_classification(type, discard):
     all_param = list(itertools.product(perc_syns, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard] for x in all_param]
     emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
-    tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
+    # tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
 
     # multiprocessing
     with Pool() as pool:
 
         result_kin = pool.map_async(fam_kin_syn_classif, kin_data_and_iter)
         # result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
-        # result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
+        # result_tact = pool.map_async(fam_tact_syn_classif, tact_data_and_iter)
 
         for res_kin in result_kin.get():
             wr.writerow(res_kin)
@@ -614,7 +619,7 @@ def fam_syn_single_source_classification(type, discard):
         # for res_emg_pca in result_emg_pca.get():
         #     wr.writerow(res_emg_pca)
         # # print("EMG PCA classification done!")
-        #
+
         # for res_tact in result_tact.get():
         #     wr.writerow(res_tact)
         # # print("Tactile classification done!")
@@ -832,7 +837,7 @@ def hierarchical_syn_classification(type, discard):
 
                     # build kinematic model
                     kin_log_model = LogisticRegression(penalty='elasticnet', C=kin_c, random_state=rnd_st,
-                                                       solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                                       solver='saga', max_iter=50000, multi_class='multinomial', n_jobs=-1,
                                                        l1_ratio=kin_l1)
 
                     # train kinematic model
@@ -841,7 +846,7 @@ def hierarchical_syn_classification(type, discard):
                     # build EMG model
                     emg_log_model = LogisticRegression(penalty='elasticnet', C=emg_c,
                                                        random_state=rnd_st,
-                                                       solver='saga', max_iter=50000, multi_class='ovr',
+                                                       solver='saga', max_iter=50000, multi_class='multinomial',
                                                        n_jobs=-1,
                                                        l1_ratio=emg_l1)
 
@@ -852,7 +857,7 @@ def hierarchical_syn_classification(type, discard):
                     # build Tactile model
                     tact_log_model = LogisticRegression(penalty='elasticnet', C=tact_c,
                                                         random_state=rnd_st,
-                                                        solver='saga', max_iter=50000, multi_class='ovr',
+                                                        solver='saga', max_iter=50000, multi_class='multinomial',
                                                         n_jobs=-1,
                                                         l1_ratio=tact_l1)
 
@@ -870,7 +875,7 @@ def hierarchical_syn_classification(type, discard):
                     # build & train top layer classifier
                     top_log_model = LogisticRegression(C=top_c, random_state=rnd_st, solver='saga',
                                                        max_iter=50000,
-                                                       multi_class='ovr', n_jobs=-1)
+                                                       multi_class='multinomial', n_jobs=-1)
                     top_log_model.fit(X=pred_proba, y=train_labels)
 
                     # get probabilities from first layer on test set to feed the second layer
@@ -1094,7 +1099,7 @@ def multi_aux_classification(input_data):
 
         log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                        random_state=rnd_st, solver='saga', max_iter=50000,
-                                       multi_class='ovr',
+                                       multi_class='multinomial',
                                        n_jobs=-1, l1_ratio=l1_param)
         # train model
         log_model.fit(X=train_df, y=train_labels)

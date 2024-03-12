@@ -83,3 +83,7 @@ Backup 15:
 Backup 16:
 ******************************
 - Results discarding subjects 7-9
+
+Backup 17:
+******************************
+- Single source results for raw data, discarding subj 7-9, targeting 'Family' instead of 'Given Object', old style = {50000 max iter, iteration over 'family' is fake}
