@@ -52,7 +52,7 @@ def ep_from_scores_classif():
     kin_bins = kin_params[0]
     emg_bins = emg_params[0]
     tact_bins = tact_params[0]
-    perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
@@ -93,7 +93,7 @@ def ep_from_scores_classif():
 
     # BUILD ITERABLE STRUCTURES
     # all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
-    all_param = list(itertools.product(perc_syns, l1VSl2, c_param))
+    all_param = list(itertools.product(l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard] for x in all_param]
     # emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
     # tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
@@ -127,10 +127,11 @@ def kin_ep_classif(input_data):
 
     kin_scores = input_data[0]
     extra_data = input_data[1]
-    perc_syns = input_data[2][0]
+    # perc_syns = input_data[2][0]
+    perc_syns = 100
     # family = input_data[2][1]
-    l1VSl2 = input_data[2][1]
-    c_param = input_data[2][2]
+    l1VSl2 = input_data[2][0]
+    c_param = input_data[2][1]
     cv = input_data[3]
     kin_bins = input_data[4]
 
