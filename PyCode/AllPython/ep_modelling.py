@@ -157,7 +157,7 @@ def kin_ep_classif(input_data):
 
     if include_suj:
         encoder = OneHotEncoder(sparse_output=False)
-        encoded_suj = encoder.fit_transform(to_kfold[['Subject']])
+        encoded_suj = encoder.fit(to_kfold[['Subject']])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
