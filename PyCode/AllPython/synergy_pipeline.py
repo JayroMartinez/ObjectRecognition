@@ -1132,7 +1132,7 @@ def kin_syn_classif(input_data):
     cv = input_data[3]
     kin_bins = input_data[4]
 
-    # discard = input_data[5]
+    discard = input_data[5]
 
     total_score = []
 

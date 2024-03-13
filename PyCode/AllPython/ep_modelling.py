@@ -5,6 +5,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from collections import Counter
 from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.decomposition import NMF
@@ -36,18 +37,15 @@ from scipy.spatial.distance import cdist
 from numpy import std, mean, sqrt
 
 from classification import get_raw_best_params
-from synergy_pipeline import kin_syn_classif
-from synergy_pipeline import emg_pca_syn_classif
-from synergy_pipeline import tact_syn_classif
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-def ep_from_scores_classif():
+def ep_from_scores_classif(include_suj):
 
     discard = 'less'
 
-    cv = 3
+    cv = 5
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
     emg_bins = emg_params[0]
@@ -61,7 +59,11 @@ def ep_from_scores_classif():
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
     # SET AND OPEN RESULT FILE
-    res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+    if include_suj:
+        res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+    else:
+        res_file_name = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
+
     result_file = open(res_file_name, 'a')
     wr = csv.writer(result_file)
 
@@ -94,7 +96,7 @@ def ep_from_scores_classif():
     # BUILD ITERABLE STRUCTURES
     # all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
     all_param = list(itertools.product(l1VSl2, c_param))
-    kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard] for x in all_param]
+    kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard, include_suj] for x in all_param]
     # emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
     # tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
 
@@ -137,6 +139,8 @@ def kin_ep_classif(input_data):
 
     discard = input_data[5]
 
+    include_suj = input_data[6]
+
     total_score = []
 
     num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
@@ -149,17 +153,21 @@ def kin_ep_classif(input_data):
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
 
     # selected_df = data_df.loc[data_df['Family'] == family]
-    to_kfold = data_df.drop_duplicates(subset=['Trial num', 'EP'])
+    to_kfold = data_df.drop_duplicates(subset=['EP total', 'EP'])
+
+    if include_suj:
+        encoder = OneHotEncoder(sparse_output=False)
+        encoded_suj = encoder.fit_transform(to_kfold[['Subject']])
 
     random_states = [42, 43, 44]
     for rnd_st in random_states:
 
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
         # WARNING: the skf.split returns the indexes
-        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['EP'].astype(str)):
+        for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['EP'].astype(str)):
 
-            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
-            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
+            train_trials = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
 
             train_data = []
             train_labels = []
@@ -169,7 +177,7 @@ def kin_ep_classif(input_data):
             # take each ep, create bins & compute mean
             for trn_iter in train_trials:
 
-                train_tri = data_df.loc[data_df['Trial num'] == trn_iter]
+                train_tri = data_df.loc[data_df['EP total'] == trn_iter]
                 tr_kin_data = train_tri.drop(columns=extra_data.columns)
                 tr_in_bins = np.array_split(tr_kin_data, kin_bins)
 
@@ -179,6 +187,9 @@ def kin_ep_classif(input_data):
                         tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
                         flat_tr_mean = list(
                             itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        if include_suj:
+                            transformed_sample = encoder.transform(train_tri[['Subject']])[0]
+                            flat_tr_mean.extend(transformed_sample)
                         train_data.append(flat_tr_mean)
                         train_labels.append(np.unique(train_tri['EP'])[0])
                     except RuntimeWarning:
@@ -190,7 +201,7 @@ def kin_ep_classif(input_data):
 
             for tst_iter in test_trials:
 
-                test_tri = data_df.loc[data_df['Trial num'] == tst_iter]
+                test_tri = data_df.loc[data_df['EP total'] == tst_iter]
                 tst_kin_data = test_tri.drop(columns=extra_data.columns)
                 tst_in_bins = np.array_split(tst_kin_data, kin_bins)
 
@@ -200,6 +211,9 @@ def kin_ep_classif(input_data):
                         tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
                         flat_tst_mean = list(
                             itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        if include_suj:
+                            transformed_sample = encoder.transform(test_tri[['Subject']])[0]
+                            flat_tst_mean.extend(transformed_sample)
                         test_data.append(flat_tst_mean)
                         test_labels.append(np.unique(test_tri['EP'])[0])
                     except RuntimeWarning:
@@ -212,7 +226,9 @@ def kin_ep_classif(input_data):
                                            solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
-            log_model.fit(X=train_data, y=train_labels)
+            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            # log_model.fit(X=train_data, y=train_labels)
             sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
 
@@ -223,3 +239,7 @@ def kin_ep_classif(input_data):
     # print("RESULT:", result)
 
     return result
+
+def ep_from_raw_classif(split_df):
+
+    a=1
