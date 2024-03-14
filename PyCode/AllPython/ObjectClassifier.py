@@ -58,38 +58,38 @@ from synergy_pipeline import syn_clustering_alternative
 
 def main():
 
-    # data_folder = '/BIDSData'
-    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-    #
-    # # """WE ARE REMOVING SUBJECTS 7 TO 9"""
-    # # ##########################################################################################################################
-    # # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
-    # # ##########################################################################################################################
-    #
-    # data_df = pd.DataFrame()
-    #
-    # # ep_presabs_df = pd.DataFrame()
-    # # ep_dur_df = pd.DataFrame()
-    # # ep_count_df = pd.DataFrame()
-    #
-    # for subject in subject_folders:  # load data for each subject
-    #     """LOAD RAW DATA"""
-    #     subject_df = load(subject)
-    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
-    #
-    #     # """LOAD EP TRIALS"""
-    #     # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-    #     # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-    #     # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-    #     # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-    #
-    # print("\nDATA LOADED")
-    #
-    # """RAW DATA PREPROCESSING"""
-    # split_df = split(data_df)  # split data into trials and EPs and add fields
-    # split_df['Trial num'] = split_df['Trial num'].astype('str')
-    # split_df['EP num'] = split_df['EP num'].astype('str')
-    # print("\nDATA PREPROCESSED")
+    data_folder = '/BIDSData'
+    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+
+    # """WE ARE REMOVING SUBJECTS 7 TO 9"""
+    # ##########################################################################################################################
+    # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
+    # ##########################################################################################################################
+
+    data_df = pd.DataFrame()
+
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+
+    for subject in subject_folders:  # load data for each subject
+        """LOAD RAW DATA"""
+        subject_df = load(subject)
+        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+
+        # """LOAD EP TRIALS"""
+        # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+        # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+        # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+        # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+
+    print("\nDATA LOADED")
+
+    """RAW DATA PREPROCESSING"""
+    split_df = split(data_df)  # split data into trials and EPs and add fields
+    split_df['Trial num'] = split_df['Trial num'].astype('str')
+    split_df['EP num'] = split_df['EP num'].astype('str')
+    print("\nDATA PREPROCESSED")
 
     # """CHECK MIDDLE FINGER VALUES"""
     # plt.figure()
@@ -339,10 +339,18 @@ def main():
     ###########################################################
     ## TARGETING EP
     ###########################################################
-    # ep_from_raw_classif(split_df)
+
+    ep_from_raw_classif(split_df, False)
+    print("\nEP classification from raw scores without subjects DONE!")
+
+    ep_from_raw_classif(split_df, True)
+    print("\nEP classification from raw scores with subjects DONE!")
+
+    ep_from_scores_classif(False)
+    print("\nEP classification from syn scores without subjects DONE!")
+
     ep_from_scores_classif(True)
-    # ep_from_scores_classif(False)
-    print("\nEP classification from scores DONE!")
+    print("\nEP classification from syn scores with subjects DONE!")
 
 
 if __name__ == "__main__":

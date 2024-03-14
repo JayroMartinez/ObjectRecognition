@@ -45,7 +45,7 @@ def ep_from_scores_classif(include_suj):
 
     discard = 'less'
 
-    cv = 5
+    cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
     emg_bins = emg_params[0]
@@ -60,9 +60,9 @@ def ep_from_scores_classif(include_suj):
 
     # SET AND OPEN RESULT FILE
     if include_suj:
-        res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
-    else:
         res_file_name = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
+    else:
+        res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
 
     result_file = open(res_file_name, 'a')
     wr = csv.writer(result_file)
@@ -223,13 +223,13 @@ def kin_ep_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=25000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-            # log_model.fit(X=train_data, y=train_labels)
-            sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            trn_weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            log_model.fit(X=train_data, y=train_labels, sample_weight=trn_weights)
+            tst_weights = compute_sample_weight(class_weight='balanced', y=test_labels)
+            sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=tst_weights) * 100, 2)
             total_score.append(sc)
 
     result = ['Kin']
@@ -240,6 +240,60 @@ def kin_ep_classif(input_data):
 
     return result
 
-def ep_from_raw_classif(split_df):
+def ep_from_raw_classif(df, include_suj):
 
-    a=1
+    discard = 'less'
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+
+    extra_cols = ['Task', 'EP', 'Subject', 'Trial num', 'EP num', 'EP total',
+       'Given Object', 'Asked Object', 'Family']
+
+    kin_df = df[kin_cols]
+    extra_data = df[extra_cols]
+
+    cv = 3
+    [kin_params, emg_params, tact_params] = get_raw_best_params()
+    kin_bins = kin_params[0]
+    emg_bins = emg_params[0]
+    tact_bins = tact_params[0]
+    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
+    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+
+    # SET AND OPEN RESULT FILE
+    if include_suj:
+        res_file_name = './results/Raw/accuracy/ep_alternative_raw_suj_results.csv'
+    else:
+        res_file_name = './results/Raw/accuracy/ep_alternative_raw_results.csv'
+
+    result_file = open(res_file_name, 'a')
+    wr = csv.writer(result_file)
+
+    # BUILD ITERABLE STRUCTURES
+    all_param = list(itertools.product(l1VSl2, c_param))
+    kin_data_and_iter = [[kin_df, extra_data, x, cv, kin_bins, discard, include_suj] for x in all_param]
+
+    with Pool() as pool:
+
+        result_kin = pool.map_async(kin_ep_classif, kin_data_and_iter)
+
+        for res_kin in result_kin.get():
+            wr.writerow(res_kin)
+        # print("Kinematic classification done!")
+
+        # for res_emg_pca in result_emg_pca.get():
+        #     wr.writerow(res_emg_pca)
+        # # print("EMG PCA classification done!")
+        #
+        # for res_tact in result_tact.get():
+        #     wr.writerow(res_tact)
+        # # print("Tactile classification done!")
+
+    # print("Single source classification done!!")
+    result_file.close()
