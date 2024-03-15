@@ -54,7 +54,7 @@ from synergy_pipeline import distances
 from ep_modelling import ep_from_scores_classif
 from ep_modelling import ep_from_raw_classif
 from synergy_pipeline import syn_clustering_alternative
-
+from ep_modelling import ep_classification_plots
 
 def main():
 
@@ -99,17 +99,17 @@ def main():
     # plt.savefig('./MiddleMPJ.png')
     # plt.close()
 
-    # """REMOVE DOUBLE EP TRIALS"""
-    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    # split_df = split_df[~split_df['EP'].isin(to_remove)]
-    # # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    # # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    # # ep_count_df = ep_count_df.drop(to_remove, axis=1)
-    # print("\nREMOVED DOUBLE EPs")
-    #
-    # """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
-    # split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
-    # print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
+    """REMOVE DOUBLE EP TRIALS"""
+    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    print("\nREMOVED DOUBLE EPs")
+
+    """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
+    split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+    print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
 
     # """SELECT & SAVE EARLY ENCLOSURE DATA"""
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -351,6 +351,12 @@ def main():
 
     ep_from_scores_classif(True)
     print("\nEP classification from syn scores with subjects DONE!")
+
+    # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
+    ep_classification_plots('syn')
+    ep_classification_plots('raw')
+    ep_classification_plots('syn_raw_suj')
+    ep_classification_plots('syn_raw_no_suj')
 
 
 if __name__ == "__main__":

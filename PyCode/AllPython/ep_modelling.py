@@ -35,6 +35,7 @@ from scipy.stats import mannwhitneyu
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial.distance import cdist
 from numpy import std, mean, sqrt
+import ast
 
 from classification import get_raw_best_params
 
@@ -223,7 +224,7 @@ def kin_ep_classif(input_data):
             # build model
             log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced',
                                            random_state=rnd_st,
-                                           solver='saga', max_iter=50000, multi_class='ovr', n_jobs=-1,
+                                           solver='saga', max_iter=100000, multi_class='ovr', n_jobs=-1,
                                            l1_ratio=l1VSl2)
             # train model
             trn_weights = compute_sample_weight(class_weight='balanced', y=train_labels)
@@ -297,3 +298,77 @@ def ep_from_raw_classif(df, include_suj):
 
     # print("Single source classification done!!")
     result_file.close()
+
+
+def ep_classification_plots(type):
+
+    plt.close('all')  # to clean the screen
+
+    # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
+    if type == 'syn':
+        a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        b_file = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
+    elif type == 'raw':
+        a_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
+        b_file = './results/Raw/accuracy/ep_alternative_raw_suj_results.csv'
+    elif type == 'syn_raw_suj':
+        a_file = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
+        b_file = './results/Raw/accuracy/ep_alternative_raw_suj_results.csv'
+    else: # syn_raw_no_suj
+        a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        b_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
+
+    a_df = pd.read_csv(a_file, header=None)
+    b_df = pd.read_csv(b_file, header=None)
+
+    values_col = a_df.columns[-2]
+    best_score_col = a_df.columns[-1]
+
+    # Fix: Use 'a_df' consistently for 'a_best_values'
+    a_best_values = a_df.loc[a_df[best_score_col].idxmax()][values_col]
+    # Ensure the string is correctly formatted and convert it to a list
+    a_floats_list = ast.literal_eval(a_best_values.strip("'"))
+
+    # Fix: Properly create a DataFrame from the list
+    a_best_values_df = pd.DataFrame({'Group 1': a_floats_list})
+
+    # Similar corrections for 'b_df'
+    b_best_values = b_df.loc[b_df[best_score_col].idxmax()][values_col]
+    b_floats_list = ast.literal_eval(b_best_values.strip("'"))
+    b_best_values_df = pd.DataFrame({'Group 2': b_floats_list})
+
+    # Combining the two DataFrames side by side
+    plot_data = pd.concat([a_best_values_df, b_best_values_df], axis=1)
+    plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
+
+    plt.figure(figsize=(10, 6))
+    ax = sns.boxplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
+    _, p = mannwhitneyu(plot_data['Group 1'], plot_data['Group 2'])
+    ax.text(0.5, 0.95, f'p={p:.3f}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    ax.set_ylim(0, 100)
+    plt.axhline(12.5, color='r', linestyle='--')
+    current_ticks = ax.get_yticks()
+    updated_ticks = np.unique(np.append(current_ticks, 12.5))
+    ax.set_yticks(updated_ticks)
+    ax.set_xlabel('')
+
+    if type == 'syn':
+        ax.set_xticklabels(['Syn scores', 'Syn scores + Subject'])
+        plt.title('Comparison of accuracies for classifiers targeting EP label\nSynergy scores and syn scores + subject')
+        save_file = './results/ep_comp_syn.png'
+    elif type == 'raw':
+        ax.set_xticklabels(['Raw data', 'Raw data + Subject'])
+        plt.title('Comparison of accuracies for classifiers targeting EP label\nRaw data and raw data + subject')
+        save_file = './results/ep_comp_raw.png'
+    elif type == 'syn_raw_suj':
+        ax.set_xticklabels(['Syn scores + Subject', 'Raw Data + Subject'])
+        plt.title('Comparison of accuracies for classifiers targeting EP label\nSyn scores and Raw data, both including subject')
+        save_file = './results/ep_comp_syn_raw_suj.png'
+    else:  # syn_raw_no_suj
+        ax.set_xticklabels(['Syn scores', 'Raw Data'])
+        plt.title('Comparison of accuracies for classifiers targeting EP label\nSyn scores and Raw data without subject')
+        save_file = './results/ep_comp_syn_raw_no_suj.png'
+
+    # plt.show()
+    plt.savefig(save_file, dpi=600)
+    a=1
