@@ -58,58 +58,58 @@ from ep_modelling import ep_classification_plots
 
 def main():
 
-    data_folder = '/BIDSData'
-    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-
-    # """WE ARE REMOVING SUBJECTS 7 TO 9"""
-    # ##########################################################################################################################
-    # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
-    # ##########################################################################################################################
-
-    data_df = pd.DataFrame()
-
-    # ep_presabs_df = pd.DataFrame()
-    # ep_dur_df = pd.DataFrame()
-    # ep_count_df = pd.DataFrame()
-
-    for subject in subject_folders:  # load data for each subject
-        """LOAD RAW DATA"""
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
-
-        # """LOAD EP TRIALS"""
-        # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-
-    print("\nDATA LOADED")
-
-    """RAW DATA PREPROCESSING"""
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
-    print("\nDATA PREPROCESSED")
-
-    # """CHECK MIDDLE FINGER VALUES"""
-    # plt.figure()
-    # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
-    # plt.xticks(rotation=45, size=5)
-    # plt.show()
-    # plt.savefig('./MiddleMPJ.png')
-    # plt.close()
-
-    """REMOVE DOUBLE EP TRIALS"""
-    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    split_df = split_df[~split_df['EP'].isin(to_remove)]
-    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
-    print("\nREMOVED DOUBLE EPs")
-
-    """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
-    split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
-    print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
+    # data_folder = '/BIDSData'
+    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+    #
+    # # """WE ARE REMOVING SUBJECTS 7 TO 9"""
+    # # ##########################################################################################################################
+    # # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
+    # # ##########################################################################################################################
+    #
+    # data_df = pd.DataFrame()
+    #
+    # # ep_presabs_df = pd.DataFrame()
+    # # ep_dur_df = pd.DataFrame()
+    # # ep_count_df = pd.DataFrame()
+    #
+    # for subject in subject_folders:  # load data for each subject
+    #     """LOAD RAW DATA"""
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    #
+    #     # """LOAD EP TRIALS"""
+    #     # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+    #     # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+    #     # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+    #     # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    #
+    # print("\nDATA LOADED")
+    #
+    # """RAW DATA PREPROCESSING"""
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
+    # print("\nDATA PREPROCESSED")
+    #
+    # # """CHECK MIDDLE FINGER VALUES"""
+    # # plt.figure()
+    # # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
+    # # plt.xticks(rotation=45, size=5)
+    # # plt.show()
+    # # plt.savefig('./MiddleMPJ.png')
+    # # plt.close()
+    #
+    # """REMOVE DOUBLE EP TRIALS"""
+    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    # split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # # ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    # print("\nREMOVED DOUBLE EPs")
+    #
+    # """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
+    # split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+    # print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
 
     # """SELECT & SAVE EARLY ENCLOSURE DATA"""
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -194,12 +194,12 @@ def main():
     # syn_clustering()
     # print("\nSynergy clustering done!")
 
-    # syn_clustering_alternative()
-    # print("\nSynergy alternative clustering done!")
+    syn_clustering_alternative()
+    print("\nSynergy alternative clustering done!")
 
     # score_reordering('agglomerative')
-    # score_reordering('alternative')
-    # print("\nSynergy reordering done!")
+    score_reordering('alternative')
+    print("\nSynergy reordering done!")
 
 
     ###################################
@@ -340,21 +340,21 @@ def main():
     ## TARGETING EP
     ###########################################################
 
-    ep_from_raw_classif(split_df, False)
-    print("\nEP classification from raw scores without subjects DONE!")
-
-    ep_from_raw_classif(split_df, True)
-    print("\nEP classification from raw scores with subjects DONE!")
-
+    # ep_from_raw_classif(split_df, False)
+    # print("\nEP classification from raw scores without subjects DONE!")
+    #
+    # ep_from_raw_classif(split_df, True)
+    # print("\nEP classification from raw scores with subjects DONE!")
+    #
     ep_from_scores_classif(False)
     print("\nEP classification from syn scores without subjects DONE!")
 
     ep_from_scores_classif(True)
     print("\nEP classification from syn scores with subjects DONE!")
 
-    # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
+    # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     ep_classification_plots('syn')
-    ep_classification_plots('raw')
+    # ep_classification_plots('raw')
     ep_classification_plots('syn_raw_suj')
     ep_classification_plots('syn_raw_no_suj')
 

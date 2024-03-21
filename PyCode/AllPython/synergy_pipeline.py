@@ -800,7 +800,8 @@ def syn_clustering_alternative():
                 select_components = components_df.loc[
                     (components_df['Subject'] == str(subjects[it_subj])) & (components_df['Label'] == int(best_clust))]
 
-                if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
+                # if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
+                if (len(select_components.index) > 0):  # If there are components for that subject in the cluster
 
                     best_suj_component = select_components.loc[select_components['Score'].idxmax()]['Component']
 
