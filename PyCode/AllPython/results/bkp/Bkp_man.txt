@@ -91,10 +91,20 @@ Backup 17:
 Backup 18:
 ******************************
 - Classification results targeting EP using synergy scores and synergy scores + subjects. Classes are not balanced so results probably are not accurate. 
-- Made alternative clustering that works worse than early version.
+- Made alternative clustering that works worse than early version
 
 Backup 19:
 ******************************
-- Results targeting EP from syn scores and raw data, with and without using subject label also. Now classes are balanced.
-- For syn score classifiers we see they don't converge (it also happens with raw data but not that often).
-- Implemented plot function to show difference in EP classifier accuracies.
+- Results targeting EP from syn scores and raw data, with and without using subject label also. Now classes are balanced
+- For syn score classifiers we see they don't converge (it also happens with raw data but not that often)
+- Implemented plot function to show difference in EP classifier accuracies
+[CLUSTERING IS THE MOST RESTRICTIVE APPROACH]
+
+Backup 20:
+******************************
+- Increased number of max iterations for classifiers
+[CLUSTERING IS THE MOST RESTRICTIVE APPROACH]
+
+Backup 21:
+******************************
+- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before.

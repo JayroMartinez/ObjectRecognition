@@ -42,6 +42,33 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
+def silhouette_scores_custom(distances, cluster_labels):
+    n_samples = distances.shape[0]
+    silhouette_scores = np.zeros(n_samples)
+
+    # Iterate through each sample
+    for i in range(n_samples):
+        # Current sample's cluster
+        own_cluster = cluster_labels[i]
+
+        # Intra-cluster distances (a)
+        intra_cluster_distances = distances[i, cluster_labels == own_cluster]
+        a = np.mean(intra_cluster_distances[intra_cluster_distances != 0])  # Exclude distance to itself
+
+        # Nearest cluster calculation (b)
+        inter_cluster_distances = []
+        for other_cluster in set(cluster_labels):
+            if other_cluster != own_cluster:
+                # Mean distance to all samples in the other cluster
+                inter_cluster_distances.append(np.mean(distances[i, cluster_labels == other_cluster]))
+        b = np.min(inter_cluster_distances)  # Minimum mean distance to any other cluster
+
+        # Silhouette score for this sample
+        silhouette_scores[i] = (b - a) / max(a, b)
+
+    return silhouette_scores
+
+
 def all_subjects_comp():
 
     sources = ['kin', 'emg_pca', 'tact']
@@ -415,7 +442,8 @@ def extract_early_enclosure_alt():
 def score_reordering(type):
 
     # sources = ['kin', 'emg_pca', 'tact']
-    sources = ['kin', 'tact']
+    # sources = ['kin', 'tact']
+    sources = ['kin']
 
     for source in sources:
 
@@ -780,7 +808,8 @@ def syn_clustering_alternative():
             clustering_model = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=remaining_clusters)
             cluster_labels = clustering_model.fit_predict(distances)
             # reshaped_clusters = np.reshape(cluster_labels, (-1, remaining_clusters-1))
-            silh_score = metrics.silhouette_samples(numerical_data, cluster_labels)
+            # silh_score = metrics.silhouette_samples(numerical_data, cluster_labels)
+            silh_score = silhouette_scores_custom(distances, cluster_labels)
 
 
             components_df = all_data[['Component', 'Subject']]
@@ -800,8 +829,8 @@ def syn_clustering_alternative():
                 select_components = components_df.loc[
                     (components_df['Subject'] == str(subjects[it_subj])) & (components_df['Label'] == int(best_clust))]
 
-                # if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
-                if (len(select_components.index) > 0):  # If there are components for that subject in the cluster
+                if (len(select_components.index) > 0) & (select_components['Score'].max() > 0):  # If there are components for that subject in the cluster and the sample is well clustered
+                # if (len(select_components.index) > 0):  # If there are components for that subject in the cluster
 
                     best_suj_component = select_components.loc[select_components['Score'].idxmax()]['Component']
 
