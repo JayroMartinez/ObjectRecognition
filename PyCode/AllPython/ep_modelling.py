@@ -2,9 +2,9 @@ import numpy as np
 import os
 import itertools
 from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from collections import Counter
-from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.utils.class_weight import compute_sample_weight, compute_class_weight
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -106,7 +106,9 @@ def ep_from_scores_classif(include_suj):
 
         """NOPE"""
 
-        result_kin = pool.map_async(kin_ep_classif, kin_data_and_iter)
+        # result_kin = pool.map_async(kin_ep_classif, kin_data_and_iter)
+        result_kin = pool.map_async(kin_ep_classif_sgdb, kin_data_and_iter)
+
         # result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
         # result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
 
@@ -229,8 +231,145 @@ def kin_ep_classif(input_data):
             # train model
             trn_weights = compute_sample_weight(class_weight='balanced', y=train_labels)
             log_model.fit(X=train_data, y=train_labels, sample_weight=trn_weights)
-            tst_weights = compute_sample_weight(class_weight='balanced', y=test_labels)
-            sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=tst_weights) * 100, 2)
+            # tst_weights = compute_sample_weight(class_weight='balanced', y=test_labels)
+            # sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=tst_weights) * 100, 2)
+            sc = round(log_model.score(X=test_data, y=test_labels) * 100, 2)
+            total_score.append(sc)
+
+    result = ['Kin']
+    result.extend(input_data[2])
+    result.append(total_score)
+    result.append(round(np.mean(total_score), 2))
+    # print("RESULT:", result)
+
+    return result
+
+def kin_ep_classif_sgdb(input_data):
+
+    kin_scores = input_data[0]
+    extra_data = input_data[1]
+    # perc_syns = input_data[2][0]
+    perc_syns = 100
+    # family = input_data[2][1]
+    l1VSl2 = input_data[2][0]
+    c_param = input_data[2][1]
+    cv = input_data[3]
+    kin_bins = input_data[4]
+
+    discard = input_data[5]
+
+    include_suj = input_data[6]
+
+    total_score = []
+
+    num_syns = np.ceil(len(kin_scores.columns) * perc_syns / 100)
+    extra_data.reset_index(inplace=True, drop=True)
+    kin_scores.reset_index(inplace=True, drop=True)
+
+    if discard == 'less':
+        data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)  # keeps most relevant
+    else:
+        data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
+
+    # selected_df = data_df.loc[data_df['Family'] == family]
+    to_kfold = data_df.drop_duplicates(subset=['EP total', 'EP'])
+
+    if include_suj:
+        encoder = OneHotEncoder(sparse_output=False)
+        encoded_suj = encoder.fit(to_kfold[['Subject']])
+
+    random_states = [42, 43, 44]
+    for rnd_st in random_states:
+
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        for train, test in skf.split(to_kfold['EP total'].astype(int), to_kfold['EP'].astype(str)):
+
+            train_trials = to_kfold.iloc[train]['EP total']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['EP total']  # because skf.split returns the indexes
+
+            train_data = []
+            train_labels = []
+
+            dropped = 0  # Number of dropped EPs
+
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
+
+                train_tri = data_df.loc[data_df['EP total'] == trn_iter]
+                tr_kin_data = train_tri.drop(columns=extra_data.columns)
+                tr_in_bins = np.array_split(tr_kin_data, kin_bins)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(
+                            itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        if include_suj:
+                            transformed_sample = encoder.transform(train_tri[['Subject']])[0]
+                            flat_tr_mean.extend(transformed_sample)
+                        train_data.append(flat_tr_mean)
+                        train_labels.append(np.unique(train_tri['EP'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
+
+            test_data = []
+            test_labels = []
+
+            for tst_iter in test_trials:
+
+                test_tri = data_df.loc[data_df['EP total'] == tst_iter]
+                tst_kin_data = test_tri.drop(columns=extra_data.columns)
+                tst_in_bins = np.array_split(tst_kin_data, kin_bins)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
+                        flat_tst_mean = list(
+                            itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        if include_suj:
+                            transformed_sample = encoder.transform(test_tri[['Subject']])[0]
+                            flat_tst_mean.extend(transformed_sample)
+                        test_data.append(flat_tst_mean)
+                        test_labels.append(np.unique(test_tri['EP'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
+
+            alpha_param = 1 / c_param  # Alpha is the inverse of regularization strength (C)
+            batch_size = 50  # Define your batch size here
+
+            # Create the SGDClassifier model with logistic regression
+            sgd_model = SGDClassifier(loss='log_loss', penalty='elasticnet', alpha=alpha_param, l1_ratio=l1VSl2,
+                                      random_state=rnd_st, max_iter=10000, warm_start=True, learning_rate='optimal',
+                                       eta0=0.01)
+
+            # Compute the sample weights for the entire dataset
+            classes = np.unique(train_labels)
+            # Compute class weights
+            class_weights = compute_class_weight('balanced', classes=classes, y=train_labels)
+            # Convert class weights to dictionary format
+            class_weight_dict = {classes[i]: class_weights[i] for i in range(len(classes))}
+
+            # Mini-batch training
+            for _ in range(100000 // batch_size):  # Assuming 100000 iterations as max, adjust as needed
+                # Randomly sample a batch of data
+                batch_indices = np.random.choice(range(len(train_data)), size=batch_size, replace=False)
+                batch_indices_list = batch_indices.tolist()
+
+                batch_data = [train_data[i] for i in batch_indices_list]
+                batch_labels = [train_labels[i] for i in batch_indices_list]
+                # batch_weights = [trn_weights[i] for i in batch_indices_list]
+                batch_weights = np.array([class_weight_dict[label] for label in batch_labels])
+
+                # Partial fit on the batch
+                sgd_model.partial_fit(batch_data, batch_labels, classes=classes, sample_weight=batch_weights)
+
+            # Evaluate the model
+            sc = round(sgd_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
 
     result = ['Kin']

@@ -108,3 +108,8 @@ Backup 20:
 Backup 21:
 ******************************
 - Results for targeting EP from synergies (+ subject) using a less restrictive approach than before.
+
+Backup 22:
+******************************
+- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before, now with an improved clustering metho that builds the clusters based on pairwise correlation distances instead of default=euclidean.
+

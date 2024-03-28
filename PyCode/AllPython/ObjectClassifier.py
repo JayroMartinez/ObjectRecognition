@@ -194,12 +194,12 @@ def main():
     # syn_clustering()
     # print("\nSynergy clustering done!")
 
-    syn_clustering_alternative()
-    print("\nSynergy alternative clustering done!")
-
-    # score_reordering('agglomerative')
-    score_reordering('alternative')
-    print("\nSynergy reordering done!")
+    # syn_clustering_alternative()
+    # print("\nSynergy alternative clustering done!")
+    #
+    # # score_reordering('agglomerative')
+    # score_reordering('alternative')
+    # print("\nSynergy reordering done!")
 
 
     ###################################
