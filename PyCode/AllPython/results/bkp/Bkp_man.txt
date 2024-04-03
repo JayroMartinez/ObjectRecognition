@@ -90,7 +90,7 @@ Backup 17:
 
 Backup 18:
 ******************************
-- Classification results targeting EP using synergy scores and synergy scores + subjects. Classes are not balanced so results probably are not accurate. 
+- Classification results targeting EP using synergy scores and synergy scores + subjects. Classes are not balanced so results probably are not accurate 
 - Made alternative clustering that works worse than early version
 
 Backup 19:
@@ -107,9 +107,20 @@ Backup 20:
 
 Backup 21:
 ******************************
-- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before.
+- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before
 
 Backup 22:
 ******************************
-- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before, now with an improved clustering metho that builds the clusters based on pairwise correlation distances instead of default=euclidean.
+- Results for targeting EP from synergies (+ subject) using a less restrictive approach than before, now with an improved clustering method that builds the clusters based on pairwise correlation distances instead of default=euclidean
+
+Backup 23:
+******************************
+- Changed the classifier from logistic regression to SGD (still using log-loss function) in order to perform mini-batch training
+
+Backup 24:
+******************************
+- Modified C param (alpha parameter in SGD) to get better results
+- Including also classification from raw data to make a fair comparison
+
+
 

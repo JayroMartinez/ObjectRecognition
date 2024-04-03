@@ -54,7 +54,8 @@ def ep_from_scores_classif(include_suj):
     # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    c_param = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
 
     # LOAD EXTRA DATA
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
@@ -244,6 +245,7 @@ def kin_ep_classif(input_data):
 
     return result
 
+
 def kin_ep_classif_sgdb(input_data):
 
     kin_scores = input_data[0]
@@ -380,6 +382,7 @@ def kin_ep_classif_sgdb(input_data):
 
     return result
 
+
 def ep_from_raw_classif(df, include_suj):
 
     discard = 'less'
@@ -404,7 +407,8 @@ def ep_from_raw_classif(df, include_suj):
     # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    c_param = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
 
     # SET AND OPEN RESULT FILE
     if include_suj:
@@ -421,7 +425,8 @@ def ep_from_raw_classif(df, include_suj):
 
     with Pool() as pool:
 
-        result_kin = pool.map_async(kin_ep_classif, kin_data_and_iter)
+        # result_kin = pool.map_async(kin_ep_classif, kin_data_and_iter)
+        result_kin = pool.map_async(kin_ep_classif_sgdb, kin_data_and_iter)
 
         for res_kin in result_kin.get():
             wr.writerow(res_kin)
@@ -511,3 +516,5 @@ def ep_classification_plots(type):
     # plt.show()
     plt.savefig(save_file, dpi=600)
     a=1
+
+
