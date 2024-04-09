@@ -55,7 +55,8 @@ def ep_from_scores_classif(include_suj):
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
-    c_param = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
+    # c_param = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
 
     # LOAD EXTRA DATA
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')

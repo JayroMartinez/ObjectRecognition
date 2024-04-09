@@ -27,6 +27,7 @@ from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import SGDClassifier
+from sklearn.utils.class_weight import compute_sample_weight, compute_class_weight
 
 from classification import get_raw_best_params
 
@@ -330,16 +331,49 @@ def fam_kin_syn_classif(input_data):
                         # print("Dropped EP", tst_iter, "from family ", family)
                         dropped += 1
 
-            # build model
-            weights = compute_sample_weight(class_weight='balanced', y=train_labels)
-            log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced', random_state=rnd_st,
-                                           solver='saga', max_iter=25000, tol=0.000001, multi_class='multinomial', n_jobs=-1,
-                                           l1_ratio=l1VSl2)
-            # log_model = SGDClassifier(loss="log_loss", penalty='elasticnet', alpha=c_param, l1_ratio=l1VSl2, max_iter=25000, n_jobs=-1, random_state=rnd_st, class_weight='balanced')
-            # train model
-            log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
-            weights_test = compute_sample_weight(class_weight='balanced', y=test_labels)
-            sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=weights_test) * 100, 2)
+            # # build model
+            # weights = compute_sample_weight(class_weight='balanced', y=train_labels)
+            # log_model = LogisticRegression(penalty='elasticnet', C=c_param, class_weight='balanced', random_state=rnd_st,
+            #                                solver='saga', max_iter=25000, tol=0.000001, multi_class='multinomial', n_jobs=-1,
+            #                                l1_ratio=l1VSl2)
+            # # log_model = SGDClassifier(loss="log_loss", penalty='elasticnet', alpha=c_param, l1_ratio=l1VSl2, max_iter=25000, n_jobs=-1, random_state=rnd_st, class_weight='balanced')
+            # # train model
+            # log_model.fit(X=train_data, y=train_labels, sample_weight=weights)
+            # weights_test = compute_sample_weight(class_weight='balanced', y=test_labels)
+            # sc = round(log_model.score(X=test_data, y=test_labels, sample_weight=weights_test) * 100, 2)
+            # total_score.append(sc)
+
+            alpha_param = 1 / c_param  # Alpha is the inverse of regularization strength (C)
+            batch_size = 50  # Define your batch size here
+
+            # Create the SGDClassifier model with logistic regression
+            sgd_model = SGDClassifier(loss='log_loss', penalty='elasticnet', alpha=alpha_param, l1_ratio=l1VSl2,
+                                      random_state=rnd_st, max_iter=10000, warm_start=True, learning_rate='optimal',
+                                      eta0=0.01)
+
+            # Compute the sample weights for the entire dataset
+            classes = np.unique(train_labels)
+            # Compute class weights
+            class_weights = compute_class_weight('balanced', classes=classes, y=train_labels)
+            # Convert class weights to dictionary format
+            class_weight_dict = {classes[i]: class_weights[i] for i in range(len(classes))}
+
+            # Mini-batch training
+            for _ in range(100000 // batch_size):  # Assuming 100000 iterations as max, adjust as needed
+                # Randomly sample a batch of data
+                batch_indices = np.random.choice(range(len(train_data)), size=batch_size, replace=False)
+                batch_indices_list = batch_indices.tolist()
+
+                batch_data = [train_data[i] for i in batch_indices_list]
+                batch_labels = [train_labels[i] for i in batch_indices_list]
+                # batch_weights = [trn_weights[i] for i in batch_indices_list]
+                batch_weights = np.array([class_weight_dict[label] for label in batch_labels])
+
+                # Partial fit on the batch
+                sgd_model.partial_fit(batch_data, batch_labels, classes=classes, sample_weight=batch_weights)
+
+            # Evaluate the model
+            sc = round(sgd_model.score(X=test_data, y=test_labels) * 100, 2)
             total_score.append(sc)
 
     result = ['Kin']
@@ -561,7 +595,8 @@ def fam_syn_single_source_classification(type, discard):
     tact_bins = tact_params[0]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
-    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
 
     # LOAD EXTRA DATA
     if type == 'early':
@@ -574,6 +609,8 @@ def fam_syn_single_source_classification(type, discard):
         res_file_name = './results/Syn/accuracy/fam_syn_results'
     elif type == 'clustering':
         res_file_name = './results/Syn/accuracy/fam_subj_clust_syn_results'
+    elif type == 'alternative':
+        res_file_name = './results/Syn/accuracy/fam_alternative_syn_results'
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/fam_alternative_syn_results'
 
@@ -588,21 +625,23 @@ def fam_syn_single_source_classification(type, discard):
     # GET SCORES
     if type == 'all':
         kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
     elif type == 'clustering':
         kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+    elif type == 'alternative':
+        kin_score_df = pd.read_csv('./results/Syn/scores/reordered_alternative_kin_scores.csv', index_col=0)
     else:  # early enclosure
         kin_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
 
     # BUILD ITERABLE STRUCTURES
     all_param = list(itertools.product(perc_syns, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard] for x in all_param]
-    emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
+    # emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
     # tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
 
     # multiprocessing
