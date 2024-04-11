@@ -308,6 +308,8 @@ def get_best_params_single(type, discard):
         res_file_name = './results/Syn/accuracy/syn'
     elif type == 'clustering':
         res_file_name = './results/Syn/accuracy/subj_clust_syn'
+    elif type == 'family':
+        res_file_name = './results/Syn/accuracy/fam_subj_clust'
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn'
 
@@ -2185,6 +2187,13 @@ def print_syn_results(type, discard):
         emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
         tact_var = pd.read_csv('./results/Syn/variance/overall_var_tact.csv')
         tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
+    elif type == 'alternative':
+        kin_var = pd.read_csv('./results/Syn/variance/alternative_overall_var_kin.csv')
+        kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
+        emg_pca_var = []
+        # emg_pca_var.drop(emg_pca_var.columns[0], axis=1, inplace=True)
+        tact_var = []
+        # tact_var.drop(tact_var.columns[0], axis=1, inplace=True)
     else:  # early enclosure
         kin_var = pd.read_csv('./results/Early Enclosure/variance/alternative_reordered_kin_var_tot.csv')
         kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
@@ -2202,6 +2211,10 @@ def print_syn_results(type, discard):
         res_file_name = './results/Syn/accuracy/subj_clust_syn_results'
         multi_file_name = './results/Syn/accuracy/subj_clust_syn_multi_results'
         hier_file_name = './results/Syn/accuracy/subj_clust_syn_hier_results'
+    elif type == 'alternative':
+        res_file_name = './results/Syn/accuracy/fam_alternative_syn_results'
+        multi_file_name = []
+        hier_file_name = []
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn_results'
         multi_file_name = './results/Early Enclosure/accuracy/alternative_syn_multi_results'
@@ -2487,6 +2500,9 @@ def print_syn_results(type, discard):
     elif type == 'clustering':
         title = 'Kinematic accuracy comparison for each subject with clustering'
         fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc'
+    elif type == 'alternative':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc'
     else:  # early enclosure
         title = 'Kinematic accuracy comparison for early enclosure'
         fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc'
@@ -2535,6 +2551,9 @@ def print_syn_results(type, discard):
     elif type == 'clustering':
         title = 'Kinematic accuracy comparison for each subject with clustering'
         fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc_pval'
+    elif type == 'alternative':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc_pval'
     else:  # early enclosure
         title = 'Kinematic accuracy comparison for early enclosure'
         fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc_pval'
@@ -3169,4 +3188,570 @@ def distances(type):
 
     plt.savefig(save_file, dpi=600)
 
+def print_syn_results_alternative(discard):
 
+    plt.close()
+    plt.clf()
+    cols = ['Kind', 'Perc', 'Family', 'L1vsL2', 'C', 'Acc', 'Mean']
+
+    kin_var = pd.read_csv('./results/Syn/variance/alternative_overall_var_kin.csv')
+    kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
+
+    res_file_name = './results/Syn/accuracy/fam_alternative_syn_results'
+
+    if discard == 'less':
+        res_file_name += '.csv'
+    else:
+        res_file_name += '_decr.csv'
+
+    results_df = pd.read_csv(res_file_name, header=None)
+    results_df.columns = cols
+    kin_results_df = results_df.loc[results_df['Kind'] == 'Kin']
+
+    """VARIANCE CALCULATIONS"""
+    perc = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+
+    kin_cum_var = []
+
+    for p in perc:
+        kin_syns = int(np.ceil(len(kin_var) * p / 100))
+
+        if discard == 'less':
+            kin_cum_var.append(kin_var.iloc[:kin_syns].sum()[0] * 100)
+        else:  # discard most relevant
+            kin_cum_var.append(kin_var.iloc[-kin_syns:].sum()[0] * 100)
+
+    kin_cum_var = pd.DataFrame(kin_cum_var)
+    # not sure what have done here
+    extended_kin_cum_var = kin_cum_var[:]
+    extended_kin_cum_var = np.insert(extended_kin_cum_var, 0, extended_kin_cum_var[0][0])
+
+    ## GET SYNERGIES BEST RESULTS
+
+    perc_values = np.flip(np.unique(results_df['Perc']))
+    l1vsl2_values = np.unique(results_df['L1vsL2'])
+    c_values = np.unique(results_df['C'])
+
+    kin_best_acc = np.zeros((len(perc_values), 5))
+    kin_best_params = [[[], []]] * len(perc_values)
+
+    for iter_perc in range(0, len(perc_values)):
+        for l1 in l1vsl2_values:
+            for c in c_values:
+
+                kin_sel = kin_results_df.loc[
+                    (kin_results_df['Perc'] == perc_values[iter_perc]) & (kin_results_df['L1vsL2'] == l1) & (
+                            kin_results_df['C'] == c)]
+                kin_sel_mean_acc = kin_sel['Mean'].mean()
+
+                if kin_sel_mean_acc > kin_best_acc[iter_perc].mean():
+                    kin_best_acc[iter_perc] = kin_sel['Mean']
+                    kin_best_params[iter_perc] = [l1, c]
+
+    # BEST ACCURACIES
+    syn_cols = ["Source"]
+    syn_cols.extend(perc_values)
+    syn_best_acc_df = pd.DataFrame(columns=syn_cols)
+
+    kin_aux_df = pd.DataFrame(data=kin_best_acc.transpose(), columns=perc_values)
+    kin_aux_df.insert(0, "Source", ["Kin"] * 5)
+
+    syn_best_acc_df = pd.concat([syn_best_acc_df, kin_aux_df])
+
+    ## LOAD RAW BEST RESULTS
+    raw_cols = ['Kind', 'Family', 'bins', 'L1vsL2', 'C', 'Acc', 'Mean']
+    raw_results_df = pd.read_csv('./results/Raw/accuracy/raw_fam_results.csv', header=None)
+    raw_results_df.columns = raw_cols
+
+    kin_raw_df = raw_results_df.loc[raw_results_df["Kind"] == "Kin"]
+
+    """BEST RAW PARAMETERS"""
+    bt_prm = get_best_params_single('clustered', 'less')
+    # FIXED PARAMETERS FROM RAW CLASSIFICATION
+    # best_kin_param = [40, 0.25, 0.1]
+    # best_emg_param = [10, 0, 1.5]
+    # best_tact_param = [5, 0.5, 0.25]
+    # best_multi_param = [5, 0.75, 0.25]
+    # best_hier_param = 0.5
+    #
+    # # KIN
+    # best_raw_kin_results = kin_raw_df.loc[
+    #     (kin_raw_df["bins"] == best_kin_param[0]) & (kin_raw_df["L1vsL2"] == best_kin_param[1]) & (
+    #             kin_raw_df["C"] == best_kin_param[2])]["Mean"]
+    #
+    # best_raw_kin_df = pd.DataFrame()
+    # for x in range(len(syn_best_acc_df.columns) - 1):
+    #     best_raw_kin_df = pd.concat([best_raw_kin_df, best_raw_kin_results], axis=1)
+    # # best_raw_kin_df = best_raw_kin_df.transpose()
+    # best_raw_kin_df.columns = perc_values
+
+    """ KIN lines plot """
+    sns.pointplot(data=pd.DataFrame(kin_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
+    i = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Kin"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="r", label='Syn classifier')
+    sns.pointplot(data=best_raw_kin_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
+    i.set(ylabel="Accuracy (95% ci)\nVariance Explained")
+    i.set(xlabel="Percentage of Synergies")
+    i.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # i.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
+                     labelcolor=['r', 'b', '0.75', '0'])
+    handles = leg.legendHandles
+    colors = ['r', 'b', '0.75', '0']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    i.set_ylim([0, 100])
+    sns.move_legend(i, "best")
+    # plt.show()
+
+    if type == 'all':
+        title = 'Kinematic accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/kin_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc'
+    elif type == 'alternative':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Kinematic accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    # plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ KIN bar pval plot """
+    kin_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
+    kin_pval_df.insert(0, 'Raw', best_raw_kin_df.iloc[:, 0].values)
+    plt.figure()
+    sns.pointplot(data=pd.DataFrame(extended_kin_cum_var).transpose(), label='Variance Explained', color='r', scale=.5)
+    i = sns.barplot(data=kin_pval_df)
+    # pairs_kin = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                 ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_kin[::-1], data=kin_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small',
+                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.apply_and_annotate()
+
+    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    i.set(ylabel="Accuracy (95% ci)")
+    leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
+    handles = leg.legendHandles
+    colors = ['b', 'r']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    sns.move_legend(i, "center right")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+
+    if type == 'all':
+        title = 'Kinematic accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/kin_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_kin_drop_syn_acc_pval'
+    elif type == 'alternative':
+        title = 'Kinematic accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Kinematic accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/kin_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    i.set_ylim(0, 200)
+    plt.savefig(fig_file, dpi=600)
+    # plt.show()
+    plt.close()
+    plt.clf()
+
+    """  EMG PCA plot """
+    sns.pointplot(data=pd.DataFrame(emg_pca_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
+    j = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "EMG PCA"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="r", label='Syn classifier')
+    sns.pointplot(data=best_raw_emg_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
+    j.set(ylabel="Accuracy (95% ci)")
+    j.set(xlabel="Percentage of Synergies")
+    j.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # j.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
+                     labelcolor=['r', 'b', '0.75', '0'])
+    handles = leg.legendHandles
+    colors = ['r', 'b', '0.75', '0']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    j.set_ylim([0, 100])
+    sns.move_legend(j, "best")
+    # plt.show()
+
+    if type == 'all':
+        title = 'EMG PCA accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/emg_pca_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'EMG PCA accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_emg_pca_drop_syn_acc'
+    else:  # early enclosure
+        title = 'EMG PCA accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    j.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ EMG PCA bar pval plot """
+    emg_pca_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "EMG PCA"])
+    emg_pca_pval_df.insert(0, 'Raw', best_raw_emg_df.iloc[:, 0].values)
+    plt.figure()
+    sns.pointplot(data=pd.DataFrame(extended_emg_pca_cum_var).transpose(), label='Variance Explained', color='r',
+                  scale=.5)
+    i = sns.barplot(data=emg_pca_pval_df)
+    # pairs_emg_pca = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_emg_pca = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                     ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_emg_pca, data=emg_pca_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small',
+                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
+    handles = leg.legendHandles
+    colors = ['b', 'r']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    sns.move_legend(i, "center right")
+
+    if type == 'all':
+        title = 'EMG PCA accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/emg_pca_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'EMG PCA accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_emg_pca_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'EMG PCA accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/emg_pca_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    i.set_ylim(0, 200)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ TACT plot """
+    sns.pointplot(data=pd.DataFrame(tact_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Tact"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="r", label='Syn classifier')
+    sns.pointplot(data=best_raw_tact_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
+    k.set(ylabel="Accuracy (95% ci)")
+    k.set(xlabel="Percentage of Synergies")
+    k.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
+                     labelcolor=['r', 'b', '0.75', '0'])
+    handles = leg.legendHandles
+    colors = ['r', 'b', '0.75', '0']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    k.set_ylim([0, 100])
+    sns.move_legend(k, "best")
+    # plt.show()
+
+    if type == 'all':
+        title = 'Tactile accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/tact_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Tactile accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_tact_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Tactile accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ TACT bar pval plot """
+    tact_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Tact"])
+    tact_pval_df.insert(0, 'Raw', best_raw_tact_df.iloc[:, 0].values)
+    plt.figure()
+    sns.pointplot(data=pd.DataFrame(extended_tact_cum_var).transpose(), label='Variance Explained', color='r', scale=.5)
+    i = sns.barplot(data=tact_pval_df)
+    # pairs_tact = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_tact = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_tact, data=tact_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small',
+                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
+    handles = leg.legendHandles
+    colors = ['b', 'r']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    sns.move_legend(i, "center right")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+
+    if type == 'all':
+        title = 'Tactile accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/tact_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Tactile accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_tact_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Tactile accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/tact_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    i.set_ylim(0, 200)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ MULTI plot """
+    sns.pointplot(data=pd.DataFrame(combined_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Multi"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="r", label='Syn classifier')
+    sns.pointplot(data=best_raw_multi_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
+    k.set(ylabel="Accuracy (95% ci)")
+    k.set(xlabel="Percentage of Synergies")
+    k.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
+                     labelcolor=['r', 'b', '0.75', '0'])
+    handles = leg.legendHandles
+    colors = ['r', 'b', '0.75', '0']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    k.set_ylim([0, 100])
+    sns.move_legend(k, "best")
+    # plt.show()
+
+    if type == 'all':
+        title = 'Multimodal accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/multi_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Multimodal accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_multi_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Multimodal accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ MULTI bar pval plot """
+    multi_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Multi"])
+    multi_pval_df.insert(0, 'Raw', best_raw_multi_df.iloc[:, 0].values)
+    plt.figure()
+    sns.pointplot(data=pd.DataFrame(extended_combined_cum_var).transpose(), label='Variance Explained', color='r',
+                  scale=.5)
+    i = sns.barplot(data=multi_pval_df)
+    # pairs_multi = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_multi = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                   ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_multi, data=multi_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small',
+                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
+    handles = leg.legendHandles
+    colors = ['b', 'r']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    sns.move_legend(i, "center right")
+    i.set(xlabel=None)
+    plt.xticks(rotation=45, size=4)
+    # i.axhline(20, color='r')
+
+    if type == 'all':
+        title = 'Multimodal accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/multi_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Multimodal accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_multi_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Multimodal accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/multi_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    i.set_ylim(0, 200)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ HIER plot """
+    sns.pointplot(data=pd.DataFrame(combined_cum_var).transpose(), label='Variance Explained', color='0', scale=.5)
+    k = sns.pointplot(data=syn_best_acc_df.loc[syn_best_acc_df["Source"] == "Hier"], errorbar='ci', errwidth='.75',
+                      capsize=.2,
+                      color="r", label='Syn classifier')
+    sns.pointplot(data=best_raw_hier_df, errorbar='ci', errwidth='.75', capsize=.2, color="b",
+                  label='Raw classifier')
+    k.set(ylabel="Accuracy (95% ci)")
+    k.set(xlabel="Percentage of Synergies")
+    k.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # k.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
+    leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
+                     labelcolor=['r', 'b', '0.75', '0'])
+    handles = leg.legendHandles
+    colors = ['r', 'b', '0.75', '0']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    k.set_ylim([0, 100])
+    sns.move_legend(k, "best")
+    # plt.show()
+
+    if type == 'all':
+        title = 'Hierarchical accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/hier_drop_syn_acc'
+    elif type == 'clustering':
+        title = 'Hierarchical accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_hier_drop_syn_acc'
+    else:  # early enclosure
+        title = 'Hierarchical accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    k.set(title=title)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()
+
+    """ HIER bar pval plot """
+    hier_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Hier"])
+    hier_pval_df.insert(0, 'Raw', best_raw_hier_df.iloc[:, 0].values)
+    plt.figure()
+    sns.pointplot(data=pd.DataFrame(extended_combined_cum_var).transpose(), label='Variance Explained', color='r',
+                  scale=.5)
+    i = sns.barplot(data=hier_pval_df)
+    # pairs_hier = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
+    pairs_hier = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
+                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
+    annotator_i = Annotator(i, pairs_hier, data=hier_pval_df)
+    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small',
+                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    i.set(xlabel=None)
+    plt.xticks(rotation=45, size=4)
+    leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
+    handles = leg.legendHandles
+    colors = ['b', 'r']
+    for it, handle in enumerate(handles):
+        handle.set_color(colors[it])
+        handle.set_linewidth(1)
+    sns.move_legend(i, "center right")
+    # i.set(xlabel=None)
+    # plt.xticks(rotation=45, size=4)
+    # # i.axhline(20, color='r')
+
+    if type == 'all':
+        title = 'Hierarchical accuracy comparison for all subjects'
+        fig_file = './results/Syn/plots/hier_drop_syn_acc_pval'
+    elif type == 'clustering':
+        title = 'Hierarchical accuracy comparison for each subject with clustering'
+        fig_file = './results/Syn/plots/subj_clust_hier_drop_syn_acc_pval'
+    else:  # early enclosure
+        title = 'Hierarchical accuracy comparison for early enclosure'
+        fig_file = './results/Early Enclosure/plots/hier_drop_syn_acc_pval'
+
+    if discard == 'less':
+        title += '\ndiscarding less relevant synergies'
+        fig_file += '.png'
+    else:  # discard the most
+        title += '\ndiscarding most relevant synergies'
+        fig_file += '_decr.png'
+
+    i.set(title=title)
+    i.set_ylim(0, 200)
+    plt.savefig(fig_file, dpi=600)
+    plt.close()
+    plt.clf()

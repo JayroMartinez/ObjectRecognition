@@ -55,61 +55,63 @@ from ep_modelling import ep_from_scores_classif
 from ep_modelling import ep_from_raw_classif
 from synergy_pipeline import syn_clustering_alternative
 from ep_modelling import ep_classification_plots
+from synergy_pipeline import print_syn_results_alternative
+from classification import kinematic_family_classification
 
 def main():
 
-    # data_folder = '/BIDSData'
-    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-    #
-    # # """WE ARE REMOVING SUBJECTS 7 TO 9"""
-    # # ##########################################################################################################################
-    # # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
-    # # ##########################################################################################################################
-    #
-    # data_df = pd.DataFrame()
-    #
-    # # ep_presabs_df = pd.DataFrame()
-    # # ep_dur_df = pd.DataFrame()
-    # # ep_count_df = pd.DataFrame()
-    #
-    # for subject in subject_folders:  # load data for each subject
-    #     """LOAD RAW DATA"""
-    #     subject_df = load(subject)
-    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
-    #
-    #     # """LOAD EP TRIALS"""
-    #     # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-    #     # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-    #     # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-    #     # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-    #
-    # print("\nDATA LOADED")
-    #
-    # """RAW DATA PREPROCESSING"""
-    # split_df = split(data_df)  # split data into trials and EPs and add fields
-    # split_df['Trial num'] = split_df['Trial num'].astype('str')
-    # split_df['EP num'] = split_df['EP num'].astype('str')
-    # print("\nDATA PREPROCESSED")
-    #
-    # # """CHECK MIDDLE FINGER VALUES"""
-    # # plt.figure()
-    # # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
-    # # plt.xticks(rotation=45, size=5)
-    # # plt.show()
-    # # plt.savefig('./MiddleMPJ.png')
-    # # plt.close()
-    #
-    # """REMOVE DOUBLE EP TRIALS"""
-    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    # split_df = split_df[~split_df['EP'].isin(to_remove)]
-    # # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    # # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    # # ep_count_df = ep_count_df.drop(to_remove, axis=1)
-    # print("\nREMOVED DOUBLE EPs")
-    #
-    # """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
-    # split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
-    # print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
+    data_folder = '/BIDSData'
+    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+
+    # """WE ARE REMOVING SUBJECTS 7 TO 9"""
+    # ##########################################################################################################################
+    # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
+    # ##########################################################################################################################
+
+    data_df = pd.DataFrame()
+
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+
+    for subject in subject_folders:  # load data for each subject
+        """LOAD RAW DATA"""
+        subject_df = load(subject)
+        data_df = pd.concat([data_df, subject_df], ignore_index=True)
+
+        # """LOAD EP TRIALS"""
+        # [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+        # ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+        # ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+        # ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+
+    print("\nDATA LOADED")
+
+    """RAW DATA PREPROCESSING"""
+    split_df = split(data_df)  # split data into trials and EPs and add fields
+    split_df['Trial num'] = split_df['Trial num'].astype('str')
+    split_df['EP num'] = split_df['EP num'].astype('str')
+    print("\nDATA PREPROCESSED")
+
+    # """CHECK MIDDLE FINGER VALUES"""
+    # plt.figure()
+    # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
+    # plt.xticks(rotation=45, size=5)
+    # plt.show()
+    # plt.savefig('./MiddleMPJ.png')
+    # plt.close()
+
+    """REMOVE DOUBLE EP TRIALS"""
+    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    print("\nREMOVED DOUBLE EPs")
+
+    """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
+    split_df.loc[split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+    print("\nREPLACED CONTOUR FOLLOWING BY EDGE FOLLOWING")
 
     # """SELECT & SAVE EARLY ENCLOSURE DATA"""
     # early_enclosure = split_df[(split_df['EP num'].isin(['0', '1'])) & (split_df['EP'].isin(['enclosure', 'enclosure part']))]
@@ -187,13 +189,13 @@ def main():
 
     # syn_extraction(split_df)
     # print("\nSynergy extraction for all subjects done!")
-
+    #
     # syn_extraction_subj(split_df)
     # print("\nSynergy extraction for each subject done!")
-
-    # syn_clustering()
-    # print("\nSynergy clustering done!")
-
+    #
+    # # syn_clustering()
+    # # print("\nSynergy clustering done!")
+    #
     # syn_clustering_alternative()
     # print("\nSynergy alternative clustering done!")
     #
@@ -334,11 +336,17 @@ def main():
     ###########################################################
     ## TARGETING FAMILY
     ###########################################################
+
+    kinematic_family_classification(split_df)
+
     # ['all', 'clustering', 'early'] ['less', 'most']
-    fam_syn_single_source_classification('alternative', 'less')
-    print("\nFamily classification from syn scores discarding less relevant components DONE!")
-    fam_syn_single_source_classification('alternative', 'most')
-    print("\nFamily classification from syn scores discarding most relevant components DONE!")
+    # fam_syn_single_source_classification('alternative', 'less')
+    # print("\nFamily classification from syn scores discarding less relevant components DONE!")
+    # fam_syn_single_source_classification('alternative', 'most')
+    # print("\nFamily classification from syn scores discarding most relevant components DONE!")
+
+    # print_syn_results_alternative('less')
+    # print_syn_results_alternative('most')
 
     ###########################################################
     ## TARGETING EP

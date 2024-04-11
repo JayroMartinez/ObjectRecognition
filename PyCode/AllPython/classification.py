@@ -9,6 +9,8 @@ from scipy.stats import zscore
 import pandas as pd
 from multiprocessing.pool import Pool
 import random
+from sklearn.linear_model import SGDClassifier
+from sklearn.utils.class_weight import compute_sample_weight, compute_class_weight
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -137,7 +139,6 @@ def emg_aux_classif(input_data):
 
 
 def kin_aux_classif(input_data):
-
 
     data = input_data[0]
     params = input_data[1]
@@ -1475,3 +1476,169 @@ def get_raw_best_params():
                     best_tact_acc = aux_tact_res
 
     return [best_kin_params, best_emg_params, best_tact_params]
+
+def kinematic_family_classification(data):
+
+    families = np.unique(data['Family'])
+    cv = 3
+
+    bins = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
+    # we need to build the object to be iterated in the multiprocessing pool
+    all_param = list(itertools.product(families, bins, l1VSl2, c_param))
+    data_and_iter = [[data, x, cv] for x in all_param]
+
+    # for testing
+    # bins = 20
+    # l1VSl2 = 1
+    # c_param = 0.1
+    # data_and_iter = [[data, [x, bins, l1VSl2, c_param], cv] for x in families]
+
+    result_file = open('./results/Raw/accuracy/raw_fam_results.csv', 'a')  # Open file in append mode
+    wr = csv.writer(result_file)
+
+    # multiprocessing
+    with Pool() as pool:
+        result = pool.map_async(kin_fam_aux_classif, data_and_iter)
+
+        for res in result.get():
+            wr.writerow(res)
+            # wr.writerow(res[1])
+            # a=1
+
+    result_file.close()
+
+
+def kin_fam_aux_classif(input_data):
+
+    data = input_data[0]
+    params = input_data[1]
+    cv = input_data[2]
+
+    family = params[0]
+    num_bin = params[1]
+    l1_param = params[2]
+    c_par = params[3]
+
+    total_score = []
+    random_score = []
+
+    # # model weights
+    # weight_filename = './results/Raw/weights/w_Kin_' + family + '.csv'
+    # weight_file = open(weight_filename, 'a')  # Open file in append mode
+    # weight_wr = csv.writer(weight_file)
+
+    # selected_df = data.loc[data['Family'] == family]  # select particular family
+    selected_df = data
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+    selected_df.dropna(subset=kin_cols, axis=0, inplace=True)  # drop rows containing NaN values
+
+    # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
+    to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Family'])
+
+    random_states = [42, 43, 44]
+    for rnd_st in random_states:
+
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=rnd_st)
+        # WARNING: the skf.split returns the indexes
+        # for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Given Object'].astype(str)):
+        for train, test in skf.split(to_kfold['Trial num'].astype(int), to_kfold['Family'].astype(str)):
+
+            train_trials = to_kfold.iloc[train]['Trial num']  # because skf.split returns the indexes
+            test_trials = to_kfold.iloc[test]['Trial num']  # because skf.split returns the indexes
+
+            train_data = []
+            train_labels = []
+
+            dropped = 0  # Number of dropped EPs
+
+            # take each ep, create bins & compute mean
+            for trn_iter in train_trials:
+
+                train_tri = selected_df.loc[selected_df['Trial num'] == trn_iter]
+                tr_kin_data = train_tri[kin_cols]
+                tr_in_bins = np.array_split(tr_kin_data, num_bin)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tr_bin_mean = [np.nanmean(x, axis=0) for x in tr_in_bins]  # size = [num_bins] X [64]
+                        flat_tr_mean = list(
+                            itertools.chain.from_iterable(tr_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        train_data.append(flat_tr_mean)
+                        # train_labels.append(np.unique(train_tri['Given Object'])[0])
+                        train_labels.append(np.unique(train_tri['Family'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", trn_iter, "from family ", family)
+                        dropped += 1
+
+            test_data = []
+            test_labels = []
+
+            for tst_iter in test_trials:
+
+                test_tri = selected_df.loc[selected_df['Trial num'] == tst_iter]
+                tst_kin_data = test_tri[kin_cols]
+                tst_in_bins = np.array_split(tst_kin_data, num_bin)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        tst_bin_mean = [np.nanmean(x, axis=0) for x in tst_in_bins]  # size = [num_bins] X [64]
+                        flat_tst_mean = list(
+                            itertools.chain.from_iterable(tst_bin_mean))  # size = [num_bins X 64] (unidimensional)
+                        test_data.append(flat_tst_mean)
+                        # test_labels.append(np.unique(test_tri['Given Object'])[0])
+                        test_labels.append(np.unique(test_tri['Family'])[0])
+                    except RuntimeWarning:
+                        # print("Dropped EP", tst_iter, "from family ", family)
+                        dropped += 1
+
+            alpha_param = 1 / c_par  # Alpha is the inverse of regularization strength (C)
+            batch_size = 50  # Define your batch size here
+
+            # Create the SGDClassifier model with logistic regression
+            sgd_model = SGDClassifier(loss='log_loss', penalty='elasticnet', alpha=alpha_param, l1_ratio=l1_param,
+                                      random_state=rnd_st, max_iter=10000, warm_start=True, learning_rate='optimal',
+                                      eta0=0.01)
+
+            # Compute the sample weights for the entire dataset
+            classes = np.unique(train_labels)
+            # Compute class weights
+            class_weights = compute_class_weight('balanced', classes=classes, y=train_labels)
+            # Convert class weights to dictionary format
+            class_weight_dict = {classes[i]: class_weights[i] for i in range(len(classes))}
+
+            # Mini-batch training
+            for _ in range(100000 // batch_size):  # Assuming 100000 iterations as max, adjust as needed
+                # Randomly sample a batch of data
+                batch_indices = np.random.choice(range(len(train_data)), size=batch_size, replace=False)
+                batch_indices_list = batch_indices.tolist()
+
+                batch_data = [train_data[i] for i in batch_indices_list]
+                batch_labels = [train_labels[i] for i in batch_indices_list]
+                # batch_weights = [trn_weights[i] for i in batch_indices_list]
+                batch_weights = np.array([class_weight_dict[label] for label in batch_labels])
+
+                # Partial fit on the batch
+                sgd_model.partial_fit(batch_data, batch_labels, classes=classes, sample_weight=batch_weights)
+
+            # Evaluate the model
+            sc = round(sgd_model.score(X=test_data, y=test_labels) * 100, 2)
+            total_score.append(sc)
+            # [weight_wr.writerow(x) for x in log_model.coef_]
+
+    # model weight file close
+    # weight_file.close()
+
+    result = ['Kin']
+    result.extend(params)
+    result.append(total_score)
+    result.append(round(np.mean(total_score), 2))
+    return result
