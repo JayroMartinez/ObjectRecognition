@@ -934,8 +934,8 @@ def syn_clustering_alternative():
 
 
 def kin_syn_extraction(data):
-
-    kin_scaled = StandardScaler().fit_transform(data)  # Z score
+    scaler = StandardScaler()
+    kin_scaled = scaler.fit_transform(data)  # Z score
     kin_df = pd.DataFrame(kin_scaled)
     pca_mod = PCA()
 
@@ -944,7 +944,8 @@ def kin_syn_extraction(data):
     kin_var = pca_mod.explained_variance_ratio_
     kin_tot_var = pca_mod.explained_variance_
 
-    return [kin_scores, kin_syns, kin_var, kin_tot_var]
+    # Also return the mean and std used in the StandardScaler
+    return [kin_scores, kin_syns, kin_var, kin_tot_var, scaler.mean_, scaler.scale_]
 
 
 def emg_pca_syn_extraction(data):

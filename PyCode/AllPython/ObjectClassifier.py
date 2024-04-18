@@ -57,6 +57,7 @@ from synergy_pipeline import syn_clustering_alternative
 from ep_modelling import ep_classification_plots
 from synergy_pipeline import print_syn_results_alternative
 from classification import kinematic_family_classification
+from ep_modelling import ep_all_suj_syn_one_subject_out
 
 def main():
 
@@ -341,10 +342,10 @@ def main():
     # kinematic_family_classification(split_df)
 
     # ['all', 'clustering', 'early'] ['less', 'most']
-    fam_syn_single_source_classification('all', 'less')
-    print("\nFamily classification from syn scores discarding less relevant components DONE!")
-    fam_syn_single_source_classification('all', 'most')
-    print("\nFamily classification from syn scores discarding most relevant components DONE!")
+    # fam_syn_single_source_classification('all', 'less')
+    # print("\nFamily classification from syn scores discarding less relevant components DONE!")
+    # fam_syn_single_source_classification('all', 'most')
+    # print("\nFamily classification from syn scores discarding most relevant components DONE!")
 
     # print_syn_results_alternative('most')
     # print_syn_results_alternative('most')
@@ -359,11 +360,14 @@ def main():
     # ep_from_raw_classif(split_df, True)
     # print("\nEP classification from raw scores with subjects DONE!")
     #
+    # # # include_subjects = [true/false]
     # ep_from_scores_classif(False)
     # print("\nEP classification from syn scores without subjects DONE!")
     #
     # ep_from_scores_classif(True)
     # print("\nEP classification from syn scores with subjects DONE!")
+
+    ep_all_suj_syn_one_subject_out()
     #
     # # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     # ep_classification_plots('syn')
