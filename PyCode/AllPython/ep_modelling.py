@@ -68,7 +68,8 @@ def ep_from_scores_classif(include_suj):
     if include_suj:
         res_file_name = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
     else:
-        res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        # res_file_name = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        res_file_name = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
 
     result_file = open(res_file_name, 'a')
     wr = csv.writer(result_file)
@@ -84,7 +85,8 @@ def ep_from_scores_classif(include_suj):
     for source in sources:
 
         # score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
-        score_files = glob.glob('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
+        # score_files = glob.glob('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
+        score_files = glob.glob('./results/Syn/scores/' + source + '_scores.csv')
         score_files.sort()
 
         for iter_file in range(0, len(score_files)):
@@ -537,7 +539,7 @@ def ep_all_suj_syn_one_subject_out():
     # LOAD EXTRA DATA
     # extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
-    res_file_name = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
+    res_file_name = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
 
     result_file = open(res_file_name, 'a')
     wr = csv.writer(result_file)
@@ -612,7 +614,7 @@ def ep_all_suj_syn_one_subject_out():
             for res_kin in result_kin.get():
                 wr.writerow(res_kin)
 
-        result_file.close()
+    result_file.close()
 
 def kin_ep_classif_sgdb_subject(input_data):
 

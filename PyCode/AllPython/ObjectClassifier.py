@@ -361,13 +361,13 @@ def main():
     # print("\nEP classification from raw scores with subjects DONE!")
     #
     # # # include_subjects = [true/false]
-    # ep_from_scores_classif(False)
-    # print("\nEP classification from syn scores without subjects DONE!")
+    ep_from_scores_classif(False)
+    print("\nEP classification from syn scores without subjects DONE!")
     #
     # ep_from_scores_classif(True)
     # print("\nEP classification from syn scores with subjects DONE!")
 
-    ep_all_suj_syn_one_subject_out()
+    # ep_all_suj_syn_one_subject_out()
     #
     # # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     # ep_classification_plots('syn')
