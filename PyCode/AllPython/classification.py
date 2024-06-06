@@ -159,11 +159,10 @@ def kin_aux_classif(input_data):
 
     # selected_df = data.loc[data['Family'] == family]  # select particular family
     selected_df = data
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+       'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+       'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+       'WristPitch', 'WristYaw']
     selected_df.dropna(subset=kin_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
     # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping
@@ -1425,15 +1424,16 @@ def fam_ep_count_classification(data):
 
 def get_raw_best_params():
 
-    sources = ['kin', 'EMG PCA', 'Tact']
+    # sources = ['kin', 'EMG PCA', 'Tact']
 
-    results = pd.read_csv('./results/Raw/accuracy/raw_results.csv')
+    # results = pd.read_csv('./results/Raw/accuracy/raw_results.csv')
+    results = pd.read_csv('./results/Raw/accuracy/raw_fam_results.csv')
 
     results.columns = ['Source', 'Family', 'Bins', 'L1', 'C', 'Acc', 'Mean']
 
     kin_results = results.loc[results['Source'] == 'Kin']
-    emg_results = results.loc[results['Source'] == 'EMG']
-    tact_results = results.loc[results['Source'] == 'Tactile']
+    # emg_results = results.loc[results['Source'] == 'EMG']
+    # tact_results = results.loc[results['Source'] == 'Tactile']
 
     iter_bins = kin_results['Bins'].unique()
     iter_l1 = kin_results['L1'].unique()
@@ -1442,11 +1442,11 @@ def get_raw_best_params():
     best_kin_acc = 0
     best_kin_params = [-1, -1, -1]
 
-    best_emg_acc = 0
-    best_emg_params = [-1, -1, -1]
-
-    best_tact_acc = 0
-    best_tact_params = [-1, -1, -1]
+    # best_emg_acc = 0
+    # best_emg_params = [-1, -1, -1]
+    #
+    # best_tact_acc = 0
+    # best_tact_params = [-1, -1, -1]
 
     for it_bins in iter_bins:
         for it_l1 in iter_l1:
@@ -1459,23 +1459,24 @@ def get_raw_best_params():
                     best_kin_params = [it_bins, it_l1, it_c]
                     best_kin_acc = aux_kin_res
 
-                aux_emg_sel = emg_results.loc[
-                    (emg_results['Bins'] == it_bins) & (emg_results['L1'] == it_l1) & (emg_results['C'] == it_c)]
-                aux_emg_res = aux_emg_sel['Mean'].mean()
+                # aux_emg_sel = emg_results.loc[
+                #     (emg_results['Bins'] == it_bins) & (emg_results['L1'] == it_l1) & (emg_results['C'] == it_c)]
+                # aux_emg_res = aux_emg_sel['Mean'].mean()
+                #
+                # if aux_emg_res > best_emg_acc:
+                #     best_emg_params = [it_bins, it_l1, it_c]
+                #     best_emg_acc = aux_emg_res
+                #
+                # aux_tact_sel = tact_results.loc[
+                #     (tact_results['Bins'] == it_bins) & (tact_results['L1'] == it_l1) & (tact_results['C'] == it_c)]
+                # aux_tact_res = aux_tact_sel['Mean'].mean()
+                #
+                # if aux_tact_res > best_tact_acc:
+                #     best_tact_params = [it_bins, it_l1, it_c]
+                #     best_tact_acc = aux_tact_res
 
-                if aux_emg_res > best_emg_acc:
-                    best_emg_params = [it_bins, it_l1, it_c]
-                    best_emg_acc = aux_emg_res
-
-                aux_tact_sel = tact_results.loc[
-                    (tact_results['Bins'] == it_bins) & (tact_results['L1'] == it_l1) & (tact_results['C'] == it_c)]
-                aux_tact_res = aux_tact_sel['Mean'].mean()
-
-                if aux_tact_res > best_tact_acc:
-                    best_tact_params = [it_bins, it_l1, it_c]
-                    best_tact_acc = aux_tact_res
-
-    return [best_kin_params, best_emg_params, best_tact_params]
+    # return [best_kin_params, best_emg_params, best_tact_params]
+    return [best_kin_params, [], []]
 
 def kinematic_family_classification(data):
 
@@ -1532,11 +1533,10 @@ def kin_fam_aux_classif(input_data):
 
     # selected_df = data.loc[data['Family'] == family]  # select particular family
     selected_df = data
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                'WristPitch', 'WristYaw']
     selected_df.dropna(subset=kin_cols, axis=0, inplace=True)  # drop rows containing NaN values
 
     # to_kfold = selected_df.drop_duplicates(subset=['Trial num', 'Given Object'])  # only way I found to avoid overlapping

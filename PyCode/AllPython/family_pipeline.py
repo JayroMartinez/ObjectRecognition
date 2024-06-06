@@ -591,8 +591,8 @@ def fam_syn_single_source_classification(type, discard):
     cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
-    emg_bins = emg_params[0]
-    tact_bins = tact_params[0]
+    # emg_bins = emg_params[0]
+    # tact_bins = tact_params[0]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]

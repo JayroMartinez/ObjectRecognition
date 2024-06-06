@@ -43,6 +43,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def silhouette_scores_custom(distances, cluster_labels):
+
     n_samples = distances.shape[0]
     silhouette_scores = np.zeros(n_samples)
 
@@ -71,7 +72,8 @@ def silhouette_scores_custom(distances, cluster_labels):
 
 def all_subjects_comp():
 
-    sources = ['kin', 'emg_pca', 'tact']
+    # sources = ['kin', 'emg_pca', 'tact']
+    sources = ['kin']
 
     for source in sources:
 
@@ -149,7 +151,8 @@ def all_subjects_comp():
 
 def clustered_comp():
 
-    sources = ['kin', 'emg_pca', 'tact']
+    # sources = ['kin', 'emg_pca', 'tact']
+    sources = ['kin']
 
     for source in sources:
 
@@ -445,92 +448,90 @@ def score_reordering(type):
 
     # sources = ['kin', 'emg_pca', 'tact']
     # sources = ['kin', 'tact']
-    sources = ['kin']
+    source = 'kin'
 
-    for source in sources:
+    if type == 'agglomerative':
+        source_clusters = pd.read_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv')
+    else:  # alternative
+        source_clusters = pd.read_csv('./results/Syn/resulting_components/alternative_' + source + '.csv')
 
-        if type == 'agglomerative':
-            source_clusters = pd.read_csv('./results/Syn/resulting_components/agglomerative_' + source + '.csv')
-        else:  # alternative
-            source_clusters = pd.read_csv('./results/Syn/resulting_components/alternative_' + source + '.csv')
+    source_clusters.drop(source_clusters.columns[0], axis=1, inplace=True)
 
-        source_clusters.drop(source_clusters.columns[0], axis=1, inplace=True)
+    score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
+    score_files.sort()
 
-        score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
-        score_files.sort()
+    all_data = pd.DataFrame()
+    all_var = pd.DataFrame()
 
-        all_data = pd.DataFrame()
-        all_var = pd.DataFrame()
+    source_tot_var = pd.read_csv('./results/Syn/variance/' + source + '_var_tot.csv')
+    source_tot_var.drop(source_tot_var.columns[0], axis=1, inplace=True)
 
-        source_tot_var = pd.read_csv('./results/Syn/variance/' + source + '_var_tot.csv')
-        source_tot_var.drop(source_tot_var.columns[0], axis=1, inplace=True)
+    number_datapoints = 0
 
-        number_datapoints = 0
+    for iter_file in range(0, len(score_files)):
 
-        for iter_file in range(0, len(score_files)):
+        subj_dat = pd.read_csv(score_files[iter_file])
+        subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
 
-            subj_dat = pd.read_csv(score_files[iter_file])
-            subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
+        number_datapoints += len(subj_dat)
 
-            number_datapoints += len(subj_dat)
+        # var_file = score_files[iter_file].replace('_scores', '_var')
+        # var_file = var_file.replace('scores', 'variance')
+        # subj_var = pd.read_csv(var_file)
+        # subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
 
-            # var_file = score_files[iter_file].replace('_scores', '_var')
-            # var_file = var_file.replace('scores', 'variance')
-            # subj_var = pd.read_csv(var_file)
-            # subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
+        var_file = score_files[iter_file].replace('_scores', '_var_tot')
+        var_file = var_file.replace('scores', 'variance')
+        subj_var = pd.read_csv(var_file)
+        subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
+        subj_var = subj_var * len(subj_dat)
 
-            var_file = score_files[iter_file].replace('_scores', '_var_tot')
-            var_file = var_file.replace('scores', 'variance')
-            subj_var = pd.read_csv(var_file)
-            subj_var.drop(subj_var.columns[0], axis=1, inplace=True)
-            subj_var = subj_var * len(subj_dat)
+        new_subj_dat = np.empty(subj_dat.shape)
+        new_subj_dat[:] = np.nan
 
-            new_subj_dat = np.empty(subj_dat.shape)
-            new_subj_dat[:] = np.nan
+        new_subj_var = np.empty([len(subj_dat.columns)])
+        new_subj_var[:] = np.nan
 
-            new_subj_var = np.empty([len(subj_dat.columns)])
-            new_subj_var[:] = np.nan
+        subj_order = source_clusters.iloc[iter_file, :]
 
-            subj_order = source_clusters.iloc[iter_file, :]
+        for iter_cols in range(0, len(subj_order)):
 
-            for iter_cols in range(0, len(subj_order)):
+            if ~np.isnan(subj_order[iter_cols]):
 
-                if ~np.isnan(subj_order[iter_cols]):
+                new_subj_dat[:, iter_cols] = subj_dat.iloc[:, int(subj_order[iter_cols]-1)]
+                new_subj_var[iter_cols] = subj_var.iloc[int(subj_order[iter_cols]-1)]
+                a=1
 
-                    new_subj_dat[:, iter_cols] = subj_dat.iloc[:, int(subj_order[iter_cols])]
-                    new_subj_var[iter_cols] = subj_var.iloc[int(subj_order[iter_cols])]
-                    a=1
+        all_data = pd.concat([all_data, pd.DataFrame(new_subj_dat)])
+        all_var = pd.concat([all_var, pd.DataFrame(new_subj_var).T], ignore_index=True)
 
-            all_data = pd.concat([all_data, pd.DataFrame(new_subj_dat)])
-            all_var = pd.concat([all_var, pd.DataFrame(new_subj_var).T], ignore_index=True)
+    """ AFTER FILLING ALL SUBJECTS WE NEED TO PERFORM IMPUTATION """
+    imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+    imp_data = imp.fit_transform(all_data)
 
-        """ AFTER FILLING ALL SUBJECTS WE NEED TO PERFORM IMPUTATION """
-        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
-        imp_data = imp.fit_transform(all_data)
+    """ WE ALSO NEED TO COMPUTE VARIANCE FOR EACH SYNERGY AND REORDER SYNS """
+    # entire_dataset_var = source_tot_var.sum() * number_datapoints
+    rescaled_var = all_var / number_datapoints
+    sum_var = rescaled_var.sum(axis=0, skipna=True)
+    variance = [x / source_tot_var.sum() for x in sum_var]
+    var = pd.DataFrame(variance)
+    var_sort = var.sort_values(by='0', ascending=False)
 
-        """ WE ALSO NEED TO COMPUTE VARIANCE FOR EACH SYNERGY AND REORDER SYNS """
-        # entire_dataset_var = source_tot_var.sum() * number_datapoints
-        rescaled_var = all_var / number_datapoints
-        sum_var = rescaled_var.sum(axis=0, skipna=True)
-        variance = [x / source_tot_var.sum() for x in sum_var]
-        var = pd.DataFrame(variance)
-        var_sort = var.sort_values(by='0', ascending=False)
+    if type == 'agglomerative':
+        var_sort.to_csv('./results/Syn/variance/overall_var_' + source + '.csv')
+    else:  # alternative
+        var_sort.to_csv('./results/Syn/variance/alternative_overall_var_' + source + '.csv')
 
-        if type == 'agglomerative':
-            var_sort.to_csv('./results/Syn/variance/overall_var_' + source + '.csv')
-        else:  # alternative
-            var_sort.to_csv('./results/Syn/variance/alternative_overall_var_' + source + '.csv')
+    source_clusters.columns = [int(x) for x in source_clusters.columns]
+    reordered_clusters = source_clusters.iloc[:, var_sort.index]
+    reordered_scores = pd.DataFrame(imp_data[:, var_sort.index])
 
-        source_clusters.columns = [int(x) for x in source_clusters.columns]
-        reordered_clusters = source_clusters.iloc[:, var_sort.index]
-        reordered_scores = pd.DataFrame(imp_data[:, var_sort.index])
-
-        if type == 'agglomerative':
-            reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_' + source + '.csv')
-            reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
-        else:  # alternative
-            reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_alternative_' + source + '.csv')
-            reordered_scores.to_csv('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
+    if type == 'agglomerative':
+        reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_' + source + '.csv')
+        reordered_scores.to_csv('./results/Syn/scores/reordered_' + source + '_scores.csv')
+    else:  # alternative
+        reordered_clusters.to_csv('./results/Syn/resulting_components/reordered_alternative_' + source + '.csv')
+        reordered_scores.to_csv('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
 
 
 def score_reordering_early_enclosure():
@@ -758,7 +759,7 @@ def syn_clustering():
 def syn_clustering_alternative():
 
     # sources = ['kin', 'emg_pca', 'tact']
-    sources = ['kin', 'tact']
+    sources = ['kin']
 
     for source in sources:
 
@@ -802,12 +803,8 @@ def syn_clustering_alternative():
 
             syns = numerical_data.T
             syns_corr = syns.corr().abs()
-            # mask = np.tril(np.ones_like(syns_corr, dtype=bool))
-            # tri_syns_corr = syns_corr.where(mask)
-            # np.fill_diagonal(tri_syns_corr.values, 0)
-
             distances = 1 - syns_corr.to_numpy()
-            clustering_model = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=remaining_clusters)
+            clustering_model = AgglomerativeClustering(metric='precomputed', linkage='average', n_clusters=remaining_clusters)
             cluster_labels = clustering_model.fit_predict(distances)
             # reshaped_clusters = np.reshape(cluster_labels, (-1, remaining_clusters-1))
             # silh_score = metrics.silhouette_samples(numerical_data, cluster_labels)
@@ -934,6 +931,7 @@ def syn_clustering_alternative():
 
 
 def kin_syn_extraction(data):
+
     scaler = StandardScaler()
     kin_scaled = scaler.fit_transform(data)  # Z score
     kin_df = pd.DataFrame(kin_scaled)
@@ -999,46 +997,50 @@ def tact_syn_extraction(data):
 def syn_extraction(data):
     """Synergy extraction for each source using all subjects together"""
 
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                            'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                            'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                            'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                            'Thumb_Proj_J1_Z']
-    emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
-    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
-                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
-                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
-                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
-                 'pdl', 'pdr', 'pdlo', 'lpo']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                'WristPitch', 'WristYaw']
+    # emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
+    # tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+    #              'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+    #              'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+    #              'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+    #              'pdl', 'pdr', 'pdlo', 'lpo']
 
     # REMOVE NANs
     data_clean = data.dropna(axis=0, how='any')
 
     # # NON-NUMERIC DATA EXTRACTION & SAVING
-    extra_cols = [col for col in data_clean.columns if (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+    # extra_cols = [col for col in data_clean.columns if (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+    extra_cols = [col for col in data_clean.columns if col not in kin_cols]
     extra_df = data_clean[extra_cols]
     extra_df.to_csv('./results/Syn/extra_data.csv', index=False)
 
     ## SYNERGY EXTRACTION AND SAVING
-    [kin_scores, kin_syns, kin_var, kin_var_tot] = kin_syn_extraction(data_clean[kin_cols])
+    # [kin_scores, kin_syns, kin_var, kin_var_tot] = kin_syn_extraction(data_clean[kin_cols])
+    [kin_scores, kin_syns, kin_var, kin_var_tot,kin_mean, kin_scale] = kin_syn_extraction(data_clean[kin_cols])
     pd.DataFrame(kin_scores).to_csv('./results/Syn/scores/kin_scores.csv')
     pd.DataFrame(kin_syns).to_csv('./results/Syn/synergies/kin_syns.csv')
     pd.DataFrame(kin_var).to_csv('./results/Syn/variance/kin_var.csv')
     pd.DataFrame(kin_var_tot).to_csv('./results/Syn/variance/kin_var_tot.csv')
+    pd.DataFrame(kin_mean).to_csv('./results/Syn/kin_mean.csv')
+    pd.DataFrame(kin_scale).to_csv('./results/Syn/kin_scale.csv')
 
-    [emg_scores, emg_syns, emg_var, emg_var_tot] = emg_pca_syn_extraction(data_clean[emg_cols])
-    pd.DataFrame(emg_scores).to_csv('./results/Syn/scores/emg_pca_scores.csv')
-    pd.DataFrame(emg_syns).to_csv('./results/Syn/synergies/emg_pca_syns.csv')
-    pd.DataFrame(emg_var).to_csv('./results/Syn/variance/emg_pca_var.csv')
-    pd.DataFrame(emg_var_tot).to_csv('./results/Syn/variance/emg_pca_var_tot.csv')
+
+    # [emg_scores, emg_syns, emg_var, emg_var_tot] = emg_pca_syn_extraction(data_clean[emg_cols])
+    # pd.DataFrame(emg_scores).to_csv('./results/Syn/scores/emg_pca_scores.csv')
+    # pd.DataFrame(emg_syns).to_csv('./results/Syn/synergies/emg_pca_syns.csv')
+    # pd.DataFrame(emg_var).to_csv('./results/Syn/variance/emg_pca_var.csv')
+    # pd.DataFrame(emg_var_tot).to_csv('./results/Syn/variance/emg_pca_var_tot.csv')
 
     # emg_nmf_syn_extraction(data_clean[emg_cols]) # NEEDS TO BE REFACTORED
 
-    [tact_scores, tact_syns, tact_var, tact_var_tot] = tact_syn_extraction(data_clean[tact_cols])
-    pd.DataFrame(tact_scores).to_csv('./results/Syn/scores/tact_scores.csv')
-    pd.DataFrame(tact_syns).to_csv('./results/Syn/synergies/tact_syns.csv')
-    pd.DataFrame(tact_var).to_csv('./results/Syn/variance/tact_var.csv')
-    pd.DataFrame(tact_var_tot).to_csv('./results/Syn/variance/tact_var_tot.csv')
+    # [tact_scores, tact_syns, tact_var, tact_var_tot] = tact_syn_extraction(data_clean[tact_cols])
+    # pd.DataFrame(tact_scores).to_csv('./results/Syn/scores/tact_scores.csv')
+    # pd.DataFrame(tact_syns).to_csv('./results/Syn/synergies/tact_syns.csv')
+    # pd.DataFrame(tact_var).to_csv('./results/Syn/variance/tact_var.csv')
+    # pd.DataFrame(tact_var_tot).to_csv('./results/Syn/variance/tact_var_tot.csv')
 
 
 def syn_extraction_subj(data):
@@ -1047,17 +1049,16 @@ def syn_extraction_subj(data):
 
     subjects = np.unique(data['Subject'])
 
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
-    emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
-    tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
-                 'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
-                 'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
-                 'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
-                 'pdl', 'pdr', 'pdlo', 'lpo']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                'WristPitch', 'WristYaw']
+    # emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
+    # tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+    #              'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+    #              'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+    #              'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+    #              'pdl', 'pdr', 'pdlo', 'lpo']
 
     families = np.unique(data['Family'])
 
@@ -1065,8 +1066,7 @@ def syn_extraction_subj(data):
     data_clean = data.dropna(axis=0, how='any')
 
     # # NON-NUMERIC DATA EXTRACTION & SAVING
-    extra_cols = [col for col in data_clean.columns if
-                  (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+    extra_cols = [col for col in data_clean.columns if col not in kin_cols]
     extra_df = data_clean[extra_cols]
     extra_df.to_csv('./results/Syn/extra_data.csv', index=False)
 
@@ -1075,25 +1075,27 @@ def syn_extraction_subj(data):
         subj_data = data_clean.loc[data_clean['Subject'] == subj]
 
         ## SYNERGY EXTRACTION AND SAVING
-        [kin_subj_scores, kin_subj_syns, kin_subj_var, kin_subj_var_tot] = kin_syn_extraction(subj_data[kin_cols])
+        [kin_subj_scores, kin_subj_syns, kin_subj_var, kin_subj_var_tot, kin_subj_mean , kin_subj_scale] = kin_syn_extraction(subj_data[kin_cols])
         pd.DataFrame(kin_subj_scores).to_csv('./results/Syn/scores/' + subj + '_kin_scores.csv')
         pd.DataFrame(kin_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_kin_syns.csv')
         pd.DataFrame(kin_subj_var).to_csv('./results/Syn/variance/' + subj + '_kin_var.csv')
         pd.DataFrame(kin_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_kin_var_tot.csv')
+        pd.DataFrame(kin_subj_var_tot).to_csv('./results/Syn/synergies/' + subj + '_kin_mean.csv')
+        pd.DataFrame(kin_subj_var_tot).to_csv('./results/Syn/synergies/' + subj + '_kin_scale.csv')
 
-        [emg_pca_subj_scores, emg_pca_subj_syns, emg_pca_subj_var, emg_pca_subj_var_tot] = emg_pca_syn_extraction(subj_data[emg_cols])
-        pd.DataFrame(emg_pca_subj_scores).to_csv('./results/Syn/scores/' + subj + '_emg_pca_scores.csv')
-        pd.DataFrame(emg_pca_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_emg_pca_syns.csv')
-        pd.DataFrame(emg_pca_subj_var).to_csv('./results/Syn/variance/' + subj + '_emg_pca_var.csv')
-        pd.DataFrame(emg_pca_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_emg_pca_var_tot.csv')
+        # [emg_pca_subj_scores, emg_pca_subj_syns, emg_pca_subj_var, emg_pca_subj_var_tot] = emg_pca_syn_extraction(subj_data[emg_cols])
+        # pd.DataFrame(emg_pca_subj_scores).to_csv('./results/Syn/scores/' + subj + '_emg_pca_scores.csv')
+        # pd.DataFrame(emg_pca_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_emg_pca_syns.csv')
+        # pd.DataFrame(emg_pca_subj_var).to_csv('./results/Syn/variance/' + subj + '_emg_pca_var.csv')
+        # pd.DataFrame(emg_pca_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_emg_pca_var_tot.csv')
 
         # emg_nmf_syn_extraction(data_clean[emg_cols])
 
-        [tact_subj_scores, tact_subj_syns, tact_subj_var, tact_subj_var_tot] = tact_syn_extraction(subj_data[tact_cols])
-        pd.DataFrame(tact_subj_scores).to_csv('./results/Syn/scores/' + subj + '_tact_scores.csv')
-        pd.DataFrame(tact_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_tact_syns.csv')
-        pd.DataFrame(tact_subj_var).to_csv('./results/Syn/variance/' + subj + '_tact_var.csv')
-        pd.DataFrame(tact_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_tact_var_tot.csv')
+        # [tact_subj_scores, tact_subj_syns, tact_subj_var, tact_subj_var_tot] = tact_syn_extraction(subj_data[tact_cols])
+        # pd.DataFrame(tact_subj_scores).to_csv('./results/Syn/scores/' + subj + '_tact_scores.csv')
+        # pd.DataFrame(tact_subj_syns).to_csv('./results/Syn/synergies/' + subj + '_tact_syns.csv')
+        # pd.DataFrame(tact_subj_var).to_csv('./results/Syn/variance/' + subj + '_tact_var.csv')
+        # pd.DataFrame(tact_subj_var_tot).to_csv('./results/Syn/variance/' + subj + '_tact_var_tot.csv')
 
     # print("Individual synergy extraction done!")
 
@@ -1104,11 +1106,10 @@ def syn_extraction_early_enclosure():
 
     subjects = np.unique(data['Subject'])
 
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                'WristPitch', 'WristYaw']
     emg_cols = [col for col in data.columns if ('flexion' in col) or ('extension' in col)]
     tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
                  'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
@@ -1563,8 +1564,8 @@ def syn_single_source_classification(type, discard):
     cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
-    emg_bins = emg_params[0]
-    tact_bins = tact_params[0]
+    # emg_bins = emg_params[0]
+    # tact_bins = tact_params[0]
     perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
@@ -1600,41 +1601,41 @@ def syn_single_source_classification(type, discard):
     # GET SCORES
     if type == 'all':
         kin_score_df = pd.read_csv('./results/Syn/scores/kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Syn/scores/emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Syn/scores/tact_scores.csv', index_col=0)
     elif type == 'clustering':
         kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Syn/scores/reordered_emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Syn/scores/reordered_tact_scores.csv', index_col=0)
     else:  # early enclosure
         kin_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_kin_scores.csv', index_col=0)
-        emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
-        tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
+        # emg_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_emg_pca_scores.csv', index_col=0)
+        # tact_score_df = pd.read_csv('./results/Early Enclosure/scores/alternative_reordered_tact_scores.csv', index_col=0)
 
     # BUILD ITERABLE STRUCTURES
     all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
     kin_data_and_iter = [[kin_score_df, extra_data, x, cv, kin_bins, discard] for x in all_param]
-    emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
-    tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
+    # emg_pca_data_and_iter = [[emg_score_df, extra_data, x, cv, emg_bins, discard] for x in all_param]
+    # tact_data_and_iter = [[tact_score_df, extra_data, x, cv, tact_bins, discard] for x in all_param]
 
     # multiprocessing
     with Pool() as pool:
 
         result_kin = pool.map_async(kin_syn_classif, kin_data_and_iter)
-        result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
-        result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
+        # result_emg_pca = pool.map_async(emg_pca_syn_classif, emg_pca_data_and_iter)
+        # result_tact = pool.map_async(tact_syn_classif, tact_data_and_iter)
 
         for res_kin in result_kin.get():
             wr.writerow(res_kin)
         # print("Kinematic classification done!")
 
-        for res_emg_pca in result_emg_pca.get():
-            wr.writerow(res_emg_pca)
-        # print("EMG PCA classification done!")
-
-        for res_tact in result_tact.get():
-            wr.writerow(res_tact)
-        # print("Tactile classification done!")
+        # for res_emg_pca in result_emg_pca.get():
+        #     wr.writerow(res_emg_pca)
+        # # print("EMG PCA classification done!")
+        #
+        # for res_tact in result_tact.get():
+        #     wr.writerow(res_tact)
+        # # print("Tactile classification done!")
 
     # print("Single source classification done!!")
     result_file.close()
@@ -3008,7 +3009,7 @@ def syn_fine_vs_coarse_fam(type):
             # Annotate the plot with colored asterisks
             plt.text(i, melted_df['Value'].max() * 1.05, '*', ha='center', fontsize=14, color=color)
 
-    tit = 'Kinematic score comparison Low vs. High order synergies\nfor Fine vs. Coarse families'
+    tit = 'Kinematic score comparison Low and High order synergies\nfor Fine vs. Coarse families'
     if type == 'cluster':
         tit += '. Each subject + clustering'
     else:
@@ -3032,8 +3033,10 @@ def syn_fine_vs_coarse_ep(type):
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
-    fine_eps = ['edge following', 'function test']
-    coarse_eps = ['enclosure', 'weighting', 'pressure', 'enclosure part']
+    # fine_eps = ['edge following', 'function test']
+    # coarse_eps = ['enclosure', 'weighting', 'pressure', 'enclosure part']
+    fine_eps = ['enclosure part', 'rotation', 'function test', 'edge following', 'translation']
+    coarse_eps = ['enclosure', 'weighting', 'pressure']
     fine_idx = extra_data.loc[extra_data['EP'].isin(fine_eps)]
     coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
 
@@ -3078,7 +3081,7 @@ def syn_fine_vs_coarse_ep(type):
             # Annotate the plot with colored asterisks
             plt.text(i, melted_df['Value'].max() * 1.05, '*', ha='center', fontsize=14, color=color)
 
-    tit = 'Kinematic score comparison Low vs. High order synergies\nfor Fine vs. Coarse EPs'
+    tit = 'Kinematic score comparison Low and High order synergies\nfor Fine vs. Coarse EPs'
     if type == 'cluster':
         tit += '. Each subject + clustering'
     else:
@@ -3196,10 +3199,12 @@ def print_syn_results_alternative(discard):
     # cols = ['Kind', 'Perc', 'Family', 'L1vsL2', 'C', 'Acc', 'Mean']
     cols = ['Kind', 'Perc', 'L1vsL2', 'C', 'Acc', 'Mean']
 
-    kin_var = pd.read_csv('./results/Syn/variance/alternative_overall_var_kin.csv')
+    # kin_var = pd.read_csv('./results/Syn/variance/alternative_overall_var_kin.csv')
+    kin_var = pd.read_csv('./results/Syn/variance/kin_var.csv')
     kin_var.drop(kin_var.columns[0], axis=1, inplace=True)
 
-    res_file_name = './results/Syn/accuracy/fam_alternative_syn_results'
+    # res_file_name = './results/Syn/accuracy/fam_alternative_syn_results'
+    res_file_name = './results/Syn/accuracy/fam_syn_results'
 
     if discard == 'less':
         res_file_name += '.csv'
@@ -3234,7 +3239,8 @@ def print_syn_results_alternative(discard):
     l1vsl2_values = np.unique(results_df['L1vsL2'])
     c_values = np.unique(results_df['C'])
 
-    kin_best_acc = np.zeros((len(perc_values), 5))
+    # kin_best_acc = np.zeros((len(perc_values), 5))
+    kin_best_acc = np.zeros((len(perc_values), 9))
     kin_best_params = [[[], []]] * len(perc_values)
 
     for iter_perc in range(0, len(perc_values)):
@@ -3247,7 +3253,13 @@ def print_syn_results_alternative(discard):
                 kin_sel_mean_acc = kin_sel['Mean'].mean()
 
                 if kin_sel_mean_acc > kin_best_acc[iter_perc].mean():
-                    kin_best_acc[iter_perc] = kin_sel['Mean']
+                    # kin_best_acc[iter_perc] = kin_sel['Mean']
+                    acc = kin_sel['Acc'].values[0]
+                    acc = acc.replace('[','')
+                    acc = acc.replace(']', '')
+                    acc_values = acc.split(',')
+                    kin_best_acc[iter_perc] = acc_values
+                    # kin_best_acc[iter_perc] = kin_sel['Acc']
                     kin_best_params[iter_perc] = [l1, c]
 
     # BEST ACCURACIES
@@ -3256,7 +3268,8 @@ def print_syn_results_alternative(discard):
     syn_best_acc_df = pd.DataFrame(columns=syn_cols)
 
     kin_aux_df = pd.DataFrame(data=kin_best_acc.transpose(), columns=perc_values)
-    kin_aux_df.insert(0, "Source", ["Kin"] * 5)
+    # kin_aux_df.insert(0, "Source", ["Kin"] * 5)
+    kin_aux_df.insert(0, "Source", ["Kin"] * 9)
 
     syn_best_acc_df = pd.concat([syn_best_acc_df, kin_aux_df])
 
@@ -3269,13 +3282,7 @@ def print_syn_results_alternative(discard):
 
     """BEST RAW PARAMETERS"""
     # FIXED PARAMETERS FROM RAW CLASSIFICATION
-    """substitute by get_best_raw_parameters"""
-    # best_kin_param = [40, 0.25, 0.1]
-    best_kin_param = [40, 0, 0.1]
-    best_emg_param = [10, 0, 1.5]
-    best_tact_param = [5, 0.5, 0.25]
-    best_multi_param = [5, 0.75, 0.25]
-    best_hier_param = 0.5
+    [best_kin_param, best_emg_param, best_tact_param] = get_raw_best_params()
 
     # KIN
     best_raw_kin_results = kin_raw_df.loc[
@@ -3296,7 +3303,8 @@ def print_syn_results_alternative(discard):
     sns.pointplot(data=best_raw_kin_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
     i.set(ylabel="Accuracy (95% ci)\nVariance Explained")
     i.set(xlabel="Percentage of Synergies")
-    i.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    # i.axhline(33, color='0.75', linestyle='--', label='Chance level')
+    i.axhline(20, color='0.75', linestyle='--', label='Chance level')
     # i.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
     leg = plt.legend(labels=['Syn classifier', 'Raw classifier', 'Chance Level', 'Variance Explained'],
                      labelcolor=['r', 'b', '0.75', '0'])
@@ -3309,8 +3317,8 @@ def print_syn_results_alternative(discard):
     sns.move_legend(i, "best")
     # plt.show()
 
-    title = 'Kinematic accuracy comparison for each subject with clustering'
-    fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc'
+    title = 'Family classification accuracy comparison \nwith synergies extracted from all subjects together'
+    fig_file = './results/Syn/plots/all_suj_kin_drop_syn_acc'
 
     if discard == 'less':
         title += '\ndiscarding less relevant synergies'
@@ -3326,7 +3334,13 @@ def print_syn_results_alternative(discard):
 
     """ KIN bar pval plot """
     kin_pval_df = pd.DataFrame(syn_best_acc_df.iloc[:, 1:].loc[syn_best_acc_df["Source"] == "Kin"])
-    kin_pval_df.insert(0, 'Raw', best_raw_kin_df.iloc[:, 0].values)
+
+    # kin_pval_df.insert(0, 'Raw', best_raw_kin_df.iloc[:, 0].values)
+    mean_value = best_raw_kin_df.iloc[:, 0].mean()
+    full_values = np.pad(best_raw_kin_df.iloc[:, 0].values, (0, len(kin_pval_df) - len(best_raw_kin_df)), 'constant',
+                         constant_values=(0, mean_value))
+    kin_pval_df.insert(0, 'Raw', full_values)
+
     plt.figure()
     sns.pointplot(data=pd.DataFrame(extended_kin_cum_var).transpose(), label='Variance Explained', color='r', scale=.5)
     i = sns.barplot(data=kin_pval_df)
@@ -3338,7 +3352,8 @@ def print_syn_results_alternative(discard):
                           line_height=0.01, line_width=0.5, color='0')
     annotator_i.apply_and_annotate()
 
-    i.axhline(33, color='b', linestyle='--', label='Chance level')
+    # i.axhline(33, color='b', linestyle='--', label='Chance level')
+    i.axhline(20, color='b', linestyle='--', label='Chance level')
     i.set(ylabel="Accuracy (95% ci)")
     leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
     handles = leg.legendHandles
@@ -3351,10 +3366,8 @@ def print_syn_results_alternative(discard):
     # plt.xticks(rotation=45, size=4)
     # # i.axhline(20, color='r')
 
-
-    title = 'Kinematic accuracy comparison for each subject with clustering'
-    fig_file = './results/Syn/plots/alternative_kin_drop_syn_acc_pval'
-
+    title = 'Family classification accuracy comparison \nwith synergies extracted from all subjects together'
+    fig_file = './results/Syn/plots/all_suj_kin_drop_syn_acc_pval'
 
     if discard == 'less':
         title += '\ndiscarding less relevant synergies'

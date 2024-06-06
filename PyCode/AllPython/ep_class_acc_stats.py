@@ -11,7 +11,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def ep_classification_plots():
+def ep_stats_classification_plots():
 
     kinds = ["pres/abs", "count", "duration"]
     pairs = list(combinations(kinds, r=2))
@@ -189,17 +189,17 @@ def ep_classification_plots():
 
     new_pairs = [(x,'random') for x in kinds]
 
-    # plt.figure()
-    # h = sns.barplot(data=asked, x="Kind", y="Accuracy")
-    # annotator_h = Annotator(h, new_pairs, data=asked, x="Kind", y="Accuracy")
-    # annotator_h.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    # annotator_h.apply_and_annotate()
-    # h.set(ylabel="Accuracy (95% ci)")
-    # h.axhline(33.33, color='r')
-    # plt.title('Classification Accuracy for Asked Object Classification')
-    # plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
-    # # plt.show()
-    # # plt.close()
+    plt.figure()
+    h = sns.barplot(data=asked, x="Kind", y="Accuracy")
+    annotator_h = Annotator(h, new_pairs, data=asked, x="Kind", y="Accuracy")
+    annotator_h.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_h.apply_and_annotate()
+    h.set(ylabel="Accuracy (95% ci)")
+    h.axhline(33.33, color='r')
+    plt.title('Classification Accuracy for Asked Object Classification')
+    plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
+    # plt.show()
+    # plt.close()
 
     # FAMILY PRES/ABS
     fam_presabs_acc = []
@@ -363,3 +363,24 @@ def ep_classification_plots():
     # # plt.show()
     # plt.close()
 
+    # Filter the DataFrame for only presence/absence results
+    pres_abs_df = accuracies_df[accuracies_df["Kind"] == "pres/abs"]
+
+    # BOXPLOT PRES/ABS COMPARISON
+    plt.figure()
+    j = sns.barplot(data=pres_abs_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=["asked", "given", "family"])
+    statannot.add_stat_annotation(j, data=pres_abs_df, x="Kind", y="Accuracy", hue="Obj/Fam",
+                                  hue_order=["asked", "given", "family"],
+                                  box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
+                                             (("pres/abs", "asked"), ("pres/abs", "family")),
+                                             (("pres/abs", "given"), ("pres/abs", "family"))],
+                                  test="Mann-Whitney",
+                                  text_format="star",
+                                  show_test_name=False,
+                                  )
+    j.set(ylabel="Accuracy (95% ci)")
+    plt.title('Presence/Absence Classification Accuracy Comparison')
+    sns.move_legend(j, "lower right")
+    plt.savefig('./results/EP/plots/EP_pres_abs_comp_acc_star.png', dpi=600)
+    # plt.show()
+    plt.close()

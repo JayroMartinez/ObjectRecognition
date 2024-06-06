@@ -36,11 +36,14 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.spatial.distance import cdist
 from numpy import std, mean, sqrt
 import ast
+from scipy.stats import f_oneway
+from scipy.spatial import procrustes
 
 from classification import get_raw_best_params
 from load_subject import load
 from synergy_pipeline import kin_syn_extraction
 from split_data import split
+from synergy_pipeline import silhouette_scores_custom
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -52,8 +55,8 @@ def ep_from_scores_classif(include_suj):
     cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
-    emg_bins = emg_params[0]
-    tact_bins = tact_params[0]
+    # emg_bins = emg_params[0]
+    # tact_bins = tact_params[0]
     # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
@@ -76,30 +79,29 @@ def ep_from_scores_classif(include_suj):
 
     # GET SCORES
     # sources = ['kin', 'emg_pca', 'tact']
-    sources = ['kin']
+    # sources = ['kin']
+    source = 'kin'
 
     kin_score_df = pd.DataFrame()
-    emg_score_df = pd.DataFrame()
-    tact_score_df = pd.DataFrame()
+    # emg_score_df = pd.DataFrame()
+    # tact_score_df = pd.DataFrame()
 
-    for source in sources:
+    # score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
+    # score_files = glob.glob('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
+    score_files = glob.glob('./results/Syn/scores/' + source + '_scores.csv')
+    score_files.sort()
 
-        # score_files = glob.glob('./results/Syn/scores/sub*' + source + '_scores.csv')
-        # score_files = glob.glob('./results/Syn/scores/reordered_alternative_' + source + '_scores.csv')
-        score_files = glob.glob('./results/Syn/scores/' + source + '_scores.csv')
-        score_files.sort()
+    for iter_file in range(0, len(score_files)):
 
-        for iter_file in range(0, len(score_files)):
+        subj_dat = pd.read_csv(score_files[iter_file])
+        subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
 
-            subj_dat = pd.read_csv(score_files[iter_file])
-            subj_dat.drop(subj_dat.columns[0], axis=1, inplace=True)
-
-            if source == 'kin':
-                kin_score_df = pd.concat([kin_score_df, subj_dat])
-            elif source == 'emg_pca':
-                emg_score_df = pd.concat([emg_score_df, subj_dat])
-            else:
-                tact_score_df = pd.concat([tact_score_df, subj_dat])
+        if source == 'kin':
+            kin_score_df = pd.concat([kin_score_df, subj_dat])
+        # elif source == 'emg_pca':
+        #     emg_score_df = pd.concat([emg_score_df, subj_dat])
+        # else:
+        #     tact_score_df = pd.concat([tact_score_df, subj_dat])
 
     # BUILD ITERABLE STRUCTURES
     # all_param = list(itertools.product(perc_syns, families, l1VSl2, c_param))
@@ -393,11 +395,10 @@ def ep_from_raw_classif(df, include_suj):
 
     discard = 'less'
 
-    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                'Thumb_Proj_J1_Z']
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                'WristPitch', 'WristYaw']
 
     extra_cols = ['Task', 'EP', 'Subject', 'Trial num', 'EP num', 'EP total',
        'Given Object', 'Asked Object', 'Family']
@@ -408,10 +409,10 @@ def ep_from_raw_classif(df, include_suj):
     cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
-    emg_bins = emg_params[0]
-    tact_bins = tact_params[0]
-    # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
-    # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
+    # emg_bins = emg_params[0]
+    # tact_bins = tact_params[0]
+    perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
     # c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5]
     c_param = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
@@ -521,7 +522,7 @@ def ep_classification_plots(type):
 
     # plt.show()
     plt.savefig(save_file, dpi=600)
-    a=1
+
 
 def ep_all_suj_syn_one_subject_out():
 
@@ -716,3 +717,317 @@ def kin_ep_classif_sgdb_subject(input_data):
     # print("RESULT:", result)
 
     return result
+
+
+def ep_all_suj_plots():
+
+    plt.close('all')  # to clean the screen
+
+    raw_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
+    leave_one_out_file = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
+    all_suj_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
+
+    raw_data = pd.read_csv(raw_file, header=None)
+    leave_one_out_data = pd.read_csv(leave_one_out_file, header=None)
+    all_suj_data = pd.read_csv(all_suj_file, header=None)
+
+    raw_best_values = raw_data.loc[raw_data[raw_data.columns[-1]].idxmax()][raw_data.columns[-2]]
+    raw_floats_list = ast.literal_eval(raw_best_values.strip("'"))
+
+    leave_one_out_best_values = leave_one_out_data.groupby(3)[4].max().values
+
+    all_suj_best_values = all_suj_data.loc[all_suj_data[all_suj_data.columns[-1]].idxmax()][all_suj_data.columns[-2]]
+    all_suj_floats_list = ast.literal_eval(all_suj_best_values.strip("'"))
+
+    raw_mean_value = np.asarray(raw_floats_list).mean()
+    full_raw_values = np.pad(raw_floats_list, (0, len(leave_one_out_best_values) - len(raw_floats_list)), 'constant',
+                         constant_values=(0, raw_mean_value))
+
+    all_suj_mean_value = np.asarray(all_suj_floats_list).mean()
+    full_all_suj_values = np.pad(all_suj_floats_list, (0, len(leave_one_out_best_values) - len(all_suj_floats_list)), 'constant',
+                             constant_values=(0, all_suj_mean_value))
+
+    raw_best_values_df = pd.DataFrame({'Raw': full_raw_values})
+    all_suj_best_values_df = pd.DataFrame({'All Subj': full_all_suj_values})
+    leave_one_out_best_values_df = pd.DataFrame({'Leave One Subject Out': leave_one_out_best_values})
+
+    plot_data = pd.concat([raw_best_values_df, all_suj_best_values_df, leave_one_out_best_values_df], axis=1)
+    plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
+
+    plt.figure(figsize=(10, 6))
+    ax = sns.violinplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
+    add_stat_annotation(ax, data=plot_data_melted, x='Group', y='Values',
+                        box_pairs=[("Raw", "All Subj"), ("Raw", "Leave One Subject Out"), ("All Subj", "Leave One Subject Out")],
+                        test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
+
+    ax.set_ylim(0, 100)
+    ax.set_ylabel('Accuracy')
+    ax.set_xlabel('')
+    plt.axhline(12.5, color='r', linestyle='--')
+    plt.title('Comparison of accuracies for classifiers targeting EP label')
+    save_file = './results/ep_comp_syn.png'
+    plt.savefig(save_file, dpi=600)
+    # plt.show()
+
+
+def build_subject_clusters():
+
+    number_clusters = [2, 3, 4, 5, 6]
+
+    selected_files = glob.glob('./results/Syn/synergies/*kin_syns.csv')
+    selected_files = [x for x in selected_files if 'sub' in x]  # selects only subject files
+    selected_files.sort()
+
+    all_data = pd.DataFrame()
+
+    for file in selected_files:
+        suj_dat = pd.read_csv(file)
+        components = suj_dat.pop('Unnamed: 0').to_list()
+        suj_dat = suj_dat.T
+        suj_dat['Component'] = components
+
+        all_data = pd.concat([all_data, pd.DataFrame(suj_dat)], ignore_index=True)
+
+    syns = all_data.iloc[:, :-1].T  # corr() performs correlation between columns
+    syns_corr = syns.corr().abs()
+    distances = 1 - syns_corr.to_numpy()
+
+    extra_data = pd.read_csv('./results/Syn/extra_data.csv')
+    subjects = extra_data['Subject'].unique()
+
+    num_subjects = len(subjects)
+    synergies_per_subject = len(syns.index)
+
+    mean_distances = np.zeros((num_subjects, num_subjects))
+
+    """ENTIRE DISTANCE FROM SUBJECT TO SUBJECT"""
+    # for i in range(num_subjects):
+    #     for j in range(num_subjects):
+    #
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             start_i = i * synergies_per_subject
+    #             end_i = start_i + synergies_per_subject
+    #             start_j = j * synergies_per_subject
+    #             end_j = start_j + synergies_per_subject
+    #
+    #             block = distances[start_i:end_i, start_j:end_j]
+    #             mean_distances[i, j] = block.mean()
+
+    """DISTANCE COMPONENT TO COMPONENT OF EACH SUBJECT"""
+    # for i in range(num_subjects):
+    #     for j in range(num_subjects):
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             total_distance = 0
+    #             for k in range(synergies_per_subject):
+    #                 comp_i_index = i * synergies_per_subject + k
+    #                 comp_j_index = j * synergies_per_subject + k
+    #                 total_distance += distances[comp_i_index, comp_j_index]
+    #
+    #             mean_distances[i, j] = total_distance
+    #
+    # mean_distances /= synergies_per_subject
+
+    """FIND MINIMAL DISTANCE BETWEEN COMPONENTS OF EACH SUBJECT"""
+    # for i in range(num_subjects):
+    #     for j in range(num_subjects):
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             min_distances = []
+    #             for k in range(synergies_per_subject):
+    #                 comp_i_index = i * synergies_per_subject + k
+    #                 min_distance = np.min(
+    #                     distances[comp_i_index, j * synergies_per_subject:(j + 1) * synergies_per_subject])
+    #                 min_distances.append(min_distance)
+    #             mean_distances[i, j] = np.mean(min_distances)
+
+    """PROCRUSTES DISTANCE"""
+    # for i in range(num_subjects):
+    #     for j in range(num_subjects):
+    #
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             start_i = i * synergies_per_subject
+    #             end_i = start_i + synergies_per_subject
+    #             start_j = j * synergies_per_subject
+    #             end_j = start_j + synergies_per_subject
+    #
+    #             suj_a = all_data.iloc[start_i:end_i, :-1]
+    #             suj_b = all_data.iloc[start_j:end_j, :-1]
+    #             _, _, dist = procrustes(suj_a, suj_b)
+    #
+    #             mean_distances[i, j] = dist
+
+    silhouette_scores = []
+
+    for n_clust in number_clusters:
+        clustering_model = AgglomerativeClustering(metric='precomputed', linkage='average', n_clusters=n_clust)
+        # clustering_model = AgglomerativeClustering(linkage='average', n_clusters=n_clust)
+        cluster_labels = clustering_model.fit_predict(mean_distances)
+        print(cluster_labels)
+        silh_score = metrics.silhouette_score(mean_distances, cluster_labels)
+        # silh_score = silhouette_scores_custom(mean_distances, cluster_labels)
+        silhouette_scores.append(silh_score)
+
+    plt.plot(number_clusters, silhouette_scores)
+    plt.xticks(number_clusters)  # Setting x-ticks to the exact values in number_clusters
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Silhouette Score')
+    plt.title('Silhouette Scores for subject clusters')
+    # plt.show()
+    plt.savefig('./results/silhouette_subject_clusters.png', dpi=600)
+    # plt.savefig('./results/test_silhouette_subject_clusters.png', dpi=600)
+
+
+def build_ep_clusters(data):
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+
+    number_clusters = [2, 3, 4, 5, 6]
+
+    eps = data['EP'].unique()
+
+    syn_df = pd.DataFrame()
+
+    for ep in eps:
+
+        selected_ep = data.loc[data['EP'] == ep]
+        selected_data = selected_ep[kin_cols]
+        clean_data = selected_data.apply(lambda col: col.fillna(col.mean()), axis=0)
+
+        [kin_scores, kin_syns, kin_var, kin_var_tot, kin_mean, kin_scale] = kin_syn_extraction(clean_data) # Each column is a synergy
+
+        ep_labels = np.repeat(ep, len(kin_syns))
+
+        syns = pd.DataFrame(kin_syns.T)  # each row in syns is a synergy
+        syns['EP'] = ep_labels
+
+        syn_df = pd.concat([syn_df, syns])
+
+    syns = syn_df.iloc[:, :-1].T  # corr() performs correlation between columns
+    syns_corr = syns.corr().abs()
+    distances = 1 - syns_corr.to_numpy()
+
+    num_eps = len(eps)
+    synergies_per_ep = len(kin_cols)
+
+    mean_distances = np.zeros((num_eps, num_eps))
+
+    """ENTIRE DISTANCE FROM EP TO EP"""
+    # for i in range(num_eps):
+    #     for j in range(num_eps):
+    #
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             start_i = i * synergies_per_ep
+    #             end_i = start_i + synergies_per_ep
+    #             start_j = j * synergies_per_ep
+    #             end_j = start_j + synergies_per_ep
+    #
+    #             block = distances[start_i:end_i, start_j:end_j]
+    #             mean_distances[i, j] = block.mean()
+
+    """DISTANCE COMPONENT TO COMPONENT OF EACH EP"""
+    # for i in range(num_eps):
+    #     for j in range(num_eps):
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             total_distance = 0
+    #             for k in range(synergies_per_ep):
+    #                 comp_i_index = i * synergies_per_ep + k
+    #                 comp_j_index = j * synergies_per_ep + k
+    #                 total_distance += distances[comp_i_index, comp_j_index]
+    #
+    #             mean_distances[i, j] = total_distance
+    #
+    # mean_distances /= synergies_per_ep
+
+    """FIND MINIMAL DISTANCE BETWEEN COMPONENTS OF EACH EP"""
+    for iter_i in range(num_eps):
+        for iter_j in range(num_eps):
+
+            if iter_i == iter_j:
+                mean_distances[iter_i, iter_j] = 0
+            else:
+                min_distances = []
+                for k in range(synergies_per_ep):
+                    comp_i_index = iter_i * synergies_per_ep + k
+                    min_distance = np.min(
+                        distances[comp_i_index, iter_j * synergies_per_ep:(iter_j + 1) * synergies_per_ep])
+                    min_distances.append(min_distance)
+                mean_distances[iter_i, iter_j] = np.mean(min_distances)
+
+    """PROCRUSTES DISTANCE"""
+    # for i in range(num_eps):
+    #     for j in range(num_eps):
+    #
+    #         if i == j:
+    #             mean_distances[i, j] = 0
+    #         else:
+    #             start_i = i * synergies_per_ep
+    #             end_i = start_i + synergies_per_ep
+    #             start_j = j * synergies_per_ep
+    #             end_j = start_j + synergies_per_ep
+    #
+    #             suj_a = syn_df.iloc[start_i:end_i, :-1]
+    #             suj_b = syn_df.iloc[start_j:end_j, :-1]
+    #             _, _, dist = procrustes(suj_a, suj_b)
+    #
+    #             mean_distances[i, j] = dist
+
+    """SILHOUETTE SCORES"""
+    silhouette_scores = []
+    clusters = []
+
+    for n_clust in number_clusters:
+        clustering_model = AgglomerativeClustering(metric='precomputed', linkage='average', n_clusters=n_clust)
+        # clustering_model = AgglomerativeClustering(linkage='average', n_clusters=n_clust)
+        cluster_labels = clustering_model.fit_predict(mean_distances)
+        # print(cluster_labels)
+        clusters.append(cluster_labels)
+        silh_score = metrics.silhouette_score(mean_distances, cluster_labels)
+        # silh_score = silhouette_scores_custom(mean_distances, cluster_labels)
+        silhouette_scores.append(silh_score)
+
+    """SHOW CLUSTER COMPONENTS FOR BEST SILHOUETTE SCORE"""
+    best_score_idx = silhouette_scores.index(max(silhouette_scores))
+    best_cluster = clusters[best_score_idx]
+
+    print('Best score', round(max(silhouette_scores), 3), 'with', number_clusters[best_score_idx], 'clusters')
+
+    for cl in np.unique(best_cluster):
+
+        cl_idx = [i for i in range(len(best_cluster)) if best_cluster[i] == cl]
+        print('Cluster', cl, ':')
+        print([eps[x] for x in cl_idx])
+
+    resulting_clusters = pd.concat([pd.Series(eps), pd.Series(best_cluster)], axis=1)
+    resulting_clusters.to_csv('./results/EP/resulting_components.csv', header=False, index=False)
+    a=1
+
+    """PLOT"""
+    plt.plot(number_clusters, silhouette_scores)
+    plt.xticks(number_clusters)  # Setting x-ticks to the exact values in number_clusters
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Silhouette Score')
+    plt.title('Silhouette Scores for EP clusters')
+    # plt.show()
+    plt.savefig('./results/silhouette_ep_clusters.png', dpi=600)
+    # plt.savefig('./results/test_silhouette_subject_clusters.png', dpi=600)
+
+
+def extract_ep_syns_per_cluster(data):
+
+    best_clusters = pd.read_csv('./results/EP/resulting_components.csv')
+    a=1

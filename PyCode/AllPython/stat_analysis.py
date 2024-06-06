@@ -347,4 +347,33 @@ def variance(data):
 
 
 
+def check_kinematics(data):
+
+    kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
+                'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
+                'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
+                'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
+                'Thumb_Proj_J1_Z']
+
+    subjects = data['Subject'].unique()
+
+    for subject in subjects:
+
+        plt.clf()
+        plt.close()
+
+        selected_data = data.loc[data['Subject'] == subject]
+
+        # g = sns.boxplot(data=selected_data[kin_cols])
+        # g.set_xticklabels(labels=kin_cols, rotation=45, size=5)
+        # plt.ylabel('Raw Kinematic Data Values')
+        # plt.title('Subject: ' + subject)
+        # plt.tight_layout()
+        # # plt.show()
+        # save_file = './results/checks/kinematic_data_' + subject + '.png'
+        # plt.savefig(save_file, dpi=600)
+
+        a=1
+
+
 
