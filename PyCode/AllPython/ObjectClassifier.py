@@ -146,35 +146,35 @@ def main():
     ###################################
     ## EP CLASSIFICATION
     ###################################
-    # """ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE"""
-    ask_ep_presabs_classification(ep_presabs_df)
-    # """ASKED OBJECT CLASSIFICATION BY EP DURATION"""
-    ask_ep_dur_classification(ep_dur_df)
-    # """ASKED OBJECT CLASSIFICATION BY EP COUNT"""
-    ask_ep_count_classification(ep_count_df)
-
-    # """GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE"""
-    giv_ep_presabs_classification(ep_presabs_df)
-    # """GIVEN OBJECT CLASSIFICATION BY EP DURATION"""
-    giv_ep_dur_classification(ep_dur_df)
-    # """GIVEN OBJECT CLASSIFICATION BY EP COUNT"""
-    giv_ep_count_classification(ep_count_df)
-
-    # """FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE"""
-    fam_ep_presabs_classification(ep_presabs_df)
-    # """FAMILY CLASSIFICATION BY EP DURATION"""
-    fam_ep_dur_classification(ep_dur_df)
-    # """FAMILY CLASSIFICATION BY EP COUNT"""
-    fam_ep_count_classification(ep_count_df)
-
-    print("\nEP classification done!")
-
-    # """EP ACCURACY PLOTS"""
-    ep_stats_classification_plots()
-    # """EP WEIGHT PLOTS"""
-    ep_weights()
-
-    print("\nEP PLOTS DONE")
+    # # """ASKED OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE"""
+    # ask_ep_presabs_classification(ep_presabs_df)
+    # # """ASKED OBJECT CLASSIFICATION BY EP DURATION"""
+    # ask_ep_dur_classification(ep_dur_df)
+    # # """ASKED OBJECT CLASSIFICATION BY EP COUNT"""
+    # ask_ep_count_classification(ep_count_df)
+    #
+    # # """GIVEN OBJECT CLASSIFICATION BY EP PRESENCE/ABSENCE"""
+    # giv_ep_presabs_classification(ep_presabs_df)
+    # # """GIVEN OBJECT CLASSIFICATION BY EP DURATION"""
+    # giv_ep_dur_classification(ep_dur_df)
+    # # """GIVEN OBJECT CLASSIFICATION BY EP COUNT"""
+    # giv_ep_count_classification(ep_count_df)
+    #
+    # # """FAMILY CLASSIFICATION BY EP PRESENCE/ABSENCE"""
+    # fam_ep_presabs_classification(ep_presabs_df)
+    # # """FAMILY CLASSIFICATION BY EP DURATION"""
+    # fam_ep_dur_classification(ep_dur_df)
+    # # """FAMILY CLASSIFICATION BY EP COUNT"""
+    # fam_ep_count_classification(ep_count_df)
+    #
+    # print("\nEP classification done!")
+    #
+    # # """EP ACCURACY PLOTS"""
+    # ep_stats_classification_plots()
+    # # """EP WEIGHT PLOTS"""
+    # ep_weights()
+    #
+    # print("\nEP PLOTS DONE")
 
     ###################################
     ## RAW DATA CLASSIFICATION

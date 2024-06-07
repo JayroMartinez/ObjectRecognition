@@ -2938,6 +2938,8 @@ def print_syn_results(type, discard):
 
 def early_fine_vs_coarse():
 
+    """NOT IN USE ANYMORE"""
+
     plt.close()
     plt.clf()
 
@@ -2956,8 +2958,6 @@ def early_fine_vs_coarse():
 
 def syn_fine_vs_coarse_fam(type):
 
-    num_syns_side = 4
-
     if type == 'cluster':
         kin_score_df = pd.read_csv('./results/Syn/scores/reordered_kin_scores.csv', index_col=0)
     else:
@@ -2965,6 +2965,7 @@ def syn_fine_vs_coarse_fam(type):
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
+    num_syns_side = 4
     selected_syns = list(kin_score_df.columns[:num_syns_side]) + list(kin_score_df.columns[-num_syns_side:])
 
     fine_families = ['Cutlery', 'Geometric']
@@ -3037,6 +3038,9 @@ def syn_fine_vs_coarse_ep(type):
 
     extra_data = pd.read_csv('./results/Syn/extra_data.csv')
 
+    num_syns_side = 4
+    selected_syns = list(kin_score_df.columns[:num_syns_side]) + list(kin_score_df.columns[-num_syns_side:])
+
     # fine_eps = ['edge following', 'function test']
     # coarse_eps = ['enclosure', 'weighting', 'pressure', 'enclosure part']
     fine_eps = ['enclosure part', 'rotation', 'function test', 'edge following', 'translation']
@@ -3045,10 +3049,10 @@ def syn_fine_vs_coarse_ep(type):
     coarse_idx = extra_data.loc[extra_data['EP'].isin(coarse_eps)]
 
     fine_df = kin_score_df.iloc[fine_idx.index]
-    selected_fine = fine_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+    selected_fine = fine_df[selected_syns].abs()
 
     coarse_df = kin_score_df.iloc[coarse_idx.index]
-    selected_coarse = coarse_df[['0', '1', '2', '3', '15', '16', '17', '18']].abs()
+    selected_coarse = coarse_df[selected_syns].abs()
 
     selected_fine['Condition'] = 'Fine'
     selected_coarse['Condition'] = 'Coarse'
@@ -3068,8 +3072,8 @@ def syn_fine_vs_coarse_ep(type):
 
     # Step 3: Statistical Test and Step 4: Annotation
     # Perform statistical tests, check direction, and annotate
-    columns = ['0', '1', '2', '3', '15', '16', '17', '18']
-    for i, column in enumerate(columns):
+
+    for i, column in enumerate(selected_syns):
         groupA = selected_fine[column]  # Fine group
         groupB = selected_coarse[column]  # Coarse group
         stat, p_value = mannwhitneyu(groupA, groupB, alternative='two-sided')
