@@ -384,25 +384,25 @@ def main():
     # ep_all_suj_syn_one_subject_out()
 
     # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
-    ep_classification_plots('syn')
-    ep_classification_plots('raw')
-    ep_classification_plots('syn_raw_suj')
-    ep_classification_plots('syn_raw_no_suj')
-
-    ep_all_suj_plots()
+    # ep_classification_plots('syn')
+    # ep_classification_plots('raw')
+    # ep_classification_plots('syn_raw_suj')
+    # ep_classification_plots('syn_raw_no_suj')
+    #
+    # ep_all_suj_plots()
 
     ###########################################################
     ## SUBJECT CLUSTERING
     ###########################################################
 
-    build_subject_clusters()
+    # build_subject_clusters()
 
     ###########################################################
     ## EP CLUSTERING
     ###########################################################
 
     build_ep_clusters(split_df)
-    extract_ep_syns_per_cluster(split_df)
+    # extract_ep_syns_per_cluster(split_df)
 
 if __name__ == "__main__":
     main()
