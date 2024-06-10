@@ -528,8 +528,8 @@ def ep_all_suj_syn_one_subject_out():
 
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
-    emg_bins = emg_params[0]
-    tact_bins = tact_params[0]
+    # emg_bins = emg_params[0]
+    # tact_bins = tact_params[0]
     # perc_syns = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
     # families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
     l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
@@ -563,18 +563,17 @@ def ep_all_suj_syn_one_subject_out():
         # REMOVE NANs
         data_clean = to_pca.dropna(axis=0, how='any')
 
-        kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'IndexMPJ', 'IndexPIJ',
-                    'MiddleMPJ', 'MiddlePIJ', 'RingMIJ', 'RingPIJ', 'PinkieMPJ',
-                    'PinkiePIJ', 'PalmArch', 'WristPitch', 'WristYaw', 'Index_Proj_J1_Z',
-                    'Pinkie_Proj_J1_Z', 'Ring_Proj_J1_Z', 'Middle_Proj_J1_Z',
-                    'Thumb_Proj_J1_Z']
+        kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                    'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                    'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                    'WristPitch', 'WristYaw']
 
-        emg_cols = [col for col in data_clean.columns if ('flexion' in col) or ('extension' in col)]
-        tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
-                     'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
-                     'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
-                     'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
-                     'pdl', 'pdr', 'pdlo', 'lpo']
+        # emg_cols = [col for col in data_clean.columns if ('flexion' in col) or ('extension' in col)]
+        # tact_cols = ['rmo', 'mdo', 'rmi', 'mmo', 'pcim', 'ldd', 'rmm', 'rp', 'rdd', 'lmi', 'rdo', 'lmm', 'lp', 'rdm',
+        #              'ldm', 'ptip', 'idi', 'mdi', 'ido', 'mmm', 'ipi', 'mdm', 'idd', 'idm', 'imo', 'pdi', 'mmi', 'pdm',
+        #              'imm', 'mdd', 'pdii', 'mp', 'ptod', 'ptmd', 'tdo', 'pcid', 'imi', 'tmm', 'tdi', 'tmi', 'ptop',
+        #              'ptid', 'ptmp', 'tdm', 'tdd', 'tmo', 'pcip', 'ip', 'pcmp', 'rdi', 'ldi', 'lmo', 'pcmd', 'ldo',
+        #              'pdl', 'pdr', 'pdlo', 'lpo']
 
         train_split_df = split(data_clean)
         train_split_df['Trial num'] = train_split_df['Trial num'].astype('str')
@@ -599,8 +598,9 @@ def ep_all_suj_syn_one_subject_out():
         target_transformed = np.dot(target_scaled, kin_syns)
 
         # # NON-NUMERIC DATA EXTRACTION & SAVING
-        extra_cols = [col for col in data_clean.columns if
-                      (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+        # extra_cols = [col for col in data_clean.columns if
+        #               (col not in kin_cols) and (col not in emg_cols) and (col not in tact_cols)]
+        extra_cols = [col for col in data_clean.columns if col not in kin_cols]
 
         train_extra_data = train_split_df[extra_cols]
         target_extra_data = target_split_df[extra_cols]

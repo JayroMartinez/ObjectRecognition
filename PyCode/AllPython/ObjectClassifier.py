@@ -333,13 +333,13 @@ def main():
     ###########################################################
     ## FINE vs COARSE CHECKS
     ###########################################################
-    # early_fine_vs_coarse()
-
-    # syn_fine_vs_coarse_fam('cluster')
-    syn_fine_vs_coarse_fam('all')
-
-    # syn_fine_vs_coarse_ep('cluster')
-    syn_fine_vs_coarse_ep('all')
+    # # early_fine_vs_coarse()
+    #
+    # # syn_fine_vs_coarse_fam('cluster')
+    # syn_fine_vs_coarse_fam('all')
+    #
+    # # syn_fine_vs_coarse_ep('cluster')
+    # syn_fine_vs_coarse_ep('all')
 
     ###########################################################
     ## DISTANCE CHECK
@@ -352,34 +352,34 @@ def main():
     ## TARGETING FAMILY
     ###########################################################
 
-    """RAW CLASSIFICATION"""
-    kinematic_family_classification(split_df)
-
-    # ['all', 'clustering', 'early'] ['less', 'most']
-    fam_syn_single_source_classification('all', 'less')
-    print("\nFamily classification from syn scores discarding less relevant components DONE!")
-    fam_syn_single_source_classification('all', 'most')
-    print("\nFamily classification from syn scores discarding most relevant components DONE!")
-
-    print_syn_results_alternative('most')
-    print_syn_results_alternative('less')
+    # """RAW CLASSIFICATION"""
+    # kinematic_family_classification(split_df)
+    #
+    # # ['all', 'clustering', 'early'] ['less', 'most']
+    # fam_syn_single_source_classification('all', 'less')
+    # print("\nFamily classification from syn scores discarding less relevant components DONE!")
+    # fam_syn_single_source_classification('all', 'most')
+    # print("\nFamily classification from syn scores discarding most relevant components DONE!")
+    #
+    # print_syn_results_alternative('most')
+    # print_syn_results_alternative('less')
 
     ###########################################################
     ## TARGETING EP
     ###########################################################
 
-    ep_from_raw_classif(split_df, False)
-    print("\nEP classification from raw scores without subjects DONE!")
-
-    ep_from_raw_classif(split_df, True)
-    print("\nEP classification from raw scores with subjects DONE!")
-
-    # # include_subjects = [true/false]
-    ep_from_scores_classif(False)
-    print("\nEP classification from syn scores without subjects DONE!")
-
-    ep_from_scores_classif(True)
-    print("\nEP classification from syn scores with subjects DONE!")
+    # ep_from_raw_classif(split_df, False)
+    # print("\nEP classification from raw scores without subjects DONE!")
+    #
+    # ep_from_raw_classif(split_df, True)
+    # print("\nEP classification from raw scores with subjects DONE!")
+    #
+    # # # include_subjects = [true/false]
+    # ep_from_scores_classif(False)
+    # print("\nEP classification from syn scores without subjects DONE!")
+    #
+    # ep_from_scores_classif(True)
+    # print("\nEP classification from syn scores with subjects DONE!")
 
     ep_all_suj_syn_one_subject_out()
 
