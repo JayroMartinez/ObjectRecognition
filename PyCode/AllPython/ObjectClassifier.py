@@ -381,7 +381,7 @@ def main():
     # ep_from_scores_classif(True)
     # print("\nEP classification from syn scores with subjects DONE!")
 
-    ep_all_suj_syn_one_subject_out()
+    # ep_all_suj_syn_one_subject_out()
 
     # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     ep_classification_plots('syn')

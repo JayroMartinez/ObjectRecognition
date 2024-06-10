@@ -457,7 +457,8 @@ def ep_classification_plots(type):
 
     # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     if type == 'syn':
-        a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        # a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        a_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
         b_file = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
     elif type == 'raw':
         a_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
@@ -466,7 +467,8 @@ def ep_classification_plots(type):
         a_file = './results/Syn/accuracy/ep_alternative_syn_suj_results.csv'
         b_file = './results/Raw/accuracy/ep_alternative_raw_suj_results.csv'
     else: # syn_raw_no_suj
-        a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        # a_file = './results/Syn/accuracy/ep_alternative_syn_results.csv'
+        a_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
         b_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
 
     a_df = pd.read_csv(a_file, header=None)
