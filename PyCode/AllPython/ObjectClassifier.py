@@ -58,72 +58,75 @@ from ep_modelling import ep_classification_plots
 from synergy_pipeline import print_syn_results_alternative
 from classification import kinematic_family_classification
 from ep_modelling import ep_all_suj_syn_one_subject_out
+from ep_modelling import ep_clust_suj_syn_one_subject_out
 from ep_modelling import ep_all_suj_plots
+from ep_modelling import ep_clust_suj_plots
 from ep_modelling import build_subject_clusters
 from ep_modelling import build_ep_clusters
-from ep_modelling import extract_ep_syns_per_cluster
 from stat_analysis import check_kinematics
+from aux_get_best_param import best_parameter_combination_across_families
+from feature_stats import feature_plots
 
 def main():
 
-    data_folder = '/BIDSData'
-    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
-
-    # """WE ARE REMOVING SUBJECTS 7 TO 9"""
-    # ##########################################################################################################################
-    # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
-    # ##########################################################################################################################
-
-    data_df = pd.DataFrame()
-
-    ep_presabs_df = pd.DataFrame()
-    ep_dur_df = pd.DataFrame()
-    ep_count_df = pd.DataFrame()
-
-    for subject in subject_folders:  # load data for each subject
-        """LOAD RAW DATA"""
-        subject_df = load(subject)
-        data_df = pd.concat([data_df, subject_df], ignore_index=True)
-
-        # """LOAD EP TRIALS"""
-        [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
-        ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
-        ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
-        ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
-
-    print("\nDATA LOADED")
-
-    """RAW DATA PREPROCESSING"""
-    split_df = split(data_df)  # split data into trials and EPs and add fields
-    split_df['Trial num'] = split_df['Trial num'].astype('str')
-    split_df['EP num'] = split_df['EP num'].astype('str')
-    print("\nDATA PREPROCESSED")
-
-    # """CHECK MIDDLE FINGER VALUES"""
-    # plt.figure()
-    # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
-    # plt.xticks(rotation=45, size=5)
-    # plt.show()
-    # plt.savefig('./MiddleMPJ.png')
-    # plt.close()
-
-    """REMOVE DOUBLE EP TRIALS"""
-    to_remove = [x for x in split_df['EP'].unique() if '+' in x]
-    split_df = split_df[~split_df['EP'].isin(to_remove)]
-    ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
-    ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
-    ep_count_df = ep_count_df.drop(to_remove, axis=1)
-    print("\nREMOVED DOUBLE EPs")
-
-    """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
-    split_df.loc[split_df['EP'] == 'edge following', 'EP'] = 'contour following'
-    ep_presabs_df['contour following'] = ep_presabs_df['contour following'] + ep_presabs_df['edge following']
-    ep_presabs_df = ep_presabs_df.drop(columns=['edge following'])
-    ep_dur_df['contour following'] = ep_dur_df['contour following'] + ep_dur_df['edge following']
-    ep_dur_df = ep_dur_df.drop(columns=['edge following'])
-    ep_count_df['contour following'] = ep_count_df['contour following'] + ep_count_df['edge following']
-    ep_count_df = ep_count_df.drop(columns=['edge following'])
-    print("\nREPLACED EDGE FOLLOWING BY CONTOUR FOLLOWING")
+    # data_folder = '/BIDSData'
+    # subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+    #
+    # # """WE ARE REMOVING SUBJECTS 7 TO 9"""
+    # # ##########################################################################################################################
+    # # [subject_folders.remove(x) for x in ['sub-07', 'sub-08', 'sub-09']]
+    # # ##########################################################################################################################
+    #
+    # data_df = pd.DataFrame()
+    #
+    # ep_presabs_df = pd.DataFrame()
+    # ep_dur_df = pd.DataFrame()
+    # ep_count_df = pd.DataFrame()
+    #
+    # for subject in subject_folders:  # load data for each subject
+    #     """LOAD RAW DATA"""
+    #     subject_df = load(subject)
+    #     data_df = pd.concat([data_df, subject_df], ignore_index=True)
+    #
+    #     # """LOAD EP TRIALS"""
+    #     [subject_ep_presabs, subject_ep_dur, subject_ep_count] = load_eps(subject)
+    #     ep_presabs_df = pd.concat([ep_presabs_df, subject_ep_presabs], ignore_index=True)
+    #     ep_dur_df = pd.concat([ep_dur_df, subject_ep_dur], ignore_index=True)
+    #     ep_count_df = pd.concat([ep_count_df, subject_ep_count], ignore_index=True)
+    #
+    # print("\nDATA LOADED")
+    #
+    # """RAW DATA PREPROCESSING"""
+    # split_df = split(data_df)  # split data into trials and EPs and add fields
+    # split_df['Trial num'] = split_df['Trial num'].astype('str')
+    # split_df['EP num'] = split_df['EP num'].astype('str')
+    # print("\nDATA PREPROCESSED")
+    #
+    # # """CHECK MIDDLE FINGER VALUES"""
+    # # plt.figure()
+    # # sns.boxplot(data=split_df, x="Subject", y="MiddleMPJ")
+    # # plt.xticks(rotation=45, size=5)
+    # # plt.show()
+    # # plt.savefig('./MiddleMPJ.png')
+    # # plt.close()
+    #
+    # """REMOVE DOUBLE EP TRIALS"""
+    # to_remove = [x for x in split_df['EP'].unique() if '+' in x]
+    # split_df = split_df[~split_df['EP'].isin(to_remove)]
+    # ep_presabs_df = ep_presabs_df.drop(to_remove, axis=1)
+    # ep_dur_df = ep_dur_df.drop(to_remove, axis=1)
+    # ep_count_df = ep_count_df.drop(to_remove, axis=1)
+    # print("\nREMOVED DOUBLE EPs")
+    #
+    # """REPLACE CONTOUR FOLLOWING BY EDGE FOLLOWING"""
+    # split_df.loc[split_df['EP'] == 'edge following', 'EP'] = 'contour following'
+    # ep_presabs_df['contour following'] = ep_presabs_df['contour following'] + ep_presabs_df['edge following']
+    # ep_presabs_df = ep_presabs_df.drop(columns=['edge following'])
+    # ep_dur_df['contour following'] = ep_dur_df['contour following'] + ep_dur_df['edge following']
+    # ep_dur_df = ep_dur_df.drop(columns=['edge following'])
+    # ep_count_df['contour following'] = ep_count_df['contour following'] + ep_count_df['edge following']
+    # ep_count_df = ep_count_df.drop(columns=['edge following'])
+    # print("\nREPLACED EDGE FOLLOWING BY CONTOUR FOLLOWING")
 
     # """CHECK KINEMATIC DATA DISTRIBUTION"""
     # check_kinematics(split_df)
@@ -174,6 +177,7 @@ def main():
     # # """EP WEIGHT PLOTS"""
     # ep_weights()
     #
+    # feature_plots(ep_presabs_df, ep_dur_df, ep_count_df)
     # print("\nEP PLOTS DONE")
 
     ###################################
@@ -231,33 +235,33 @@ def main():
     ###########################################################
 
     # """single source"""
-    # syn_single_source_classification('all', 'less')
-    # get_best_params_single('all', 'less')
-    # print("\nSingle source classification for all subjects discarding the less relevant DONE!")
+    # syn_single_source_classification('all', 'least')
+    # get_best_params_single('all', 'least')
+    # print("\nSingle source classification for all subjects discarding the least relevant DONE!")
     #
     # syn_single_source_classification('all', 'most')
     # get_best_params_single('all', 'most')
     # print("\nSingle source classification for all subjects discarding the most relevant DONE!")
     #
     # """multisource"""
-    # multisource_syn_classification('all', 'less')
-    # get_best_params_multi('all', 'less')
-    # print("\nMultisource classification for all subjects discarding the less relevant DONE!")
+    # multisource_syn_classification('all', 'least')
+    # get_best_params_multi('all', 'least')
+    # print("\nMultisource classification for all subjects discarding the least relevant DONE!")
     #
     # multisource_syn_classification('all', 'most')
     # get_best_params_multi('all', 'most')
     # print("\nMultisource classification for all subjects discarding the most relevant DONE!")
     #
     # """hierarchical"""
-    # hierarchical_syn_classification('all', 'less')
-    # get_best_params_hier('all', 'less')
-    # print("\nHierarchical classification for all subjects discarding the less relevant DONE!")
+    # hierarchical_syn_classification('all', 'least')
+    # get_best_params_hier('all', 'least')
+    # print("\nHierarchical classification for all subjects discarding the least relevant DONE!")
     #
     # hierarchical_syn_classification('all', 'most')
     # get_best_params_hier('all', 'most')
     # print("\nHierarchical classification for all subjects discarding the most relevant DONE!")
     #
-    # print_syn_results('all', 'less')
+    # print_syn_results('all', 'least')
     # print_syn_results('all', 'most')
 
     ###########################################################
@@ -265,33 +269,33 @@ def main():
     ###########################################################
 
     # """single source"""
-    # syn_single_source_classification('clustering', 'less')
-    # get_best_params_single('clustering', 'less')
-    # print("\nSingle source classification for each subject with clustering discarding the less relevant DONE!")
+    # syn_single_source_classification('clustering', 'least')
+    # get_best_params_single('clustering', 'least')
+    # print("\nSingle source classification for each subject with clustering discarding the least relevant DONE!")
     #
     # syn_single_source_classification('clustering', 'most')
     # get_best_params_single('clustering', 'most')
     # print("\nSingle source classification for each subject with clustering discarding the most relevant DONE!")
     #
     # """multisource"""
-    # multisource_syn_classification('clustering', 'less')
-    # get_best_params_multi('clustering', 'less')
-    # print("\nMultisource classification for each subject with clustering discarding the less relevant DONE!")
+    # multisource_syn_classification('clustering', 'least')
+    # get_best_params_multi('clustering', 'least')
+    # print("\nMultisource classification for each subject with clustering discarding the least relevant DONE!")
     #
     # multisource_syn_classification('clustering', 'most')
     # get_best_params_multi('clustering','most')
     # print("\nMultisource classification for each subject with clustering discarding the most relevant DONE!")
     #
     # """hierarchical"""
-    # hierarchical_syn_classification('clustering', 'less')
-    # get_best_params_hier('clustering', 'less')
-    # print("\nHierarchical classification for each subject with clustering discarding the less relevant DONE!")
+    # hierarchical_syn_classification('clustering', 'least')
+    # get_best_params_hier('clustering', 'least')
+    # print("\nHierarchical classification for each subject with clustering discarding the least relevant DONE!")
     #
     # hierarchical_syn_classification('clustering', 'most')
     # get_best_params_hier('clustering', 'most')
     # print("\nHierarchical classification for each subject with clustering discarding the most relevant DONE!")
 
-    # print_syn_results('clustering', 'less')
+    # print_syn_results('clustering', 'least')
     # print_syn_results('clustering', 'most')
 
     ###########################################################
@@ -301,33 +305,33 @@ def main():
     # extract_early_enclosure_alt()
     #
     # """single source"""
-    # syn_single_source_classification('early', 'less')
-    # get_best_params_single('early', 'less')
-    # print("\nSingle source classification for early enclosure discarding the less relevant DONE!")
+    # syn_single_source_classification('early', 'least')
+    # get_best_params_single('early', 'least')
+    # print("\nSingle source classification for early enclosure discarding the least relevant DONE!")
     #
     # syn_single_source_classification('early', 'most')
     # get_best_params_single('early', 'most')
     # print("\nSingle source classification for early enclosure discarding the most relevant DONE!")
     #
     # """multisource"""
-    # multisource_syn_classification('early', 'less')
-    # get_best_params_multi('early', 'less')
-    # print("\nMultisource classification for early enclosure discarding the less relevant DONE!")
+    # multisource_syn_classification('early', 'least')
+    # get_best_params_multi('early', 'least')
+    # print("\nMultisource classification for early enclosure discarding the least relevant DONE!")
     #
     # multisource_syn_classification('early', 'most')
     # get_best_params_multi('early', 'most')
     # print("\nMultisource classification for early enclosure discarding the most relevant DONE!")
     #
     # """hierarchical"""
-    # hierarchical_syn_classification('early', 'less')
-    # get_best_params_hier('early', 'less')
-    # print("\nHierarchical classification for early enclosure discarding the less relevant DONE!")
+    # hierarchical_syn_classification('early', 'least')
+    # get_best_params_hier('early', 'least')
+    # print("\nHierarchical classification for early enclosure discarding the least relevant DONE!")
     #
     # hierarchical_syn_classification('early', 'most')
     # get_best_params_hier('early', 'most')
     # print("\nHierarchical classification for early enclosure discarding the most relevant DONE!")
     #
-    # print_syn_results('early', 'less')
+    # print_syn_results('early', 'least')
     # print_syn_results('early', 'most')
 
     ###########################################################
@@ -355,14 +359,14 @@ def main():
     # """RAW CLASSIFICATION"""
     # kinematic_family_classification(split_df)
     #
-    # # ['all', 'clustering', 'early'] ['less', 'most']
-    # fam_syn_single_source_classification('all', 'less')
-    # print("\nFamily classification from syn scores discarding less relevant components DONE!")
+    # # ['all', 'clustering', 'early'] ['least', 'most']
+    # fam_syn_single_source_classification('all', 'least')
+    # print("\nFamily classification from syn scores discarding the least relevant components DONE!")
     # fam_syn_single_source_classification('all', 'most')
     # print("\nFamily classification from syn scores discarding most relevant components DONE!")
     #
     # print_syn_results_alternative('most')
-    # print_syn_results_alternative('less')
+    # print_syn_results_alternative('least')
 
     ###########################################################
     ## TARGETING EP
@@ -382,6 +386,8 @@ def main():
     # print("\nEP classification from syn scores with subjects DONE!")
 
     # ep_all_suj_syn_one_subject_out()
+    ep_clust_suj_syn_one_subject_out()  # Leave-one-subject-out by clusters
+
 
     # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
     # ep_classification_plots('syn')
@@ -390,6 +396,7 @@ def main():
     # ep_classification_plots('syn_raw_no_suj')
     #
     # ep_all_suj_plots()
+    ep_clust_suj_plots()
 
     ###########################################################
     ## SUBJECT CLUSTERING
@@ -401,8 +408,22 @@ def main():
     ## EP CLUSTERING
     ###########################################################
 
-    build_ep_clusters(split_df)
-    # extract_ep_syns_per_cluster(split_df)
+    # build_ep_clusters(split_df)
+
+    ################################
+    ## EXTRA
+    ################################
+    # """GET BEST CLASSIFICATION ACCURACY DEPENDING ON THE METHOD"""
+    # log_reg_file = './results/Raw/accuracy/raw_results.csv'
+    # mini_batch_file = './results/Raw/accuracy/raw_fam_results.csv'
+    #
+    # log_reg_df = pd.read_csv(log_reg_file)
+    # mini_batch_df = pd.read_csv(mini_batch_file)
+    #
+    # print("\nBest results with LogReg classifier:")
+    # best_parameter_combination_across_families(log_reg_df)
+    # print("\nBest results with MiniBatch classifier:")
+    # best_parameter_combination_across_families(mini_batch_df)
 
 if __name__ == "__main__":
     main()

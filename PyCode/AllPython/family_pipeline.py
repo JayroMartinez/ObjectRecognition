@@ -44,7 +44,7 @@ def get_best_params_hier(type, discard):
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn_hier'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '_results.csv'
     else:
         res_file_name += '_results_decr.csv'
@@ -81,7 +81,7 @@ def get_best_params_hier(type, discard):
     else:  # early enclosure
         best_file_name = './results/Early Enclosure/alternative_best_syn_params'
 
-    if discard == 'less':
+    if discard == 'least':
         best_file_name += '.csv'
     else:
         best_file_name += '_decr.csv'
@@ -99,7 +99,7 @@ def get_best_params_multi(type, discard):
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn_multi'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '_results.csv'
     else:
         res_file_name += '_results_decr.csv'
@@ -139,7 +139,7 @@ def get_best_params_multi(type, discard):
     else:  # early enclosure
         best_file_name = './results/Early Enclosure/alternative_best_syn_params'
 
-    if discard == 'less':
+    if discard == 'least':
         best_file_name += '.csv'
     else:
         best_file_name += '_decr.csv'
@@ -157,7 +157,7 @@ def get_best_params_single(type, discard):
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '_results.csv'
     else:
         res_file_name += '_results_decr.csv'
@@ -243,7 +243,7 @@ def get_best_params_single(type, discard):
     else:  # early enclosure
         best_file_name = './results/Early Enclosure/alternative_best_syn_params'
 
-    if discard == 'less':
+    if discard == 'least':
         best_file_name += '.csv'
     else:
         best_file_name += '_decr.csv'
@@ -269,7 +269,7 @@ def fam_kin_syn_classif(input_data):
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
 
-    if discard == 'less':
+    if discard == 'least':
         data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)  # keeps most relevant
     else:
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1) # discards most relevant
@@ -403,7 +403,7 @@ def emg_pca_syn_classif(input_data):
     extra_data.reset_index(inplace=True, drop=True)
     emg_pca_scores.reset_index(inplace=True, drop=True)
 
-    if discard == 'less':
+    if discard == 'least':
         data_df = pd.concat([emg_pca_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)  # keeps most relevant
     else:
         data_df = pd.concat([emg_pca_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
@@ -503,7 +503,7 @@ def fam_tact_syn_classif(input_data):
     extra_data.reset_index(inplace=True, drop=True)
     tact_scores.reset_index(inplace=True, drop=True)
 
-    if discard == 'less':
+    if discard == 'least':
         data_df = pd.concat([tact_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1) # keeps most relevant
     else:
         data_df = pd.concat([tact_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
@@ -614,7 +614,7 @@ def fam_syn_single_source_classification(type, discard):
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/fam_alternative_syn_results'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '.csv'
     else:
         res_file_name += '_decr.csv'
@@ -687,7 +687,7 @@ def hierarchical_syn_classification(type, discard):
         res_file_name = './results/Early Enclosure/accuracy/fam_alternative_syn_hier_results'
         best_params_file = './results/Early Enclosure/fam_alternative_best_syn_params'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '.csv'
         best_params_file += '.csv'
     else:
@@ -731,7 +731,7 @@ def hierarchical_syn_classification(type, discard):
             num_syn_tact = np.ceil(len(tact_score_df.columns) * p / 100)
 
             # SELECT SYNERGIES
-            if discard == 'less':
+            if discard == 'least':
                 kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
                 kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
                 emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
@@ -983,7 +983,7 @@ def multi_aux_classification(input_data):
     num_syn_tact = np.ceil(len(tact_score_df.columns) * perc / 100)
 
     # SELECT SYNERGIES
-    if discard == 'less':
+    if discard == 'least':
         kin_scores = pd.concat([kin_score_df.iloc[:, :int(num_syn_kin)], extra_data], axis=1, ignore_index=True)
         kin_scores.columns = list(kin_score_df.columns[:int(num_syn_kin)]) + list(extra_data.columns)
         emg_scores = pd.concat([emg_score_df.iloc[:, :int(num_syn_emg)], extra_data], axis=1, ignore_index=True)
@@ -1173,7 +1173,7 @@ def multisource_syn_classification(type, discard):
     else:  # early enclosure
         res_file_name = './results/Early Enclosure/accuracy/alternative_syn_multi_results'
 
-    if discard == 'less':
+    if discard == 'least':
         res_file_name += '.csv'
     else:
         res_file_name += '_decr.csv'

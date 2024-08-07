@@ -85,11 +85,12 @@ def raw_weights():
 
         # plot for weight evolution over time bins
         # kinematic data plot
-        plt.figure()
+        fig, ax = plt.subplots()
         sns.lineplot(data=kin_time_w).set(title='Weight evolution over time bins for Kinematic Data\nFamily: ' + family)
         plt.ylabel('Weight Sum')
         plt.xlabel('Time Bins')
-        plt.savefig('./results/Raw/time_weights_Kin_' + family + '.png', dpi=600)
+        # plt.savefig('./results/Raw/time_weights_Kin_' + family + '.png', dpi=600)
+        plt.savefig('./results/Raw/time_weights_Kin_' + family + '.svg', format='svg', dpi=600)
         plt.close()
 
         # WEIGHTS OVER VARIABLES
@@ -103,12 +104,13 @@ def raw_weights():
         kin_fin_w = kin_obj_w_df.append(pd.Series(data=kin_tot_w, index=kin_cols, name='Total'))
 
         # heatmap weights
-        plt.figure()
+        fig, ax = plt.subplots()
         g = sns.heatmap(data=kin_fin_w, annot=False, cmap="Greys")
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
-        g.set_xticklabels(labels=kin_fin_w.columns, rotation=45, size=8)
+        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        g.set_xticklabels(labels=kin_fin_w.columns, rotation=45, size=10)
         plt.title('Kinematic weights for family: ' + family)
-        plt.savefig('./results/Raw/var_weights_kin_' + family + '.png', dpi=600)
+        # plt.savefig('./results/Raw/var_weights_kin_' + family + '.png', dpi=600)
+        plt.savefig('./results/Raw/var_weights_kin_' + family + '.svg', format='svg', dpi=600)
         # plt.show()
         plt.close()
 
@@ -122,6 +124,7 @@ def ep_weights():
                     'function test', 'pressure',
                     'rotation', 'translation', 'weighting']
 
+
     fam_obj = dict(
         Mugs=['CeramicMug', 'Glass', 'MetalMug'],
         Plates=['CeramicPlate', 'MetalPlate', 'PlasticPlate'],
@@ -133,191 +136,253 @@ def ep_weights():
     for family in families:
         """Here we don't analyse the results based on the asked object, just those based on the given object"""
 
-        ##########################
-        ## Obj EP Pres/Abs      ##
-        ##########################
+        # ##########################
+        # ## Obj EP Pres/Abs      ##
+        # ##########################
+        #
+        # ep_presabs_w = []
+        # ep_presabs_weights_file = result_file = open('./results/EP/weights/w_giv_EP_PresAbs_' + family + '.csv', 'r')
+        #
+        # with open('./results/EP/weights/w_giv_EP_PresAbs_' + family + '.csv', 'r') as ep_presabs_data:
+        #
+        #     ep_presabs_reader = csv.reader(ep_presabs_data)
+        #     for row in ep_presabs_reader:
+        #         ep_presabs_w.append(row)
+        #
+        # ep_presabs_w = np.asarray(ep_presabs_w, dtype=float)
+        #
+        # # absolute value for weights (NOPE, obsolete)
+        # ep_presabs_abs_w = ep_presabs_w
+        #
+        # aux_ep_presabs_obj_1 = []
+        # aux_ep_presabs_obj_2 = []
+        # aux_ep_presabs_obj_3 = []
+        # for i in range(0, int(len(ep_presabs_abs_w) / 3)):
+        #     aux_ep_presabs_obj_1.append(ep_presabs_abs_w[3 * i])
+        #     aux_ep_presabs_obj_2.append(ep_presabs_abs_w[3 * i + 1])
+        #     aux_ep_presabs_obj_3.append(ep_presabs_abs_w[3 * i + 2])
+        # ep_presabs_cv_w = []
+        # ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_1, axis=0))  # mean by column
+        # ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_2, axis=0))  # mean by column
+        # ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_3, axis=0))  # mean by column
+        #
+        # # WEIGHTS OVER VARIABLES
+        # ep_presabs_lab = fam_obj[family] * int(len(ep_presabs_cv_w) / 3)
+        # ep_presabs_w_df = pd.DataFrame(data=ep_presabs_cv_w, columns=ep_labs_cols)
+        # scaler = MinMaxScaler(feature_range=(-1, 1))
+        # # ep_presabs_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_presabs_w_df_fam[ep_labs_cols])
+        # ep_presabs_w_df = pd.DataFrame(
+        #     scaler.fit_transform(ep_presabs_w_df.T).T,  # Transpose, scale, and transpose back
+        #     columns=ep_labs_cols,
+        #     index=ep_presabs_w_df.index
+        # )
+        # ep_presabs_w_df['Family'] = ep_presabs_lab
+        #
+        # ep_presabs_obj_w_df = ep_presabs_w_df.groupby('Family')[ep_labs_cols].sum()
+        # ep_presabs_tot_w = ep_presabs_obj_w_df.abs().mean()
+        # ep_presabs_fin_w = pd.DataFrame(data=ep_presabs_obj_w_df)
+        # idx = ep_presabs_fin_w.index.tolist()
+        # idx.append('Total')
+        # # ep_presabs_tot_w_fam = total_scaler.fit_transform(ep_presabs_tot_w_fam.values.reshape(1, -1)).flatten()
+        # values = ep_presabs_tot_w.values  # Ensure it's an array of values
+        # min_val = values.min()
+        # max_val = values.max()
+        # if max_val > min_val:
+        #     normalized_total = (values - min_val) / (max_val - min_val)
+        # else:
+        #     normalized_total = np.zeros_like(values)
+        # ep_presabs_fin_w.loc['Total'] = normalized_total
+        #
+        # # heatmap weights
+        # center = 0
+        # min = ep_presabs_fin_w.min().min()
+        # max = ep_presabs_fin_w.max().max()
+        # new_margin = np.maximum(min,max)
+        # normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
+        #
+        # colorblind_palette = sns.color_palette("colorblind")
+        # new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
+        #
+        # # fig, ax = plt.subplots()
+        # # Create the figure and the first set of axes
+        # fig, ax = plt.subplots()
+        # g = sns.heatmap(data=ep_presabs_fin_w, annot=False, norm=normalize, cmap=new_colormap)
+        # ep_presabs_fin_w.columns = [col.replace(' ', '\n') for col in ep_presabs_fin_w.columns]
+        # g.set_xticklabels(labels=ep_presabs_fin_w.columns, rotation=45, size=10)
+        # g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # # Adjust the colorbar label
+        # cbar = g.collections[0].colorbar
+        # cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        # ax.set_ylabel('')  # This sets the y-axis label to an empty string
+        # plt.title('Pres/Abs EP Labels weights for family: ' + family)
+        # plt.tight_layout()
+        # # plt.savefig('./results/EP/plots/var_weights_giv_ep_presabs_' + family + '.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_giv_ep_presabs_' + family + '.svg', format='svg', dpi=600)
+        # plt.close()
 
-        ep_presabs_w = []
-        ep_presabs_weights_file = result_file = open('./results/EP/weights/w_giv_EP_PresAbs_' + family + '.csv', 'r')
+        # ##########################
+        # ## Obj EP Duration      ##
+        # ##########################
+        #
+        # ep_dur_w = []
+        # ep_dur_weights_file = result_file = open('./results/EP/weights/w_giv_EP_Dur_' + family + '.csv', 'r')
+        #
+        # with open('./results/EP/weights/w_giv_EP_Dur_' + family + '.csv', 'r') as ep_dur_data:
+        #
+        #     ep_dur_reader = csv.reader(ep_dur_data)
+        #     for row in ep_dur_reader:
+        #         ep_dur_w.append(row)
+        #
+        # ep_dur_w = np.asarray(ep_dur_w, dtype=float)
+        #
+        # # absolute value for weights
+        # ep_dur_abs_w = ep_dur_w
+        #
+        # aux_ep_dur_obj_1 = []
+        # aux_ep_dur_obj_2 = []
+        # aux_ep_dur_obj_3 = []
+        # for i in range(0, int(len(ep_dur_abs_w) / 3)):
+        #     aux_ep_dur_obj_1.append(ep_dur_abs_w[3 * i])
+        #     aux_ep_dur_obj_2.append(ep_dur_abs_w[3 * i + 1])
+        #     aux_ep_dur_obj_3.append(ep_dur_abs_w[3 * i + 2])
+        # ep_dur_cv_w = []
+        # ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_1, axis=0))  # mean by column
+        # ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_2, axis=0))  # mean by column
+        # ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_3, axis=0))  # mean by column
+        #
+        # # WEIGHTS OVER VARIABLES
+        # # ep_dur_lab = fam_obj[family] * int(len(ep_dur_cv_w) / 3)
+        # # ep_dur_w_df = pd.DataFrame(data=ep_dur_cv_w, columns=ep_labs_cols)
+        # # ep_dur_w_df['Object'] = ep_dur_lab
+        # #
+        # # ep_dur_obj_w_df = ep_dur_w_df.groupby('Object')[ep_labs_cols].sum()
+        # # ep_dur_tot_w = ep_dur_obj_w_df.abs().mean()
+        # # ep_dur_fin_w = pd.DataFrame(data=ep_dur_obj_w_df)
+        # # aux_ep_dur_tot_w = ep_dur_tot_w.values.reshape(-1, 1)
+        # # norm_scaler = MinMaxScaler()
+        # # aux_ep_dur_tot_w = norm_scaler.fit_transform(aux_ep_dur_tot_w)
+        # # ep_dur_fin_w.loc['Total'] = aux_ep_dur_tot_w.flatten()
+        #
+        # ep_dur_lab = fam_obj[family] * int(len(ep_dur_cv_w) / 3)
+        # ep_dur_w_df = pd.DataFrame(data=ep_dur_cv_w, columns=ep_labs_cols)
+        # scaler = MinMaxScaler(feature_range=(-1, 1))
+        # ep_dur_w_df = pd.DataFrame(scaler.fit_transform(ep_dur_w_df.T).T, columns=ep_labs_cols, index=ep_dur_w_df.index)
+        # ep_dur_w_df['Object'] = ep_dur_lab
+        # ep_dur_obj_w_df = ep_dur_w_df.groupby('Object')[ep_labs_cols].sum()
+        # ep_dur_tot_w = ep_dur_obj_w_df.abs().mean()
+        # ep_dur_fin_w = pd.DataFrame(data=ep_dur_obj_w_df)
+        # values = ep_dur_tot_w.values
+        # min_val = values.min()
+        # max_val = values.max()
+        # normalized_total = (values - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(values)
+        # ep_dur_fin_w.loc['Total'] = normalized_total
+        #
+        # # heatmap weights
+        # center = 0
+        # min = ep_dur_fin_w.min().min()
+        # max = ep_dur_fin_w.max().max()
+        # new_margin = np.maximum(min, max)
+        # normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
+        #
+        # colorblind_palette = sns.color_palette("colorblind")
+        # new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
+        #
+        # fig, ax = plt.subplots()
+        # g = sns.heatmap(data=ep_dur_fin_w, annot=False, norm=normalize, cmap=new_colormap)
+        # ep_dur_fin_w.columns = [col.replace(' ', '\n') for col in ep_dur_fin_w.columns]
+        # g.set_xticklabels(labels=ep_dur_fin_w.columns, rotation=45, size=10)
+        # g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # # Adjust the colorbar label
+        # cbar = g.collections[0].colorbar
+        # cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        # ax.set_ylabel('')  # This sets the y-axis label to an empty string
+        # plt.title('Duration EP Labels weights for family: ' + family)
+        # plt.tight_layout()
+        # # plt.savefig('./results/EP/plots/var_weights_giv_ep_dur_' + family + '.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_giv_ep_dur_' + family + '.svg', format='svg', dpi=600)
+        # plt.close()
 
-        with open('./results/EP/weights/w_giv_EP_PresAbs_' + family + '.csv', 'r') as ep_presabs_data:
-
-            ep_presabs_reader = csv.reader(ep_presabs_data)
-            for row in ep_presabs_reader:
-                ep_presabs_w.append(row)
-
-        ep_presabs_w = np.asarray(ep_presabs_w, dtype=float)
-
-        # absolute value for weights
-        ep_presabs_abs_w = ep_presabs_w
-
-        aux_ep_presabs_obj_1 = []
-        aux_ep_presabs_obj_2 = []
-        aux_ep_presabs_obj_3 = []
-        for i in range(0, int(len(ep_presabs_abs_w) / 3)):
-            aux_ep_presabs_obj_1.append(ep_presabs_abs_w[3 * i])
-            aux_ep_presabs_obj_2.append(ep_presabs_abs_w[3 * i + 1])
-            aux_ep_presabs_obj_3.append(ep_presabs_abs_w[3 * i + 2])
-        ep_presabs_cv_w = []
-        ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_1, axis=0))  # mean by column
-        ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_2, axis=0))  # mean by column
-        ep_presabs_cv_w.append(np.mean(aux_ep_presabs_obj_3, axis=0))  # mean by column
-
-        # WEIGHTS OVER VARIABLES
-        ep_presabs_lab = fam_obj[family] * int(len(ep_presabs_cv_w) / 3)
-        ep_presabs_w_df = pd.DataFrame(data=ep_presabs_cv_w, columns=ep_labs_cols)
-        ep_presabs_w_df['Object'] = ep_presabs_lab
-
-        ep_presabs_obj_w_df = ep_presabs_w_df.groupby('Object')[ep_labs_cols].sum()
-
-        ep_presabs_tot_w = ep_presabs_obj_w_df.abs().sum()
-        ep_presabs_fin_w = pd.DataFrame(data=ep_presabs_obj_w_df)
-        aux_ep_presabs_tot_w = ep_presabs_tot_w.values.reshape(-1,1)
-        norm_scaler = MinMaxScaler()
-        aux_ep_presabs_tot_w = norm_scaler.fit_transform(aux_ep_presabs_tot_w)
-        ep_presabs_fin_w.loc['Total'] = aux_ep_presabs_tot_w.flatten()
-
-        # heatmap weights
-        center = 0
-        min = ep_presabs_fin_w.min().min()
-        max = ep_presabs_fin_w.max().max()
-        new_margin = np.maximum(min,max)
-        normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
-
-        colorblind_palette = sns.color_palette("colorblind")
-        new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
-
-        plt.figure()
-        g = sns.heatmap(data=ep_presabs_fin_w, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_presabs_fin_w.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
-        plt.title('Pres/Abs EP Labels weights for family: ' + family)
-        plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_giv_ep_presabs_' + family + '.png', dpi=600)
-        plt.close()
-
-        ##########################
-        ## Obj EP Duration      ##
-        ##########################
-
-        ep_dur_w = []
-        ep_dur_weights_file = result_file = open('./results/EP/weights/w_giv_EP_Dur_' + family + '.csv', 'r')
-
-        with open('./results/EP/weights/w_giv_EP_Dur_' + family + '.csv', 'r') as ep_dur_data:
-
-            ep_dur_reader = csv.reader(ep_dur_data)
-            for row in ep_dur_reader:
-                ep_dur_w.append(row)
-
-        ep_dur_w = np.asarray(ep_dur_w, dtype=float)
-
-        # absolute value for weights
-        ep_dur_abs_w = ep_dur_w
-
-        aux_ep_dur_obj_1 = []
-        aux_ep_dur_obj_2 = []
-        aux_ep_dur_obj_3 = []
-        for i in range(0, int(len(ep_dur_abs_w) / 3)):
-            aux_ep_dur_obj_1.append(ep_dur_abs_w[3 * i])
-            aux_ep_dur_obj_2.append(ep_dur_abs_w[3 * i + 1])
-            aux_ep_dur_obj_3.append(ep_dur_abs_w[3 * i + 2])
-        ep_dur_cv_w = []
-        ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_1, axis=0))  # mean by column
-        ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_2, axis=0))  # mean by column
-        ep_dur_cv_w.append(np.mean(aux_ep_dur_obj_3, axis=0))  # mean by column
-
-        # WEIGHTS OVER VARIABLES
-        ep_dur_lab = fam_obj[family] * int(len(ep_dur_cv_w) / 3)
-        ep_dur_w_df = pd.DataFrame(data=ep_dur_cv_w, columns=ep_labs_cols)
-        ep_dur_w_df['Object'] = ep_dur_lab
-
-        ep_dur_obj_w_df = ep_dur_w_df.groupby('Object')[ep_labs_cols].sum()
-        ep_dur_tot_w = ep_dur_obj_w_df.abs().mean()
-        ep_dur_fin_w = pd.DataFrame(data=ep_dur_obj_w_df)
-        aux_ep_dur_tot_w = ep_dur_tot_w.values.reshape(-1, 1)
-        norm_scaler = MinMaxScaler()
-        aux_ep_dur_tot_w = norm_scaler.fit_transform(aux_ep_dur_tot_w)
-        ep_dur_fin_w.loc['Total'] = aux_ep_dur_tot_w.flatten()
-
-        # heatmap weights
-        center = 0
-        min = ep_dur_fin_w.min().min()
-        max = ep_dur_fin_w.max().max()
-        new_margin = np.maximum(min, max)
-        normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
-
-        colorblind_palette = sns.color_palette("colorblind")
-        new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
-
-        plt.figure()
-        g = sns.heatmap(data=ep_dur_fin_w, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_dur_fin_w.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
-        plt.title('Duration EP Labels weights for family: ' + family)
-        plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_giv_ep_dur_' + family + '.png', dpi=600)
-        plt.close()
-
-        ##########################
-        ## Obj EP Count         ##
-        ##########################
-
-        ep_count_w = []
-        ep_count_weights_file = result_file = open('./results/EP/weights/w_giv_EP_Count_' + family + '.csv', 'r')
-
-        with open('./results/EP/weights/w_giv_EP_Count_' + family + '.csv', 'r') as ep_count_data:
-
-            ep_count_reader = csv.reader(ep_count_data)
-            for row in ep_count_reader:
-                ep_count_w.append(row)
-
-        ep_count_w = np.asarray(ep_count_w, dtype=float)
-
-        ep_count_abs_w = ep_count_w
-
-        aux_ep_count_obj_1 = []
-        aux_ep_count_obj_2 = []
-        aux_ep_count_obj_3 = []
-        for i in range(0, int(len(ep_count_abs_w) / 3)):
-            aux_ep_count_obj_1.append(ep_count_abs_w[3 * i])
-            aux_ep_count_obj_2.append(ep_count_abs_w[3 * i + 1])
-            aux_ep_count_obj_3.append(ep_count_abs_w[3 * i + 2])
-        ep_count_cv_w = []
-        ep_count_cv_w.append(np.mean(aux_ep_count_obj_1, axis=0))  # mean by column
-        ep_count_cv_w.append(np.mean(aux_ep_count_obj_2, axis=0))  # mean by column
-        ep_count_cv_w.append(np.mean(aux_ep_count_obj_3, axis=0))  # mean by column
-
-        # WEIGHTS OVER VARIABLES
-        ep_count_lab = fam_obj[family] * int(len(ep_count_cv_w) / 3)
-        ep_count_w_df = pd.DataFrame(data=ep_count_cv_w, columns=ep_labs_cols)
-        ep_count_w_df['Object'] = ep_count_lab
-
-        ep_count_obj_w_df = ep_count_w_df.groupby('Object')[ep_labs_cols].sum()
-        ep_count_tot_w = ep_count_obj_w_df.abs().mean()
-        ep_count_fin_w = pd.DataFrame(data=ep_count_obj_w_df)
-        aux_ep_count_tot_w = ep_count_tot_w.values.reshape(-1, 1)
-        norm_scaler = MinMaxScaler()
-        aux_ep_count_tot_w = norm_scaler.fit_transform(aux_ep_count_tot_w)
-        ep_count_fin_w.loc['Total'] = aux_ep_count_tot_w.flatten()
-
-        # heatmap weights
-        center = 0
-        min = ep_count_fin_w.min().min()
-        max = ep_count_fin_w.max().max()
-        new_margin = np.maximum(min, max)
-        normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
-
-        colorblind_palette = sns.color_palette("colorblind")
-        new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
-
-        plt.figure()
-        g = sns.heatmap(data=ep_count_fin_w, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_count_fin_w.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
-        plt.title('Count EP Labels weights for family: ' + family)
-        plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_giv_ep_count_' + family + '.png', dpi=600)
-        plt.close()
+        # ##########################
+        # ## Obj EP Count         ##
+        # ##########################
+        #
+        # ep_count_w = []
+        # ep_count_weights_file = result_file = open('./results/EP/weights/w_giv_EP_Count_' + family + '.csv', 'r')
+        #
+        # with open('./results/EP/weights/w_giv_EP_Count_' + family + '.csv', 'r') as ep_count_data:
+        #
+        #     ep_count_reader = csv.reader(ep_count_data)
+        #     for row in ep_count_reader:
+        #         ep_count_w.append(row)
+        #
+        # ep_count_w = np.asarray(ep_count_w, dtype=float)
+        #
+        # ep_count_abs_w = ep_count_w
+        #
+        # aux_ep_count_obj_1 = []
+        # aux_ep_count_obj_2 = []
+        # aux_ep_count_obj_3 = []
+        # for i in range(0, int(len(ep_count_abs_w) / 3)):
+        #     aux_ep_count_obj_1.append(ep_count_abs_w[3 * i])
+        #     aux_ep_count_obj_2.append(ep_count_abs_w[3 * i + 1])
+        #     aux_ep_count_obj_3.append(ep_count_abs_w[3 * i + 2])
+        # ep_count_cv_w = []
+        # ep_count_cv_w.append(np.mean(aux_ep_count_obj_1, axis=0))  # mean by column
+        # ep_count_cv_w.append(np.mean(aux_ep_count_obj_2, axis=0))  # mean by column
+        # ep_count_cv_w.append(np.mean(aux_ep_count_obj_3, axis=0))  # mean by column
+        #
+        # # WEIGHTS OVER VARIABLES
+        # # ep_count_lab = fam_obj[family] * int(len(ep_count_cv_w) / 3)
+        # # ep_count_w_df = pd.DataFrame(data=ep_count_cv_w, columns=ep_labs_cols)
+        # # ep_count_w_df['Object'] = ep_count_lab
+        # #
+        # # ep_count_obj_w_df = ep_count_w_df.groupby('Object')[ep_labs_cols].sum()
+        # # ep_count_tot_w = ep_count_obj_w_df.abs().mean()
+        # # ep_count_fin_w = pd.DataFrame(data=ep_count_obj_w_df)
+        # # aux_ep_count_tot_w = ep_count_tot_w.values.reshape(-1, 1)
+        # # norm_scaler = MinMaxScaler()
+        # # aux_ep_count_tot_w = norm_scaler.fit_transform(aux_ep_count_tot_w)
+        # # ep_count_fin_w.loc['Total'] = aux_ep_count_tot_w.flatten()
+        #
+        # ep_count_lab = fam_obj[family] * int(len(ep_count_cv_w) / 3)
+        # ep_count_w_df = pd.DataFrame(data=ep_count_cv_w, columns=ep_labs_cols)
+        # scaler = MinMaxScaler(feature_range=(-1, 1))
+        # ep_count_w_df = pd.DataFrame(scaler.fit_transform(ep_count_w_df.T).T, columns=ep_labs_cols,
+        #                              index=ep_count_w_df.index)
+        # ep_count_w_df['Object'] = ep_count_lab
+        # ep_count_obj_w_df = ep_count_w_df.groupby('Object')[ep_labs_cols].sum()
+        # ep_count_tot_w = ep_count_obj_w_df.abs().mean()
+        # ep_count_fin_w = pd.DataFrame(data=ep_count_obj_w_df)
+        # values = ep_count_tot_w.values
+        # min_val = values.min()
+        # max_val = values.max()
+        # normalized_total = (values - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(values)
+        # ep_count_fin_w.loc['Total'] = normalized_total
+        #
+        # # heatmap weights
+        # center = 0
+        # min = ep_count_fin_w.min().min()
+        # max = ep_count_fin_w.max().max()
+        # new_margin = np.maximum(min, max)
+        # normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
+        #
+        # colorblind_palette = sns.color_palette("colorblind")
+        # new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
+        #
+        # fig, ax = plt.subplots()
+        # g = sns.heatmap(data=ep_count_fin_w, annot=False, norm=normalize, cmap=new_colormap)
+        # ep_count_fin_w.columns = [col.replace(' ', '\n') for col in ep_count_fin_w.columns]
+        # g.set_xticklabels(labels=ep_count_fin_w.columns, rotation=45, size=10)
+        # g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # # Adjust the colorbar label
+        # cbar = g.collections[0].colorbar
+        # cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        # ax.set_ylabel('')  # This sets the y-axis label to an empty string
+        # plt.title('Count EP Labels weights for family: ' + family)
+        # plt.tight_layout()
+        # # plt.savefig('./results/EP/plots/var_weights_giv_ep_count_' + family + '.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_giv_ep_count_' + family + '.svg', format='svg', dpi=600)
+        # plt.close()
 
         ##########################
         ## Fam EP Pres/Abs      ##
@@ -360,7 +425,12 @@ def ep_weights():
         ep_presabs_lab_fam = families * int(len(ep_presabs_cv_w_fam) / 5)
         ep_presabs_w_df_fam = pd.DataFrame(data=ep_presabs_cv_w_fam, columns=ep_labs_cols)
         scaler = MinMaxScaler(feature_range=(-1, 1))
-        ep_presabs_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_presabs_w_df_fam[ep_labs_cols])
+        # ep_presabs_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_presabs_w_df_fam[ep_labs_cols])
+        ep_presabs_w_df_fam = pd.DataFrame(
+            scaler.fit_transform(ep_presabs_w_df_fam.T).T,  # Transpose, scale, and transpose back
+            columns=ep_labs_cols,
+            index=ep_presabs_w_df_fam.index
+        )
         ep_presabs_w_df_fam['Family'] = ep_presabs_lab_fam
 
         ep_presabs_obj_w_df_fam = ep_presabs_w_df_fam.groupby('Family')[ep_labs_cols].sum()
@@ -368,9 +438,17 @@ def ep_weights():
         ep_presabs_fin_w_fam = pd.DataFrame(data=ep_presabs_obj_w_df_fam)
         idx = ep_presabs_fin_w_fam.index.tolist()
         idx.append('Total')
-        ep_presabs_fin_w_fam.loc[len(ep_presabs_fin_w_fam.index)] = pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols,
-                                                                  name='Total')
-        ep_presabs_fin_w_fam.index = idx
+        # ep_presabs_tot_w_fam = total_scaler.fit_transform(ep_presabs_tot_w_fam.values.reshape(1, -1)).flatten()
+        values = ep_presabs_tot_w_fam.values  # Ensure it's an array of values
+        min_val = values.min()
+        max_val = values.max()
+        if max_val > min_val:
+            normalized_total = (values - min_val) / (max_val - min_val)
+        else:
+            normalized_total = np.zeros_like(values)
+        ep_presabs_fin_w_fam.loc['Total'] = normalized_total
+        # ep_presabs_fin_w_fam.loc[len(ep_presabs_fin_w_fam.index)] = pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols, name='Total')
+        # ep_presabs_fin_w_fam.index = idx
 
         # heatmap weights
         center = 0
@@ -380,13 +458,19 @@ def ep_weights():
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
 
-        plt.figure()
+        fig, ax = plt.subplots()
         g = sns.heatmap(data=ep_presabs_fin_w_fam, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_presabs_fin_w_fam.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
+        ep_presabs_fin_w_fam.columns = [col.replace(' ', '\n') for col in ep_presabs_fin_w_fam.columns]
+        g.set_xticklabels(labels=ep_presabs_fin_w_fam.columns, rotation=45, size=10)
+        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # Adjust the colorbar label
+        cbar = g.collections[0].colorbar
+        cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        ax.set_ylabel('')  # This sets the y-axis label to an empty string
         plt.title('Pres/Abs EP Labels weights for object family')
         plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_fam_ep_presabs_family.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_fam_ep_presabs_family.png', dpi=600)
+        plt.savefig('./results/EP/plots/var_weights_fam_ep_presabs_family.svg', format='svg', dpi=600)
         # plt.show()
         plt.close()
 
@@ -427,22 +511,37 @@ def ep_weights():
         ep_dur_cv_w_fam.append(np.mean(aux_ep_dur_mugs, axis=0))  # mean by column
         ep_dur_cv_w_fam.append(np.mean(aux_ep_dur_plates, axis=0))  # mean by column
 
-        # WEIGHTS OVER VARIABLES
+        # # WEIGHTS OVER VARIABLES
+        # ep_dur_lab_fam = families * int(len(ep_dur_cv_w_fam) / 5)
+        # ep_dur_w_df_fam = pd.DataFrame(data=ep_dur_cv_w_fam, columns=ep_labs_cols)
+        # scaler = MinMaxScaler(feature_range=(-1, 1))
+        # ep_dur_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_dur_w_df_fam[ep_labs_cols])
+        # ep_dur_w_df_fam['Family'] = ep_dur_lab_fam
+        #
+        # ep_dur_obj_w_df_fam = ep_dur_w_df_fam.groupby('Family')[ep_labs_cols].sum()
+        # ep_dur_tot_w_fam = ep_dur_obj_w_df_fam.abs().mean()
+        # ep_dur_fin_w_fam = pd.DataFrame(data=ep_dur_obj_w_df_fam)
+        # idx = ep_dur_fin_w_fam.index.tolist()
+        # idx.append('Total')
+        # ep_dur_fin_w_fam.loc[len(ep_dur_fin_w_fam.index)] = pd.Series(data=ep_dur_tot_w_fam,
+        #                                                                       index=ep_labs_cols,
+        #                                                                       name='Total')
+        # ep_dur_fin_w_fam.index = idx
+
         ep_dur_lab_fam = families * int(len(ep_dur_cv_w_fam) / 5)
         ep_dur_w_df_fam = pd.DataFrame(data=ep_dur_cv_w_fam, columns=ep_labs_cols)
         scaler = MinMaxScaler(feature_range=(-1, 1))
-        ep_dur_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_dur_w_df_fam[ep_labs_cols])
+        ep_dur_w_df_fam = pd.DataFrame(scaler.fit_transform(ep_dur_w_df_fam.T).T, columns=ep_labs_cols,
+                                       index=ep_dur_w_df_fam.index)
         ep_dur_w_df_fam['Family'] = ep_dur_lab_fam
-
         ep_dur_obj_w_df_fam = ep_dur_w_df_fam.groupby('Family')[ep_labs_cols].sum()
         ep_dur_tot_w_fam = ep_dur_obj_w_df_fam.abs().mean()
         ep_dur_fin_w_fam = pd.DataFrame(data=ep_dur_obj_w_df_fam)
-        idx = ep_dur_fin_w_fam.index.tolist()
-        idx.append('Total')
-        ep_dur_fin_w_fam.loc[len(ep_dur_fin_w_fam.index)] = pd.Series(data=ep_dur_tot_w_fam,
-                                                                              index=ep_labs_cols,
-                                                                              name='Total')
-        ep_dur_fin_w_fam.index = idx
+        values = ep_dur_tot_w_fam.values
+        min_val = values.min()
+        max_val = values.max()
+        normalized_total = (values - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(values)
+        ep_dur_fin_w_fam.loc['Total'] = normalized_total
 
         # heatmap weights
         center = 0
@@ -452,13 +551,19 @@ def ep_weights():
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
 
-        plt.figure()
+        fig, ax = plt.subplots()
         g = sns.heatmap(data=ep_dur_fin_w_fam, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_dur_fin_w_fam.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
+        ep_dur_fin_w_fam.columns = [col.replace(' ', '\n') for col in ep_dur_fin_w_fam.columns]
+        g.set_xticklabels(labels=ep_dur_fin_w_fam.columns, rotation=45, size=10)
+        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # Adjust the colorbar label
+        cbar = g.collections[0].colorbar
+        cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        ax.set_ylabel('')  # This sets the y-axis label to an empty string
         plt.title('Duration EP Labels weights for object family')
         plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_fam_ep_dur_family.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_fam_ep_dur_family.png', dpi=600)
+        plt.savefig('./results/EP/plots/var_weights_fam_ep_dur_family.svg', format='svg', dpi=600)
         # plt.show()
         plt.close()
 
@@ -499,22 +604,37 @@ def ep_weights():
         ep_count_cv_w_fam.append(np.mean(aux_ep_count_mugs, axis=0))  # mean by column
         ep_count_cv_w_fam.append(np.mean(aux_ep_count_plates, axis=0))  # mean by column
 
-        # WEIGHTS OVER VARIABLES
+        # # WEIGHTS OVER VARIABLES
+        # ep_count_lab_fam = families * int(len(ep_count_cv_w_fam) / 5)
+        # ep_count_w_df_fam = pd.DataFrame(data=ep_count_cv_w_fam, columns=ep_labs_cols)
+        # scaler = MinMaxScaler(feature_range=(-1, 1))
+        # ep_count_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_count_w_df_fam[ep_labs_cols])
+        # ep_count_w_df_fam['Family'] = ep_count_lab_fam
+        #
+        # ep_count_obj_w_df_fam = ep_count_w_df_fam.groupby('Family')[ep_labs_cols].sum()
+        # ep_count_tot_w_fam = ep_count_obj_w_df_fam.abs().mean()
+        # ep_count_fin_w_fam = pd.DataFrame(data=ep_count_obj_w_df_fam)
+        # idx = ep_count_fin_w_fam.index.tolist()
+        # idx.append('Total')
+        # ep_count_fin_w_fam.loc[len(ep_count_fin_w_fam.index)] = pd.Series(data=ep_count_tot_w_fam,
+        #                                                                       index=ep_labs_cols,
+        #                                                                       name='Total')
+        # ep_count_fin_w_fam.index = idx
+
         ep_count_lab_fam = families * int(len(ep_count_cv_w_fam) / 5)
         ep_count_w_df_fam = pd.DataFrame(data=ep_count_cv_w_fam, columns=ep_labs_cols)
         scaler = MinMaxScaler(feature_range=(-1, 1))
-        ep_count_w_df_fam[ep_labs_cols] = scaler.fit_transform(ep_count_w_df_fam[ep_labs_cols])
+        ep_count_w_df_fam = pd.DataFrame(scaler.fit_transform(ep_count_w_df_fam.T).T, columns=ep_labs_cols,
+                                         index=ep_count_w_df_fam.index)
         ep_count_w_df_fam['Family'] = ep_count_lab_fam
-
         ep_count_obj_w_df_fam = ep_count_w_df_fam.groupby('Family')[ep_labs_cols].sum()
         ep_count_tot_w_fam = ep_count_obj_w_df_fam.abs().mean()
         ep_count_fin_w_fam = pd.DataFrame(data=ep_count_obj_w_df_fam)
-        idx = ep_count_fin_w_fam.index.tolist()
-        idx.append('Total')
-        ep_count_fin_w_fam.loc[len(ep_count_fin_w_fam.index)] = pd.Series(data=ep_count_tot_w_fam,
-                                                                              index=ep_labs_cols,
-                                                                              name='Total')
-        ep_count_fin_w_fam.index = idx
+        values = ep_count_tot_w_fam.values
+        min_val = values.min()
+        max_val = values.max()
+        normalized_total = (values - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(values)
+        ep_count_fin_w_fam.loc['Total'] = normalized_total
 
         # heatmap weights
         # generate new colormap
@@ -525,12 +645,18 @@ def ep_weights():
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
 
-        plt.figure()
+        fig, ax = plt.subplots()
         g = sns.heatmap(data=ep_count_fin_w_fam, annot=False, norm=normalize, cmap=new_colormap)
-        g.set_xticklabels(labels=ep_count_fin_w_fam.columns, rotation=45, size=8)
-        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=8)  # Adjust the 'size' as needed
+        ep_count_fin_w_fam.columns = [col.replace(' ', '\n') for col in ep_count_fin_w_fam.columns]
+        g.set_xticklabels(labels=ep_count_fin_w_fam.columns, rotation=45, size=10)
+        g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
+        # Adjust the colorbar label
+        cbar = g.collections[0].colorbar
+        cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
+        ax.set_ylabel('')  # This sets the y-axis label to an empty string
         plt.title('Count EP Labels weights for object family')
         plt.tight_layout()
-        plt.savefig('./results/EP/plots/var_weights_fam_ep_count_family.png', dpi=600)
+        # plt.savefig('./results/EP/plots/var_weights_fam_ep_count_family.png', dpi=600)
+        plt.savefig('./results/EP/plots/var_weights_fam_ep_count_family.svg', format='svg', dpi=600)
         # plt.show()
         plt.close()

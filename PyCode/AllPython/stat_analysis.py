@@ -341,8 +341,9 @@ def variance(data):
         sns.scatterplot(data=tact_to_plot_wXval, x='Pval', y='Weights').set(title=tit)
         plt.xlabel('ANOVA p-value')
         plt.ylabel('Model Weight * Variable mean')
-        fig_file = './results/pVal_weight_Tact_' + family + '.png'
-        plt.savefig(fig_file, dpi=600)
+        # fig_file = './results/pVal_weight_Tact_' + family + '.png'
+        fig_file = './results/pVal_weight_Tact_' + family + '.svg'
+        plt.savefig(fig_file, format='svg', dpi=600)
         # plt.show()
 
 

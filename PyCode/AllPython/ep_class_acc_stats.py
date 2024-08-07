@@ -6,12 +6,15 @@ import numpy as np
 from itertools import combinations
 from statannotations.Annotator import Annotator
 from statannot import add_stat_annotation, statannot
+from matplotlib.patches import Patch
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def ep_stats_classification_plots():
+
+    plt.rcParams.update({'font.size':16})
 
     kinds = ["pres/abs", "count", "duration"]
     pairs = list(combinations(kinds, r=2))
@@ -86,16 +89,19 @@ def ep_stats_classification_plots():
     rand_accuracies_df = pd.concat([rand_accuracies_df, obj_dur_rand_acc_df], ignore_index=True)
 
     # BOXPLOT EP GIVEN
-    # plt.figure()
-    # g = sns.barplot(data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'given'], x="Kind", y="Accuracy")
-    # annotator_g = Annotator(g, pairs, data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'given'], x="Kind",
-    #                       y="Accuracy")
-    # annotator_g.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    # annotator_g.apply_and_annotate()
-    # g.set(ylabel="Accuracy (95% ci)")
-    # g.axhline(33.33, color='r')
+    plt.figure()
+    g = sns.barplot(data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'given'], x="Kind", y="Accuracy")
+    g.set(xlabel='')
+    annotator_g = Annotator(g, pairs, data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'given'], x="Kind",
+                          y="Accuracy")
+    annotator_g.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_g.apply_and_annotate()
+    g.set(ylabel="Accuracy (95% ci)")
+    g.axhline(33.33, color='r')
     # plt.title('Classification Accuracy for Given Object Classification')
-    # plt.savefig('./results/EP/plots/EP_giv_class_acc.png', dpi=600)
+    # plt.autoscale()
+    # plt.tight_layout()
+    plt.savefig('./results/EP/plots/EP_giv_class_acc.svg', format='svg', dpi=600)
     # # plt.show()
     # plt.close()
 
@@ -191,13 +197,17 @@ def ep_stats_classification_plots():
 
     plt.figure()
     h = sns.barplot(data=asked, x="Kind", y="Accuracy")
+    h.set(xlabel='')
     annotator_h = Annotator(h, new_pairs, data=asked, x="Kind", y="Accuracy")
     annotator_h.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
     annotator_h.apply_and_annotate()
     h.set(ylabel="Accuracy (95% ci)")
     h.axhline(33.33, color='r')
-    plt.title('Classification Accuracy for Asked Object Classification')
-    plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
+    # plt.title('Classification Accuracy for Asked Object Classification')
+    # plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.png', dpi=600)
+    # plt.autoscale()
+    # plt.tight_layout()
+    plt.savefig('./results/EP/plots/EP_ask_class_acc_rand_comp.svg', format='svg', dpi=600)
     # plt.show()
     # plt.close()
 
@@ -267,42 +277,67 @@ def ep_stats_classification_plots():
     rand_accuracies_df = pd.concat([rand_accuracies_df, fam_dur_rand_acc_df], ignore_index=True)
 
     # BOXPLOT EP FAMILY
-    # plt.figure()
-    # i = sns.barplot(data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'family'], x="Kind", y="Accuracy")
-    # annotator_i = Annotator(i, pairs, data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'family'], x="Kind", y="Accuracy")
-    # annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
-    # annotator_i.apply_and_annotate()
-    # i.set(ylabel="Accuracy (95% ci)")
-    # i.axhline(20, color='r')
+    plt.figure()
+    i = sns.barplot(data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'family'], x="Kind", y="Accuracy")
+    i.set(xlabel='')
+    annotator_i = Annotator(i, pairs, data=accuracies_df.loc[accuracies_df["Obj/Fam"] == 'family'], x="Kind", y="Accuracy")
+    annotator_i.configure(test="Mann-Whitney", text_format="simple", show_test_name=False)
+    annotator_i.apply_and_annotate()
+    i.set(ylabel="Accuracy (95% ci)")
+    i.axhline(20, color='r')
     # plt.title('Classification Accuracy for Family Classification')
-    # plt.savefig('./results/EP/plots/EP_fam_class_acc.png', dpi=600)
+    # plt.autoscale()
+    # plt.tight_layout()
+    plt.savefig('./results/EP/plots/EP_fam_class_acc.svg', format='svg', dpi=600)
     # # plt.show()
     # plt.close()
 
     # BOXPLOT ALL COMPARISON
     plt.figure()
-    j = sns.barplot(data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]))
-    statannot.add_stat_annotation(j, data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=list(["asked", "given", "family"]),
-        box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
-                   (("pres/abs", "asked"), ("pres/abs", "family")),
-                   (("pres/abs", "given"), ("pres/abs", "family")),
-                   (("count", "asked"), ("count", "given")),
-                   (("count", "asked"), ("count", "family")),
-                   (("count", "given"), ("count", "family")),
-                   (("duration", "asked"), ("duration", "given")),
-                   (("duration", "asked"), ("duration", "family")),
-                   (("duration", "given"), ("duration", "family"))],
-        test="Mann-Whitney",
-        text_format="star",
-        show_test_name=False,
-    )
+    # sns.set_palette("colorblind")
+    hatches = ['...', '', '///']
+    # Create the barplot
+    j = sns.barplot(data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=["asked", "given", "family"], palette=["white"]*3)
+    j.set(xlabel='')
+    # Each bar represented by j.patches is ordered by the 'Kind' and within each 'Kind' by 'Obj/Fam'
+    hue_order = ["asked", "given", "family"]
+    num_hues = len(hue_order)
+    num_kinds = len(accuracies_df['Kind'].unique())
+    bars_per_group = num_hues * num_kinds
+    for i, bar in enumerate(j.patches):
+        hue_index = (i // num_kinds) % num_hues  # Calculate which hue within the kind
+        hatch = hatches[hue_index]
+        bar.set_hatch(hatch)
+        bar.set_edgecolor('black')
+    # Add statistical annotations
+    statannot.add_stat_annotation(j, data=accuracies_df, x="Kind", y="Accuracy", hue="Obj/Fam",
+                                  hue_order=["asked", "given", "family"],
+                                  box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
+                                             (("pres/abs", "asked"), ("pres/abs", "family")),
+                                             (("pres/abs", "given"), ("pres/abs", "family")),
+                                             (("count", "asked"), ("count", "given")),
+                                             (("count", "asked"), ("count", "family")),
+                                             (("count", "given"), ("count", "family")),
+                                             (("duration", "asked"), ("duration", "given")),
+                                             (("duration", "asked"), ("duration", "family")),
+                                             (("duration", "given"), ("duration", "family"))],
+                                  test="Mann-Whitney",
+                                  text_format="star",
+                                  show_test_name=False,
+                                  color='black'
+                                  )
+    # Set y-axis label
     j.set(ylabel="Accuracy (95% ci)")
+    # Set plot title
     plt.title('Classification Accuracy Comparison')
-    sns.move_legend(j, "lower right")
-    plt.savefig('./results/EP/plots/EP_all_comp_acc_star.png', dpi=600)
-    # plt.show()
+    # Adjust the legend to ensure clarity in black and white
+    handles, labels = j.get_legend_handles_labels()
+    plt.legend(handles, labels, loc="lower right")
+    # Save the plot
+    # plt.autoscale()
+    # plt.tight_layout()
+    plt.savefig('./results/EP/plots/EP_all_comp_acc_star.svg', format='svg', dpi=600)
     plt.close()
-    # a=1
 
     # BOXPLOT COMPARISON ASKED-GIVEN
     # plt.figure()
@@ -367,8 +402,24 @@ def ep_stats_classification_plots():
     pres_abs_df = accuracies_df[accuracies_df["Kind"] == "pres/abs"]
 
     # BOXPLOT PRES/ABS COMPARISON
+    # Start the figure
     plt.figure()
-    j = sns.barplot(data=pres_abs_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=["asked", "given", "family"])
+    # Define hatches for "asked," "given," and "family"
+    hatches = ['...', '', '///']
+    # Create the barplot
+    j = sns.barplot(data=pres_abs_df, x="Kind", y="Accuracy", hue="Obj/Fam", hue_order=["asked", "given", "family"],
+                    palette=["white"] * 3)
+    j.set(xlabel='')
+    # Apply hatches to the bars
+    num_kinds = len(pres_abs_df["Kind"].unique())
+    num_hues = len(hatches)
+    bars_per_group = len(j.patches) // num_kinds
+    for i, bar in enumerate(j.patches):
+        # Calculate which hue category within the Kind we are in
+        hue_index = (i // num_kinds) % num_hues
+        bar.set_hatch(hatches[hue_index])
+        bar.set_edgecolor('black')
+    # Add statistical annotations
     statannot.add_stat_annotation(j, data=pres_abs_df, x="Kind", y="Accuracy", hue="Obj/Fam",
                                   hue_order=["asked", "given", "family"],
                                   box_pairs=[(("pres/abs", "asked"), ("pres/abs", "given")),
@@ -377,10 +428,22 @@ def ep_stats_classification_plots():
                                   test="Mann-Whitney",
                                   text_format="star",
                                   show_test_name=False,
-                                  )
+                                  color='black')
+    # Set y-axis label
     j.set(ylabel="Accuracy (95% ci)")
+    # Set plot title
     plt.title('Presence/Absence Classification Accuracy Comparison')
+    # Define legend handles using the defined hatches and corresponding colors
+    legend_handles = [Patch(facecolor='white', edgecolor='black', label='asked', hatch=hatches[0]),
+                      Patch(facecolor='white', edgecolor='black', label='given', hatch=hatches[1]),
+                      Patch(facecolor='white', edgecolor='black', label='family', hatch=hatches[2])]
+
+    # Set the legend with these custom handles
+    plt.legend(handles=legend_handles, loc="lower right")
+    # Move legend to the appropriate location
     sns.move_legend(j, "lower right")
-    plt.savefig('./results/EP/plots/EP_pres_abs_comp_acc_star.png', dpi=600)
-    # plt.show()
+    # plt.autoscale()
+    # plt.tight_layout()
+    # Save the plot
+    plt.savefig('./results/EP/plots/EP_pres_abs_comp_acc_star.svg', format='svg', dpi=600)
     plt.close()

@@ -50,7 +50,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def ep_from_scores_classif(include_suj):
 
-    discard = 'less'
+    discard = 'least'
 
     cv = 3
     [kin_params, emg_params, tact_params] = get_raw_best_params()
@@ -159,7 +159,7 @@ def kin_ep_classif(input_data):
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
 
-    if discard == 'less':
+    if discard == 'least':
         data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)  # keeps most relevant
     else:
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
@@ -276,7 +276,7 @@ def kin_ep_classif_sgdb(input_data):
     extra_data.reset_index(inplace=True, drop=True)
     kin_scores.reset_index(inplace=True, drop=True)
 
-    if discard == 'less':
+    if discard == 'least':
         data_df = pd.concat([kin_scores.iloc[:, 0:int(num_syns)], extra_data], axis=1)  # keeps most relevant
     else:
         data_df = pd.concat([kin_scores.iloc[:, -int(num_syns):], extra_data], axis=1)  # discards most relevant
@@ -393,7 +393,7 @@ def kin_ep_classif_sgdb(input_data):
 
 def ep_from_raw_classif(df, include_suj):
 
-    discard = 'less'
+    discard = 'least'
 
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
                 'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
@@ -497,33 +497,116 @@ def ep_classification_plots(type):
     plt.figure(figsize=(10, 6))
     ax = sns.boxplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
     _, p = mannwhitneyu(plot_data['Group 1'], plot_data['Group 2'])
-    ax.text(0.5, 0.95, f'p={p:.3f}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    ax.text(0.5, 0.95, f'p={p:.3f}', fontsize=14, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     ax.set_ylim(0, 100)
     plt.axhline(12.5, color='r', linestyle='--')
     current_ticks = ax.get_yticks()
     updated_ticks = np.unique(np.append(current_ticks, 12.5))
     ax.set_yticks(updated_ticks)
     ax.set_xlabel('')
+    ax.set_ylabel('Values', fontsize=14)  # Ajusta según sea necesario
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
 
     if type == 'syn':
         ax.set_xticklabels(['Syn scores', 'Syn scores + Subject'])
         plt.title('Comparison of accuracies for classifiers targeting EP label\nSynergy scores and syn scores + subject')
-        save_file = './results/ep_comp_syn.png'
+        # save_file = './results/ep_comp_syn.png'
+        save_file = './results/ep_comp_syn.svg'
     elif type == 'raw':
         ax.set_xticklabels(['Raw data', 'Raw data + Subject'])
         plt.title('Comparison of accuracies for classifiers targeting EP label\nRaw data and raw data + subject')
-        save_file = './results/ep_comp_raw.png'
+        # save_file = './results/ep_comp_raw.png'
+        save_file = './results/ep_comp_raw.svg'
     elif type == 'syn_raw_suj':
         ax.set_xticklabels(['Syn scores + Subject', 'Raw Data + Subject'])
         plt.title('Comparison of accuracies for classifiers targeting EP label\nSyn scores and Raw data, both including subject')
-        save_file = './results/ep_comp_syn_raw_suj.png'
+        # save_file = './results/ep_comp_syn_raw_suj.png'
+        save_file = './results/ep_comp_syn_raw_suj.svg'
     else:  # syn_raw_no_suj
         ax.set_xticklabels(['Syn scores', 'Raw Data'])
         plt.title('Comparison of accuracies for classifiers targeting EP label\nSyn scores and Raw data without subject')
-        save_file = './results/ep_comp_syn_raw_no_suj.png'
+        # save_file = './results/ep_comp_syn_raw_no_suj.png'
+        save_file = './results/ep_comp_syn_raw_no_suj.svg'
 
     # plt.show()
-    plt.savefig(save_file, dpi=600)
+    plt.savefig(save_file, format='svg', dpi=600)
+
+
+def ep_clust_suj_syn_one_subject_out():
+
+    # Defining clusters
+    clusters = [
+        {'sub-09', 'sub-10'},
+        {'sub-01', 'sub-03', 'sub-05', 'sub-07', 'sub-08'},
+        {'sub-02', 'sub-04', 'sub-06', 'sub-11'}
+    ]
+
+    [kin_params, emg_params, tact_params] = get_raw_best_params()
+    kin_bins = kin_params[0]
+    l1VSl2 = [0, 0.25, 0.5, 0.75, 1]
+    c_param = [0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]
+
+    res_file_name = './results/Syn/accuracy/ep_clust_suj_leave_one_syn_results.csv'
+    result_file = open(res_file_name, 'a')
+    wr = csv.writer(result_file)
+
+    data_folder = '/BIDSData'
+    subject_folders = sorted([f.name for f in os.scandir(os.getcwd() + data_folder) if f.is_dir()])
+
+    # Iterate over each cluster
+    for cluster in clusters:
+        cluster_subjects = [subj for subj in subject_folders if subj in cluster]
+        for target_subject in cluster_subjects:
+
+            new_subjects = [x for x in cluster_subjects if x != target_subject]
+            to_pca = pd.DataFrame()
+
+            for n_subject in new_subjects:
+                n_subject_data = load(n_subject)
+                to_pca = pd.concat([to_pca, n_subject_data], ignore_index=True)
+
+            data_clean = to_pca.dropna(axis=0, how='any')
+            kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
+                        'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
+                        'RingMiddleAb', 'PinkieMPJ', 'PinkiePIJ', 'PinkieRingAb', 'PalmArch',
+                        'WristPitch', 'WristYaw']
+
+            train_split_df = split(data_clean)
+            train_split_df['Trial num'] = train_split_df['Trial num'].astype('str')
+            train_split_df['EP num'] = train_split_df['EP num'].astype('str')
+            to_remove = [x for x in train_split_df['EP'].unique() if '+' in x]
+            train_split_df = train_split_df[~train_split_df['EP'].isin(to_remove)]
+            train_split_df.loc[train_split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+
+            [kin_scores, kin_syns, kin_var, kin_var_tot, kin_mean, kin_scale] = kin_syn_extraction(
+                train_split_df[kin_cols])
+
+            target_subject_data = load(target_subject)
+            target_split_df = split(target_subject_data)
+            target_split_df['Trial num'] = target_split_df['Trial num'].astype('str')
+            target_split_df['EP num'] = target_split_df['EP num'].astype('str')
+            to_remove = [x for x in target_split_df['EP'].unique() if '+' in x]
+            target_split_df = target_split_df[~target_split_df['EP'].isin(to_remove)]
+            target_split_df.loc[target_split_df['EP'] == 'contour following', 'EP'] = 'edge following'
+
+            target_scaled = (target_split_df[kin_cols] - kin_mean) / kin_scale
+            target_transformed = np.dot(target_scaled, kin_syns)
+
+            extra_cols = [col for col in data_clean.columns if col not in kin_cols]
+            train_extra_data = train_split_df[extra_cols]
+            target_extra_data = target_split_df[extra_cols]
+
+            all_param = list(itertools.product(l1VSl2, c_param))
+            kin_data_and_iter = [[kin_scores, target_transformed, train_extra_data, target_extra_data, x, kin_bins] for
+                                 x in all_param]
+
+            with Pool() as pool:
+                result_kin = pool.map_async(kin_ep_classif_sgdb_subject, kin_data_and_iter)
+                for res_kin in result_kin.get():
+                    wr.writerow(res_kin)
+
+    result_file.close()
 
 
 def ep_all_suj_syn_one_subject_out():
@@ -721,60 +804,150 @@ def kin_ep_classif_sgdb_subject(input_data):
     return result
 
 
+def ep_clust_suj_plots():
+
+    plt.close('all')  # to clean the screen
+
+    # File paths
+    raw_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
+    leave_one_out_file = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
+    all_suj_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
+    leave_one_out_cluster_file = './results/Syn/accuracy/ep_clust_suj_leave_one_syn_results.csv'  # Correct file for clustered leave-one-out
+
+    # Load data
+    raw_data = pd.read_csv(raw_file, header=None)
+    leave_one_out_data = pd.read_csv(leave_one_out_file, header=None)
+    all_suj_data = pd.read_csv(all_suj_file, header=None)
+    leave_one_out_cluster_data = pd.read_csv(leave_one_out_cluster_file, header=None)
+
+    # Define clusters mapping
+    clusters = {
+        'sub-09': 'Cluster 1', 'sub-10': 'Cluster 1',
+        'sub-01': 'Cluster 2', 'sub-03': 'Cluster 2', 'sub-05': 'Cluster 2', 'sub-07': 'Cluster 2',
+        'sub-08': 'Cluster 2',
+        'sub-02': 'Cluster 3', 'sub-04': 'Cluster 3', 'sub-06': 'Cluster 3', 'sub-11': 'Cluster 3'
+    }
+
+    # Map subject IDs to cluster labels in the clustered leave-one-out data
+    leave_one_out_cluster_data['Cluster'] = leave_one_out_cluster_data[3].map(
+        clusters)  # Assuming subject IDs are in column 3
+
+    # Group by cluster and aggregate data
+    cluster_groups = leave_one_out_cluster_data.groupby('Cluster')
+    cluster_data = cluster_groups[4].agg(list)  # Assuming accuracy is in column 4
+
+    # Extract values from other datasets
+    raw_values = raw_data[raw_data.columns[-1]]
+    all_suj_values = all_suj_data[all_suj_data.columns[-1]]
+    leave_one_out_values = leave_one_out_data[leave_one_out_data.columns[-1]]
+
+    # Prepare dataframes for plotting
+    raw_df = pd.DataFrame({'Raw Data': raw_values})
+    all_suj_df = pd.DataFrame({'All Subjects': all_suj_values})
+    leave_one_out_df = pd.DataFrame({'Leave One Out': leave_one_out_values})
+    cluster_1_df = pd.DataFrame({'Cluster 1': cluster_data['Cluster 1']})
+    cluster_2_df = pd.DataFrame({'Cluster 2': cluster_data['Cluster 2']})
+    cluster_3_df = pd.DataFrame({'Cluster 3': cluster_data['Cluster 3']})
+
+    # Combine and melt data for plotting
+    plot_data = pd.concat([raw_df, all_suj_df, leave_one_out_df, cluster_1_df, cluster_2_df, cluster_3_df],
+                          axis=1).melt(var_name='Group', value_name='Values')
+
+    # Plotting
+    plt.figure(figsize=(12, 8))
+    ax = sns.violinplot(x='Group', y='Values', data=plot_data, width=0.5)
+    add_stat_annotation(ax, data=plot_data, x='Group', y='Values',
+                        box_pairs=[("Raw Data", "All Subjects"), ("Raw Data", "Leave One Out"),
+                                   ("Raw Data", "Cluster 1"),
+                                   ("All Subjects", "Leave One Out"), ("All Subjects", "Cluster 1"),
+                                   ("All Subjects", "Cluster 2"),
+                                   ("All Subjects", "Cluster 3")],
+                        test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
+
+    ax.set_ylim(0, 100)
+    ax.tick_params(axis='both', labelsize=14)
+    ax.set_ylabel('Accuracy (%)', fontsize=14)
+    plt.axhline(12.5, color='r', linestyle='--')
+    plt.title('Comparison of Classification Accuracies Across Different Setups', fontsize=16)
+    plt.savefig('./results/ep_comp_syn.svg', format='svg', dpi=600)
+    plt.show()
+
+
 def ep_all_suj_plots():
 
     plt.close('all')  # to clean the screen
 
+    # File paths
     raw_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
     leave_one_out_file = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
     all_suj_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
 
+    # Load data
     raw_data = pd.read_csv(raw_file, header=None)
     leave_one_out_data = pd.read_csv(leave_one_out_file, header=None)
     all_suj_data = pd.read_csv(all_suj_file, header=None)
 
+    # Extract best values from raw data
     raw_best_values = raw_data.loc[raw_data[raw_data.columns[-1]].idxmax()][raw_data.columns[-2]]
     raw_floats_list = ast.literal_eval(raw_best_values.strip("'"))
 
-    leave_one_out_best_values = leave_one_out_data.groupby(3)[4].max().values
+    # Group leave one out data by cluster and find the maximum value per cluster
+    leave_one_out_clusters = leave_one_out_data.groupby(3)  # Assuming cluster info is in column 3
+    cluster_max_values = leave_one_out_clusters[4].max()  # Assuming accuracy is in column 4
 
+    # Convert cluster values to array
+    cluster_values = cluster_max_values.values
+
+    # Extract best values from all subjects data
     all_suj_best_values = all_suj_data.loc[all_suj_data[all_suj_data.columns[-1]].idxmax()][all_suj_data.columns[-2]]
     all_suj_floats_list = ast.literal_eval(all_suj_best_values.strip("'"))
 
+    # Calculating mean values and padding for consistency in plotting
     raw_mean_value = np.asarray(raw_floats_list).mean()
-    full_raw_values = np.pad(raw_floats_list, (0, len(leave_one_out_best_values) - len(raw_floats_list)), 'constant',
-                         constant_values=(0, raw_mean_value))
+    full_raw_values = np.pad(raw_floats_list, (0, len(cluster_values) - len(raw_floats_list)), 'constant',
+                             constant_values=(0, raw_mean_value))
 
     all_suj_mean_value = np.asarray(all_suj_floats_list).mean()
-    full_all_suj_values = np.pad(all_suj_floats_list, (0, len(leave_one_out_best_values) - len(all_suj_floats_list)), 'constant',
-                             constant_values=(0, all_suj_mean_value))
+    full_all_suj_values = np.pad(all_suj_floats_list, (0, len(cluster_values) - len(all_suj_floats_list)), 'constant',
+                                 constant_values=(0, all_suj_mean_value))
 
+    # Prepare dataframes for plotting
     raw_best_values_df = pd.DataFrame({'Raw': full_raw_values})
     all_suj_best_values_df = pd.DataFrame({'All Subj': full_all_suj_values})
-    leave_one_out_best_values_df = pd.DataFrame({'Leave One Subject Out': leave_one_out_best_values})
+    leave_one_out_best_values_df = pd.DataFrame({'Leave One Subject Out': cluster_values})
 
+    # Combine and melt data for plotting
     plot_data = pd.concat([raw_best_values_df, all_suj_best_values_df, leave_one_out_best_values_df], axis=1)
     plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
 
+    # Plotting
     plt.figure(figsize=(10, 6))
     ax = sns.violinplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
     add_stat_annotation(ax, data=plot_data_melted, x='Group', y='Values',
                         box_pairs=[("Raw", "All Subj"), ("Raw", "Leave One Subject Out"), ("All Subj", "Leave One Subject Out")],
                         test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
 
+    # Customize labels and axes
+    labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels[2] = 'Leave One\nSubject Out'
+    ax.set_xticklabels(labels)
+
     ax.set_ylim(0, 100)
-    ax.set_ylabel('Accuracy')
+    ax.tick_params(axis='both', labelsize=14)
+    ax.set_ylabel('Accuracy', fontsize=14)
     ax.set_xlabel('')
     plt.axhline(12.5, color='r', linestyle='--')
-    plt.title('Comparison of accuracies for classifiers targeting EP label')
-    save_file = './results/ep_comp_syn.png'
-    plt.savefig(save_file, dpi=600)
+    plt.title('Comparison of accuracies for classifiers targeting EP label', fontsize=14)
+    save_file = './results/ep_comp_syn.svg'
+    plt.savefig(save_file, format='svg', dpi=600)
     # plt.show()
 
 
 def build_subject_clusters():
 
-    number_clusters = [2, 3, 4, 5, 6]
+    plt.close('all')  # to clean the screen
+
+    number_clusters = [2, 3, 4, 5, 6, 7, 8]
 
     selected_files = glob.glob('./results/Syn/synergies/*kin_syns.csv')
     selected_files = [x for x in selected_files if 'sub' in x]  # selects only subject files
@@ -834,18 +1007,18 @@ def build_subject_clusters():
     # mean_distances /= synergies_per_subject
 
     """FIND MINIMAL DISTANCE BETWEEN COMPONENTS OF EACH SUBJECT"""
-    # for i in range(num_subjects):
-    #     for j in range(num_subjects):
-    #         if i == j:
-    #             mean_distances[i, j] = 0
-    #         else:
-    #             min_distances = []
-    #             for k in range(synergies_per_subject):
-    #                 comp_i_index = i * synergies_per_subject + k
-    #                 min_distance = np.min(
-    #                     distances[comp_i_index, j * synergies_per_subject:(j + 1) * synergies_per_subject])
-    #                 min_distances.append(min_distance)
-    #             mean_distances[i, j] = np.mean(min_distances)
+    for i in range(num_subjects):
+        for j in range(num_subjects):
+            if i == j:
+                mean_distances[i, j] = 0
+            else:
+                min_distances = []
+                for k in range(synergies_per_subject):
+                    comp_i_index = i * synergies_per_subject + k
+                    min_distance = np.min(
+                        distances[comp_i_index, j * synergies_per_subject:(j + 1) * synergies_per_subject])
+                    min_distances.append(min_distance)
+                mean_distances[i, j] = np.mean(min_distances)
 
     """PROCRUSTES DISTANCE"""
     # for i in range(num_subjects):
@@ -877,16 +1050,20 @@ def build_subject_clusters():
         silhouette_scores.append(silh_score)
 
     plt.plot(number_clusters, silhouette_scores)
-    plt.xticks(number_clusters)  # Setting x-ticks to the exact values in number_clusters
+    plt.xticks(number_clusters, fontsize=14)  # Setting x-ticks to the exact values in number_clusters
+    plt.yticks(np.linspace(0, 0.11, 12), ['{:.2f}'.format(x) for x in np.linspace(0, 0.11, 12)], fontsize=14)  # Setting y-ticks
+    plt.ylim(0, 0.11)  # Setting the y-axis limits to 0 to 0.11
     plt.xlabel('Number of Clusters')
     plt.ylabel('Silhouette Score')
     plt.title('Silhouette Scores for subject clusters')
     # plt.show()
-    plt.savefig('./results/silhouette_subject_clusters.png', dpi=600)
-    # plt.savefig('./results/test_silhouette_subject_clusters.png', dpi=600)
+    # plt.savefig('./results/silhouette_subject_clusters.png', dpi=600)
+    plt.savefig('./results/silhouette_subject_clusters.svg', format='svg', dpi=600)
 
 
 def build_ep_clusters(data):
+
+    plt.close('all')  # to clean the screen
 
     kin_cols = ['ThumbRotate', 'ThumbMPJ', 'ThumbIj', 'ThumbAb', 'IndexMPJ', 'IndexPIJ',
                 'MiddleMPJ', 'MiddlePIJ', 'MiddleIndexAb', 'RingMPJ', 'RingPIJ',
@@ -1019,16 +1196,13 @@ def build_ep_clusters(data):
 
     """PLOT"""
     plt.plot(number_clusters, silhouette_scores)
-    plt.xticks(number_clusters)  # Setting x-ticks to the exact values in number_clusters
+    plt.xticks(number_clusters, fontsize=14)  # Setting x-ticks to the exact values in number_clusters
+    plt.yticks(np.linspace(0, 0.11, 12), ['{:.2f}'.format(x) for x in np.linspace(0, 0.11, 12)], fontsize=14)  # Setting y-ticks
+    plt.ylim(0, 0.11)  # Setting the y-axis limits to 0 to 0.11
     plt.xlabel('Number of Clusters')
     plt.ylabel('Silhouette Score')
     plt.title('Silhouette Scores for EP clusters')
     # plt.show()
-    plt.savefig('./results/silhouette_ep_clusters.png', dpi=600)
+    # plt.savefig('./results/silhouette_ep_clusters.png', dpi=600)
+    plt.savefig('./results/silhouette_ep_clusters.svg', format='svg', dpi=600)
     # plt.savefig('./results/test_silhouette_subject_clusters.png', dpi=600)
-
-
-def extract_ep_syns_per_cluster(data):
-
-    best_clusters = pd.read_csv('./results/EP/resulting_components.csv')
-    a=1
