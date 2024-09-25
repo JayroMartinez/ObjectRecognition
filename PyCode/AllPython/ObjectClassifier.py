@@ -341,10 +341,10 @@ def main():
     # # early_fine_vs_coarse()
     #
     # syn_fine_vs_coarse_fam('cluster')
-    syn_fine_vs_coarse_fam('all')
+    # syn_fine_vs_coarse_fam('all')
 
     # syn_fine_vs_coarse_ep('cluster')
-    syn_fine_vs_coarse_ep('all')
+    # syn_fine_vs_coarse_ep('all')
 
     ###########################################################
     ## DISTANCE CHECK
