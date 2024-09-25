@@ -805,14 +805,13 @@ def kin_ep_classif_sgdb_subject(input_data):
 
 
 def ep_clust_suj_plots():
-
     plt.close('all')  # to clean the screen
 
     # File paths
     raw_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
     leave_one_out_file = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
     all_suj_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
-    leave_one_out_cluster_file = './results/Syn/accuracy/ep_clust_suj_leave_one_syn_results.csv'  # Correct file for clustered leave-one-out
+    leave_one_out_cluster_file = './results/Syn/accuracy/ep_clust_suj_leave_one_syn_results.csv'
 
     # Load data
     raw_data = pd.read_csv(raw_file, header=None)
@@ -820,114 +819,104 @@ def ep_clust_suj_plots():
     all_suj_data = pd.read_csv(all_suj_file, header=None)
     leave_one_out_cluster_data = pd.read_csv(leave_one_out_cluster_file, header=None)
 
+    # Extract best hyperparameter set results
+    raw_best_values = ast.literal_eval(raw_data.loc[raw_data.iloc[:, -1].idxmax(), raw_data.columns[-2]].strip("'"))
+    all_suj_best_values = ast.literal_eval(all_suj_data.loc[all_suj_data.iloc[:, -1].idxmax(), all_suj_data.columns[-2]].strip("'"))
+    leave_one_out_best_values = leave_one_out_data.groupby(3)[4].max().tolist()
+
     # Define clusters mapping
     clusters = {
         'sub-09': 'Cluster 1', 'sub-10': 'Cluster 1',
-        'sub-01': 'Cluster 2', 'sub-03': 'Cluster 2', 'sub-05': 'Cluster 2', 'sub-07': 'Cluster 2',
-        'sub-08': 'Cluster 2',
+        'sub-01': 'Cluster 2', 'sub-03': 'Cluster 2', 'sub-05': 'Cluster 2', 'sub-07': 'Cluster 2', 'sub-08': 'Cluster 2',
         'sub-02': 'Cluster 3', 'sub-04': 'Cluster 3', 'sub-06': 'Cluster 3', 'sub-11': 'Cluster 3'
     }
+    leave_one_out_cluster_data['Cluster'] = leave_one_out_cluster_data[3].map(clusters)
 
-    # Map subject IDs to cluster labels in the clustered leave-one-out data
-    leave_one_out_cluster_data['Cluster'] = leave_one_out_cluster_data[3].map(
-        clusters)  # Assuming subject IDs are in column 3
+    # Extract best scores per subject within each cluster
+    leave_one_out_cluster_data['Best Score'] = leave_one_out_cluster_data.groupby([3, 'Cluster'])[4].transform('max')
+    best_cluster_values = leave_one_out_cluster_data.drop_duplicates(subset=[3, 'Cluster', 'Best Score'])
 
-    # Group by cluster and aggregate data
-    cluster_groups = leave_one_out_cluster_data.groupby('Cluster')
-    cluster_data = cluster_groups[4].agg(list)  # Assuming accuracy is in column 4
-
-    # Extract values from other datasets
-    raw_values = raw_data[raw_data.columns[-1]]
-    all_suj_values = all_suj_data[all_suj_data.columns[-1]]
-    leave_one_out_values = leave_one_out_data[leave_one_out_data.columns[-1]]
+    # Flatten values into lists for each cluster
+    cluster_values = best_cluster_values.groupby('Cluster')['Best Score'].apply(list)
 
     # Prepare dataframes for plotting
-    raw_df = pd.DataFrame({'Raw Data': raw_values})
-    all_suj_df = pd.DataFrame({'All Subjects': all_suj_values})
-    leave_one_out_df = pd.DataFrame({'Leave One Out': leave_one_out_values})
-    cluster_1_df = pd.DataFrame({'Cluster 1': cluster_data['Cluster 1']})
-    cluster_2_df = pd.DataFrame({'Cluster 2': cluster_data['Cluster 2']})
-    cluster_3_df = pd.DataFrame({'Cluster 3': cluster_data['Cluster 3']})
+    raw_df = pd.DataFrame({'Group': 'Raw', 'Values': [raw_best_values]})
+    all_suj_df = pd.DataFrame({'Group': 'All Subjects', 'Values': [all_suj_best_values]})
+    leave_one_out_df = pd.DataFrame({'Group': 'Leave One Subject Out', 'Values': [leave_one_out_best_values]})
+    cluster_dfs = pd.DataFrame({'Group': ['Cluster 1', 'Cluster 2', 'Cluster 3'],
+                                'Values': cluster_values.reindex(['Cluster 1', 'Cluster 2', 'Cluster 3']).values})
 
-    # Combine and melt data for plotting
-    plot_data = pd.concat([raw_df, all_suj_df, leave_one_out_df, cluster_1_df, cluster_2_df, cluster_3_df],
-                          axis=1).melt(var_name='Group', value_name='Values')
+    # Combine data for plotting
+    plot_data = pd.concat([raw_df.explode('Values'), all_suj_df.explode('Values'), leave_one_out_df.explode('Values'), cluster_dfs.explode('Values')])
+
+    # Ensure data is numeric
+    plot_data['Values'] = pd.to_numeric(plot_data['Values'], errors='coerce')
 
     # Plotting
     plt.figure(figsize=(12, 8))
-    ax = sns.violinplot(x='Group', y='Values', data=plot_data, width=0.5)
+    ax = sns.violinplot(x='Group', y='Values', data=plot_data)
     add_stat_annotation(ax, data=plot_data, x='Group', y='Values',
-                        box_pairs=[("Raw Data", "All Subjects"), ("Raw Data", "Leave One Out"),
-                                   ("Raw Data", "Cluster 1"),
-                                   ("All Subjects", "Leave One Out"), ("All Subjects", "Cluster 1"),
-                                   ("All Subjects", "Cluster 2"),
-                                   ("All Subjects", "Cluster 3")],
+                        box_pairs=[("Raw", "All Subjects"),
+                                   ("Raw", "Leave One Subject Out"),
+                                   ("All Subjects", "Leave One Subject Out"),
+                                   ("Cluster 1", "Leave One Subject Out"),
+                                   ("Cluster 2", "Leave One Subject Out"),
+                                   ("Cluster 3", "Leave One Subject Out")],
                         test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
-
-    ax.set_ylim(0, 100)
-    ax.tick_params(axis='both', labelsize=14)
-    ax.set_ylabel('Accuracy (%)', fontsize=14)
-    plt.axhline(12.5, color='r', linestyle='--')
-    plt.title('Comparison of Classification Accuracies Across Different Setups', fontsize=16)
-    plt.savefig('./results/ep_comp_syn.svg', format='svg', dpi=600)
-    plt.show()
+    labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels[2] = 'Leave One\nSubject Out'
+    ax.set_xticklabels(labels)
+    ax.set_xlabel('')
+    plt.ylim(0, 110)
+    plt.ylabel('Accuracy (%)', fontsize=14)
+    plt.title('Comparison of Best Classification Accuracies Across Different Setups', fontsize=16)
+    plt.axhline(12.5, color='r', linestyle='--', label='Chance Level')  # Add chance level line
+    ax.legend(loc='lower left')
+    plt.savefig('./results/ep_comp_syn_clust.svg', format='svg', dpi=600)
+    # plt.show()
 
 
 def ep_all_suj_plots():
 
     plt.close('all')  # to clean the screen
 
-    # File paths
     raw_file = './results/Raw/accuracy/ep_alternative_raw_results.csv'
     leave_one_out_file = './results/Syn/accuracy/ep_all_suj_leave_one_syn_results.csv'
     all_suj_file = './results/Syn/accuracy/ep_all_suj_syn_results.csv'
 
-    # Load data
     raw_data = pd.read_csv(raw_file, header=None)
     leave_one_out_data = pd.read_csv(leave_one_out_file, header=None)
     all_suj_data = pd.read_csv(all_suj_file, header=None)
 
-    # Extract best values from raw data
     raw_best_values = raw_data.loc[raw_data[raw_data.columns[-1]].idxmax()][raw_data.columns[-2]]
     raw_floats_list = ast.literal_eval(raw_best_values.strip("'"))
 
-    # Group leave one out data by cluster and find the maximum value per cluster
-    leave_one_out_clusters = leave_one_out_data.groupby(3)  # Assuming cluster info is in column 3
-    cluster_max_values = leave_one_out_clusters[4].max()  # Assuming accuracy is in column 4
+    leave_one_out_best_values = leave_one_out_data.groupby(3)[4].max().values
 
-    # Convert cluster values to array
-    cluster_values = cluster_max_values.values
-
-    # Extract best values from all subjects data
     all_suj_best_values = all_suj_data.loc[all_suj_data[all_suj_data.columns[-1]].idxmax()][all_suj_data.columns[-2]]
     all_suj_floats_list = ast.literal_eval(all_suj_best_values.strip("'"))
 
-    # Calculating mean values and padding for consistency in plotting
     raw_mean_value = np.asarray(raw_floats_list).mean()
-    full_raw_values = np.pad(raw_floats_list, (0, len(cluster_values) - len(raw_floats_list)), 'constant',
-                             constant_values=(0, raw_mean_value))
+    full_raw_values = np.pad(raw_floats_list, (0, len(leave_one_out_best_values) - len(raw_floats_list)), 'constant',
+                         constant_values=(0, raw_mean_value))
 
     all_suj_mean_value = np.asarray(all_suj_floats_list).mean()
-    full_all_suj_values = np.pad(all_suj_floats_list, (0, len(cluster_values) - len(all_suj_floats_list)), 'constant',
-                                 constant_values=(0, all_suj_mean_value))
+    full_all_suj_values = np.pad(all_suj_floats_list, (0, len(leave_one_out_best_values) - len(all_suj_floats_list)), 'constant',
+                             constant_values=(0, all_suj_mean_value))
 
-    # Prepare dataframes for plotting
     raw_best_values_df = pd.DataFrame({'Raw': full_raw_values})
     all_suj_best_values_df = pd.DataFrame({'All Subj': full_all_suj_values})
-    leave_one_out_best_values_df = pd.DataFrame({'Leave One Subject Out': cluster_values})
+    leave_one_out_best_values_df = pd.DataFrame({'Leave One Subject Out': leave_one_out_best_values})
 
-    # Combine and melt data for plotting
     plot_data = pd.concat([raw_best_values_df, all_suj_best_values_df, leave_one_out_best_values_df], axis=1)
     plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
 
-    # Plotting
     plt.figure(figsize=(10, 6))
     ax = sns.violinplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
     add_stat_annotation(ax, data=plot_data_melted, x='Group', y='Values',
                         box_pairs=[("Raw", "All Subj"), ("Raw", "Leave One Subject Out"), ("All Subj", "Leave One Subject Out")],
                         test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
 
-    # Customize labels and axes
     labels = [item.get_text() for item in ax.get_xticklabels()]
     labels[2] = 'Leave One\nSubject Out'
     ax.set_xticklabels(labels)
@@ -938,6 +927,7 @@ def ep_all_suj_plots():
     ax.set_xlabel('')
     plt.axhline(12.5, color='r', linestyle='--')
     plt.title('Comparison of accuracies for classifiers targeting EP label', fontsize=14)
+    # save_file = './results/ep_comp_syn.png'
     save_file = './results/ep_comp_syn.svg'
     plt.savefig(save_file, format='svg', dpi=600)
     # plt.show()

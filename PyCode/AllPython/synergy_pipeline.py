@@ -3018,9 +3018,7 @@ def syn_fine_vs_coarse_fam(type):
     ax.legend(loc='center right', title='Condition')
     plt.xlabel("Synergies")
     plt.ylabel("Z-score (absolute value)")
-
-    # Step 3: Statistical Test and Step 4: Annotation
-    # Perform statistical tests, check direction, and annotate
+    plt.ylim(melted_df['Value'].min(), melted_df['Value'].max() * 1.15)
 
     for i, column in enumerate(selected_syns):
         groupA = selected_fine[column]  # Fine group
@@ -3045,7 +3043,7 @@ def syn_fine_vs_coarse_fam(type):
     # else:
     #     tit += ' all subjects'
     # plt.title(tit)
-    plt.autoscale()
+    # plt.autoscale()
     plt.tight_layout()
     # plt.show()
 
@@ -3099,9 +3097,7 @@ def syn_fine_vs_coarse_ep(type):
     ax.legend(loc='center right', title='Condition')
     plt.xlabel("Synergies")
     plt.ylabel("Z-score (absolute value)")
-
-    # Step 3: Statistical Test and Step 4: Annotation
-    # Perform statistical tests, check direction, and annotate
+    plt.ylim(melted_df['Value'].min(), melted_df['Value'].max() * 1.15)
 
     for i, column in enumerate(selected_syns):
         groupA = selected_fine[column]  # Fine group
@@ -3125,7 +3121,7 @@ def syn_fine_vs_coarse_ep(type):
     # else:
     #     tit += ' all subjects'
     # plt.title(tit)
-    plt.autoscale()
+    # plt.autoscale()
     plt.tight_layout()
     # plt.show()
 

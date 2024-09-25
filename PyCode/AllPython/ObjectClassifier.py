@@ -66,6 +66,7 @@ from ep_modelling import build_ep_clusters
 from stat_analysis import check_kinematics
 from aux_get_best_param import best_parameter_combination_across_families
 from feature_stats import feature_plots
+from aux_distinguis import get_dist_heatmap
 
 def main():
 
@@ -339,11 +340,11 @@ def main():
     ###########################################################
     # # early_fine_vs_coarse()
     #
-    # # syn_fine_vs_coarse_fam('cluster')
-    # syn_fine_vs_coarse_fam('all')
-    #
-    # # syn_fine_vs_coarse_ep('cluster')
-    # syn_fine_vs_coarse_ep('all')
+    # syn_fine_vs_coarse_fam('cluster')
+    syn_fine_vs_coarse_fam('all')
+
+    # syn_fine_vs_coarse_ep('cluster')
+    syn_fine_vs_coarse_ep('all')
 
     ###########################################################
     ## DISTANCE CHECK
@@ -386,7 +387,7 @@ def main():
     # print("\nEP classification from syn scores with subjects DONE!")
 
     # ep_all_suj_syn_one_subject_out()
-    ep_clust_suj_syn_one_subject_out()  # Leave-one-subject-out by clusters
+    # ep_clust_suj_syn_one_subject_out()
 
 
     # # ['syn', 'raw', 'syn_raw_suj', 'syn_raw_no_suj]
@@ -396,7 +397,7 @@ def main():
     # ep_classification_plots('syn_raw_no_suj')
     #
     # ep_all_suj_plots()
-    ep_clust_suj_plots()
+    # ep_clust_suj_plots()
 
     ###########################################################
     ## SUBJECT CLUSTERING
@@ -424,6 +425,9 @@ def main():
     # best_parameter_combination_across_families(log_reg_df)
     # print("\nBest results with MiniBatch classifier:")
     # best_parameter_combination_across_families(mini_batch_df)
+
+    """GET TERNARY DISTINGUISHABILITY TABLE"""
+    # get_dist_heatmap()
 
 if __name__ == "__main__":
     main()
