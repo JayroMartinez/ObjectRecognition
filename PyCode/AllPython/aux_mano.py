@@ -2,7 +2,7 @@ import torch
 import mano
 from mano.utils import Mesh
 
-model_path = 'PATH_TO_MANO_MODELS'
+model_path = '/models'
 n_comps = 45
 batch_size = 10
 

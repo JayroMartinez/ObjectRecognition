@@ -68,6 +68,8 @@ from aux_get_best_param import best_parameter_combination_across_families
 from feature_stats import feature_plots
 from aux_distinguis import get_dist_heatmap
 
+import aux_mano
+
 def main():
 
     # data_folder = '/BIDSData'
@@ -428,6 +430,9 @@ def main():
 
     """GET TERNARY DISTINGUISHABILITY TABLE"""
     # get_dist_heatmap()
+
+    """MANO"""
+    aux_mano()
 
 if __name__ == "__main__":
     main()
