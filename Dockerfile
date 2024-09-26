@@ -11,5 +11,5 @@ RUN pip3 install numpy scikit-learn pandas jupyterlab matplotlib seaborn pingoui
 EXPOSE 8888
 
 CMD ["/bin/bash", "-c", "jupyter lab --ip='0.0.0.0' --no-browser --allow-root"]
-CMD mv /PyCode/mano/ /usr/local/lib/python3.8/site-packages
+CMD cp /PyCode/mano/ /usr/local/lib/python3.8/site-packages
 
