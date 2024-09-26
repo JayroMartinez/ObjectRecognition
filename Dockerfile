@@ -6,7 +6,7 @@ FROM python:3.8
 # COPY /PyCode . 
 
 RUN pip3 install --upgrade pip
-RUN pip3 install git numpy==1.23.0 scikit-learn pandas jupyterlab matplotlib seaborn pingouin scipy statannotations statannot torch==1.5.1+cpu torchvision==0.6.1+cpu -f https://download.pytorch.org/whl/torch_stable.html trimesh chumpy
+RUN pip3 install numpy==1.23.0 scikit-learn pandas jupyterlab matplotlib seaborn pingouin scipy statannotations statannot torch==1.5.1+cpu torchvision==0.6.1+cpu -f https://download.pytorch.org/whl/torch_stable.html trimesh chumpy
 # git+https://github.com/mattloper/chumpy
 
 EXPOSE 8888
