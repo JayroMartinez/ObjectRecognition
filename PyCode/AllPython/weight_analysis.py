@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
@@ -117,7 +118,7 @@ def raw_weights():
 
 def ep_weights():
 
-    families = ['Ball', 'Cutlery', 'Geometric', 'Mugs', 'Plates']
+    families = ['Ball', 'Cutlery', 'Geometric', 'Vessels', 'Plates']
 
     ep_labs_cols = ['contour following',
                     'enclosure', 'enclosure part',
@@ -126,7 +127,7 @@ def ep_weights():
 
 
     fam_obj = dict(
-        Mugs=['CeramicMug', 'Glass', 'MetalMug'],
+        Vessels=['CeramicMug', 'Glass', 'MetalMug'],
         Plates=['CeramicPlate', 'MetalPlate', 'PlasticPlate'],
         Geometric=['Cube', 'Cylinder', 'Triangle'],
         Cutlery=['Fork', 'Knife', 'Spoon'],
@@ -450,16 +451,26 @@ def ep_weights():
         # ep_presabs_fin_w_fam.loc[len(ep_presabs_fin_w_fam.index)] = pd.Series(data=ep_presabs_tot_w_fam, index=ep_labs_cols, name='Total')
         # ep_presabs_fin_w_fam.index = idx
 
-        # heatmap weights
+        # Heatmap weights
         center = 0
-        min = ep_presabs_fin_w_fam.min().min()
-        max = ep_presabs_fin_w_fam.max().max()
-        new_margin = np.maximum(min, max)
+        min_val = ep_presabs_fin_w_fam.min().min()
+        max_val = ep_presabs_fin_w_fam.max().max()
+        new_margin = max(abs(min_val), abs(max_val))
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
-        new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
+
+        # Define colorblind-friendly colors
+        # Blue for negative values, white for zero, green for positive values
+        colors = [
+            (0.0, '#377eb8'),  # Dark blue
+            (0.5, '#ffffff'),  # White
+            (1.0, '#4daf4a')  # Dark green
+        ]
+
+        # Create custom colormap
+        custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
         fig, ax = plt.subplots()
-        g = sns.heatmap(data=ep_presabs_fin_w_fam, annot=False, norm=normalize, cmap=new_colormap)
+        g = sns.heatmap(data=ep_presabs_fin_w_fam, annot=False, norm=normalize, cmap=custom_cmap)
         ep_presabs_fin_w_fam.columns = [col.replace(' ', '\n') for col in ep_presabs_fin_w_fam.columns]
         g.set_xticklabels(labels=ep_presabs_fin_w_fam.columns, rotation=45, size=10)
         g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
@@ -467,7 +478,7 @@ def ep_weights():
         cbar = g.collections[0].colorbar
         cbar.set_label('Normalized Weights (a.u.)', rotation=270, labelpad=20)
         ax.set_ylabel('')  # This sets the y-axis label to an empty string
-        plt.title('Pres/Abs EP Labels weights for object family')
+        plt.title('Presence/Absence EP Labels weights for object family')
         plt.tight_layout()
         # plt.savefig('./results/EP/plots/var_weights_fam_ep_presabs_family.png', dpi=600)
         plt.savefig('./results/EP/plots/var_weights_fam_ep_presabs_family.svg', format='svg', dpi=600)
@@ -543,16 +554,26 @@ def ep_weights():
         normalized_total = (values - min_val) / (max_val - min_val) if max_val > min_val else np.zeros_like(values)
         ep_dur_fin_w_fam.loc['Total'] = normalized_total
 
-        # heatmap weights
+        # Heatmap weights
         center = 0
-        min = ep_dur_fin_w_fam.min().min()
-        max = ep_dur_fin_w_fam.max().max()
-        new_margin = np.maximum(min, max)
+        min_val = ep_presabs_fin_w_fam.min().min()
+        max_val = ep_presabs_fin_w_fam.max().max()
+        new_margin = max(abs(min_val), abs(max_val))
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
-        new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
+
+        # Define colorblind-friendly colors
+        # Blue for negative values, white for zero, green for positive values
+        colors = [
+            (0.0, '#377eb8'),  # Dark blue
+            (0.5, '#ffffff'),  # White
+            (1.0, '#4daf4a')  # Dark green
+        ]
+
+        # Create custom colormap
+        custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
         fig, ax = plt.subplots()
-        g = sns.heatmap(data=ep_dur_fin_w_fam, annot=False, norm=normalize, cmap=new_colormap)
+        g = sns.heatmap(data=ep_dur_fin_w_fam, annot=False, norm=normalize, cmap=custom_cmap)
         ep_dur_fin_w_fam.columns = [col.replace(' ', '\n') for col in ep_dur_fin_w_fam.columns]
         g.set_xticklabels(labels=ep_dur_fin_w_fam.columns, rotation=45, size=10)
         g.set_yticklabels(labels=g.get_yticklabels(), rotation=45, size=10)  # Adjust the 'size' as needed
@@ -639,9 +660,9 @@ def ep_weights():
         # heatmap weights
         # generate new colormap
         center = 0
-        min = ep_count_fin_w_fam.min().min()
-        max = ep_count_fin_w_fam.max().max()
-        new_margin = np.maximum(min, max)
+        min_v = ep_count_fin_w_fam.min().min()
+        max_v = ep_count_fin_w_fam.max().max()
+        new_margin = np.maximum(min_v, max_v)
         normalize = mcolors.TwoSlopeNorm(vcenter=center, vmin=-new_margin, vmax=new_margin)
         new_colormap = sns.color_palette("viridis", as_cmap=True)  # Use a continuous colorblind-friendly colormap
 

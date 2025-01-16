@@ -535,12 +535,12 @@ def ep_classification_plots(type):
 
 def ep_clust_suj_syn_one_subject_out():
 
-    # Defining clusters
     clusters = [
-        {'sub-09', 'sub-10'},
         {'sub-01', 'sub-03', 'sub-05', 'sub-07', 'sub-08'},
+        {'sub-09', 'sub-10'},
         {'sub-02', 'sub-04', 'sub-06', 'sub-11'}
     ]
+    # Defining clusters
 
     [kin_params, emg_params, tact_params] = get_raw_best_params()
     kin_bins = kin_params[0]
@@ -826,9 +826,9 @@ def ep_clust_suj_plots():
 
     # Define clusters mapping
     clusters = {
+        'sub-01': 'Cluster 0', 'sub-03': 'Cluster 0', 'sub-05': 'Cluster 0', 'sub-07': 'Cluster 0', 'sub-08': 'Cluster 0',
         'sub-09': 'Cluster 1', 'sub-10': 'Cluster 1',
-        'sub-01': 'Cluster 2', 'sub-03': 'Cluster 2', 'sub-05': 'Cluster 2', 'sub-07': 'Cluster 2', 'sub-08': 'Cluster 2',
-        'sub-02': 'Cluster 3', 'sub-04': 'Cluster 3', 'sub-06': 'Cluster 3', 'sub-11': 'Cluster 3'
+        'sub-02': 'Cluster 2', 'sub-04': 'Cluster 2', 'sub-06': 'Cluster 2', 'sub-11': 'Cluster 2'
     }
     leave_one_out_cluster_data['Cluster'] = leave_one_out_cluster_data[3].map(clusters)
 
@@ -843,8 +843,8 @@ def ep_clust_suj_plots():
     raw_df = pd.DataFrame({'Group': 'Raw', 'Values': [raw_best_values]})
     all_suj_df = pd.DataFrame({'Group': 'All Subjects', 'Values': [all_suj_best_values]})
     leave_one_out_df = pd.DataFrame({'Group': 'Leave One Subject Out', 'Values': [leave_one_out_best_values]})
-    cluster_dfs = pd.DataFrame({'Group': ['Cluster 1', 'Cluster 2', 'Cluster 3'],
-                                'Values': cluster_values.reindex(['Cluster 1', 'Cluster 2', 'Cluster 3']).values})
+    cluster_dfs = pd.DataFrame({'Group': ['Cluster 0', 'Cluster 1', 'Cluster 2'],
+                                'Values': cluster_values.reindex(['Cluster 0', 'Cluster 1', 'Cluster 2']).values})
 
     # Combine data for plotting
     plot_data = pd.concat([raw_df.explode('Values'), all_suj_df.explode('Values'), leave_one_out_df.explode('Values'), cluster_dfs.explode('Values')])
@@ -859,17 +859,20 @@ def ep_clust_suj_plots():
                         box_pairs=[("Raw", "All Subjects"),
                                    ("Raw", "Leave One Subject Out"),
                                    ("All Subjects", "Leave One Subject Out"),
+                                   ("Cluster 0", "Leave One Subject Out"),
                                    ("Cluster 1", "Leave One Subject Out"),
-                                   ("Cluster 2", "Leave One Subject Out"),
-                                   ("Cluster 3", "Leave One Subject Out")],
+                                   ("Cluster 2", "Leave One Subject Out")],
                         test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
     labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels[0] = 'Raw\nData'
+    labels[1] = 'All\nSubjects'
     labels[2] = 'Leave One\nSubject Out'
     ax.set_xticklabels(labels)
     ax.set_xlabel('')
     plt.ylim(0, 110)
+    ax.tick_params(axis='both', labelsize=14)
     plt.ylabel('Accuracy (%)', fontsize=14)
-    plt.title('Comparison of Best Classification Accuracies Across Different Setups', fontsize=16)
+    plt.title('Comparison of accuracies for classifiers targeting EP label', fontsize=14)
     plt.axhline(12.5, color='r', linestyle='--', label='Chance Level')  # Add chance level line
     ax.legend(loc='lower left')
     plt.savefig('./results/ep_comp_syn_clust.svg', format='svg', dpi=600)
@@ -918,6 +921,8 @@ def ep_all_suj_plots():
                         test='Mann-Whitney', text_format='simple', loc='inside', verbose=2)
 
     labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels[0] = 'Raw\nData'
+    labels[1] = 'All\nSubjects'
     labels[2] = 'Leave One\nSubject Out'
     ax.set_xticklabels(labels)
 

@@ -35,6 +35,7 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.spatial.distance import cdist
 from numpy import std, mean, sqrt
 from sklearn.metrics.pairwise import cosine_similarity
+import pickle
 
 from classification import get_raw_best_params
 
@@ -944,7 +945,35 @@ def kin_syn_extraction(data):
     kin_var = pca_mod.explained_variance_ratio_
     kin_tot_var = pca_mod.explained_variance_
 
+
+    """SAVE DATA IN SIMON FORMAT"""
+    explained_variance = pca_mod.explained_variance_ratio_
+    # Calculate the reconstruction
+    reconstruction = pca_mod.inverse_transform(kin_scores)
+    reconstruction_error = np.mean((kin_scaled - reconstruction) ** 2)
     # Also return the mean and std used in the StandardScaler
+    out_dict = {
+        'scaler': scaler,
+        'model': pca_mod,
+        'nb_components': np.shape(kin_scores)[1],  # TODO not needed, nb_comps given in model
+        'encoded_data': kin_scores,
+        'synergies': kin_syns,
+        'explained_variance': explained_variance,
+        'reconstruction_error': reconstruction_error
+    }
+    with open("./results/pca_results.pkl", "wb") as f:
+        pickle.dump(out_dict, f)
+
+    # headers = out_dict.keys()
+    # with open("./results/pca_results.csv", "w", newline='') as f:
+    #     writer = csv.writer(f)
+    #
+    #     # Write the header row
+    #     writer.writerow(headers)
+    #
+    #     # Write the rows of values (transpose the lists to rows)
+    #     writer.writerows(zip(*out_dict.values()))
+
     return [kin_scores, kin_syns, kin_var, kin_tot_var, scaler.mean_, scaler.scale_]
 
 
@@ -1021,9 +1050,9 @@ def syn_extraction(data):
 
     ## SYNERGY EXTRACTION AND SAVING
     # [kin_scores, kin_syns, kin_var, kin_var_tot] = kin_syn_extraction(data_clean[kin_cols])
-    [kin_scores, kin_syns, kin_var, kin_var_tot,kin_mean, kin_scale] = kin_syn_extraction(data_clean[kin_cols])
+    [kin_scores, kin_syns, kin_var, kin_var_tot, kin_mean, kin_scale] = kin_syn_extraction(data_clean[kin_cols])
     pd.DataFrame(kin_scores).to_csv('./results/Syn/scores/kin_scores.csv')
-    pd.DataFrame(kin_syns).to_csv('./results/Syn/synergies/kin_syns.csv')
+    pd.DataFrame(kin_syns).to_csv('./results/Syn/synergies/kin_syns.csv') # EACH COLUMN IS A COMPONENT
     pd.DataFrame(kin_var).to_csv('./results/Syn/variance/kin_var.csv')
     pd.DataFrame(kin_var_tot).to_csv('./results/Syn/variance/kin_var_tot.csv')
     pd.DataFrame(kin_mean).to_csv('./results/Syn/kin_mean.csv')

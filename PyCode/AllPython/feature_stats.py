@@ -17,6 +17,7 @@ def feature_plots(presabs, dur, count):
     }
 
     # Create a copy of dur, including the 'Family' column in the new DataFrame
+    dur['Family'] = dur['Family'].replace('Mugs', 'Vessels')
     new_dur = dur.copy()
     # Ensure 'Family' is copied directly to the expanded_dur
     expanded_dur = pd.DataFrame(index=new_dur.index)
