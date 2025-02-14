@@ -71,6 +71,7 @@ def get_dist_heatmap():
         cmap=cmap,
         cbar=True,
         linewidths=0.5,
+        linecolor='gray',
         cbar_kws={'boundaries': [-0.5, 0.5, 1.5], 'ticks': [0, 1]},
         square=False
     )
