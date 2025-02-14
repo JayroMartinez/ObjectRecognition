@@ -78,6 +78,8 @@ def get_dist_heatmap():
 
     colorbar = plt.gca().collections[0].colorbar
     colorbar.set_ticks([0, 1])
+    colorbar.outline.set_edgecolor('grey')
+    colorbar.outline.set_linewidth(1)
     colorbar.set_ticklabels(['No', 'Yes'])
 
     ax = plt.gca()
