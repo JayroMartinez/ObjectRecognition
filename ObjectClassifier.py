@@ -9,7 +9,9 @@ pd.options.mode.chained_assignment = None
 
 # from load_subject import load
 # from load_subject import load_eps
+
 # from split_data import split
+
 # from classification import emg_classification
 # from classification import kinematic_classification
 # from classification import tactile_classification
@@ -25,9 +27,13 @@ pd.options.mode.chained_assignment = None
 # from classification import fam_ep_dur_classification
 # from classification import fam_ep_count_classification
 # from classification import get_raw_best_params
+# from classification import kinematic_family_classification
+
 # from ep_class_acc_stats import ep_stats_classification_plots
+
 # from weight_analysis import raw_weights
 # from weight_analysis import ep_weights
+
 # from synergy_pipeline import syn_extraction
 # from synergy_pipeline import syn_extraction_subj
 # from synergy_pipeline import syn_single_source_classification
@@ -46,23 +52,27 @@ pd.options.mode.chained_assignment = None
 # from synergy_pipeline import early_fine_vs_coarse
 # from synergy_pipeline import syn_fine_vs_coarse_fam
 # from synergy_pipeline import syn_fine_vs_coarse_ep
-# from family_pipeline import fam_syn_single_source_classification
 # from synergy_pipeline import all_subjects_comp
 # from synergy_pipeline import clustered_comp
+# from synergy_pipeline import syn_clustering_alternative
+from synergy_pipeline import print_syn_results_alternative
+
 # from ep_modelling import ep_from_scores_classif
 # from ep_modelling import ep_from_raw_classif
-# from synergy_pipeline import syn_clustering_alternative
 # from ep_modelling import ep_classification_plots
-# from synergy_pipeline import print_syn_results_alternative
-# from classification import kinematic_family_classification
 # from ep_modelling import ep_all_suj_syn_one_subject_out
 # from ep_modelling import ep_clust_suj_syn_one_subject_out
-# from ep_modelling import ep_all_suj_plots
+from ep_modelling import ep_all_suj_plots
 # from ep_modelling import ep_clust_suj_plots
 # from ep_modelling import build_subject_clusters
 # from ep_modelling import build_ep_clusters
+
+# from family_pipeline import fam_syn_single_source_classification
+
 # from aux_get_best_param import best_parameter_combination_across_families
+
 from feature_stats import feature_plots
+
 from aux_distinguis import get_dist_heatmap
 
 def main():
@@ -345,7 +355,7 @@ def main():
     # # ep_classification_plots('syn_raw_suj')
     # # ep_classification_plots('syn_raw_no_suj')
     #
-    # ep_all_suj_plots()
+    ep_all_suj_plots()
     # ep_clust_suj_plots()
     #
     # ################################
@@ -368,7 +378,7 @@ def main():
     # # best_parameter_combination_across_families(mini_batch_df)
 
     """GET BINARY DISTINGUISHABILITY TABLE"""
-    get_dist_heatmap()
+    # get_dist_heatmap()
 
 
 if __name__ == "__main__":

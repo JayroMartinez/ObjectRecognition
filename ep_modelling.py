@@ -28,9 +28,9 @@ from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
 from itertools import combinations
-from statsmodels.multivariate.manova import MANOVA
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
+# from statsmodels.multivariate.manova import MANOVA
+# import statsmodels.api as sm
+# import statsmodels.formula.api as smf
 from scipy.stats import mannwhitneyu
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial.distance import cdist
@@ -514,7 +514,7 @@ def ep_classification_plots(type):
     plot_data = pd.concat([a_best_values_df, b_best_values_df], axis=1)
     plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(7, 6))
     ax = sns.boxplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
     _, p = mannwhitneyu(plot_data['Group 1'], plot_data['Group 2'])
     ax.text(0.5, 0.95, f'p={p:.3f}', fontsize=14, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
@@ -524,7 +524,7 @@ def ep_classification_plots(type):
     updated_ticks = np.unique(np.append(current_ticks, 12.5))
     ax.set_yticks(updated_ticks)
     ax.set_xlabel('')
-    ax.set_ylabel('Values', fontsize=14)  # Ajusta según sea necesario
+    ax.set_ylabel('Values', fontsize=14)
     ax.tick_params(axis='x', labelsize=12)
     ax.tick_params(axis='y', labelsize=12)
 
@@ -958,7 +958,7 @@ def ep_all_suj_plots():
     plot_data = pd.concat([raw_best_values_df, all_suj_best_values_df, leave_one_out_best_values_df], axis=1)
     plot_data_melted = plot_data.melt(var_name='Group', value_name='Values')
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 8))
     ax = sns.violinplot(x='Group', y='Values', data=plot_data_melted, width=0.5)
     add_stat_annotation(ax, data=plot_data_melted, x='Group', y='Values',
                         box_pairs=[("Raw", "All Subj"), ("Raw", "Leave One Subject Out"), ("All Subj", "Leave One Subject Out")],
@@ -972,7 +972,7 @@ def ep_all_suj_plots():
 
     ax.set_ylim(0, 100)
     ax.tick_params(axis='both', labelsize=14)
-    ax.set_ylabel('Accuracy', fontsize=14)
+    ax.set_ylabel('Accuracy (%)', fontsize=14)
     ax.set_xlabel('')
     plt.axhline(12.5, color='r', linestyle='--')
     plt.title('Comparison of accuracies for classifiers targeting EP label', fontsize=14)

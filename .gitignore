@@ -28,3 +28,6 @@ PyCode/AllPython/results/Raw/weights
 PyCode/AllPython/results/bkp
 PyCode/AllPython/results/Syn
 PyCode/AllPython/results/Early Enclosure/
+.DS_Store
+BIDSData
+results

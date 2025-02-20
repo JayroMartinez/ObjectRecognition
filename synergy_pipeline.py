@@ -27,9 +27,9 @@ from sklearn.impute import SimpleImputer
 import statistics
 from sklearn.preprocessing import MinMaxScaler
 from itertools import combinations
-from statsmodels.multivariate.manova import MANOVA
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
+# from statsmodels.multivariate.manova import MANOVA
+# import statsmodels.api as sm
+# import statsmodels.formula.api as smf
 from scipy.stats import mannwhitneyu
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial.distance import cdist
@@ -2588,7 +2588,14 @@ def print_syn_results(type, discard):
     pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
     annotator_i = Annotator(i, pairs_kin[::-1], data=kin_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize='xx-small', line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney",
+                          text_format="star",
+                          show_test_name=False,
+                          fontsize='xx-small',
+                          line_height=0.01,
+                          line_width=0.5,
+                          loc="inside",
+                          color='0')
     annotator_i.apply_and_annotate()
 
     i.axhline(33, color='b', linestyle='--', label='Chance level')
@@ -3242,7 +3249,7 @@ def print_syn_results_alternative(discard):
     # not sure what have done here
     # extended_kin_cum_var = kin_cum_var[:]
     # extended_kin_cum_var = np.insert(extended_kin_cum_var, 0, extended_kin_cum_var[0][0])
-    extended_kin_cum_var = kin_cum_var[:]
+    extended_kin_cum_var = kin_cum_var[:].to_numpy()
     extended_kin_cum_var = np.insert(extended_kin_cum_var, 0, extended_kin_cum_var[0][0])
     extended_kin_cum_var = pd.DataFrame(extended_kin_cum_var).transpose()
 
@@ -3320,10 +3327,10 @@ def print_syn_results_alternative(discard):
                       color="r", label='Syn classifier')
     sns.pointplot(data=best_raw_kin_df, errorbar='ci', errwidth='.75', capsize=.2, color="b", label='Raw classifier')
     i.set_ylim([0, 100])
-    custom_labels = ['100%', '90%', '80%', '70%', '60%', '50%', '40%', '30%', '20%', '10%']
+    custom_labels = ['100', '90', '80', '70', '60', '50', '40', '30', '20', '10']
     i.set_xticklabels(custom_labels)
-    i.set(ylabel="Accuracy (95% ci)\nVariance Explained")
-    i.set(xlabel="Percentage of Synergies")
+    i.set(ylabel="Accuracy (95% ci)\nVariance explained (%)")
+    i.set(xlabel="Retained synergies (%)")
     # i.axhline(33, color='0.75', linestyle='--', label='Chance level')
     i.axhline(20, color='0.75', linestyle='--', label='Chance level')
     # i.axhline(55.52, color='r', linestyle='--', label='Raw Classifier')
@@ -3334,7 +3341,7 @@ def print_syn_results_alternative(discard):
     for it, handle in enumerate(handles):
         handle.set_color(colors[it])
         handle.set_linewidth(1)
-    i.set_ylim(0, 170)
+    i.set_ylim(0, 110)
     sns.move_legend(i, "best")
     # plt.show()
 
@@ -3372,16 +3379,24 @@ def print_syn_results_alternative(discard):
     # pairs_kin = [('Raw', '100'), ('Raw', '90'), ('Raw', '80'), ('Raw', '70'), ('Raw', '60'), ('Raw', '50'), ('Raw', '40'), ('Raw', '30'), ('Raw', '20'), ('Raw', '10')]
     pairs_kin = [('Raw', 100), ('Raw', 90), ('Raw', 80), ('Raw', 70), ('Raw', 60), ('Raw', 50),
                  ('Raw', 40), ('Raw', 30), ('Raw', 20), ('Raw', 10)]
-    custom_labels = ['Raw', '100%', '90%', '80%', '70%', '60%', '50%', '40%', '30%', '20%', '10%']
+    custom_labels = ['Raw', '100', '90', '80', '70', '60', '50', '40', '30', '20', '10']
     i.set_xticklabels(custom_labels)
     annotator_i = Annotator(i, pairs_kin[::-1], data=kin_pval_df)
-    annotator_i.configure(test="Mann-Whitney", text_format="star", show_test_name=False, fontsize=10,
-                          line_height=0.01, line_width=0.5, color='0')
+    annotator_i.configure(test="Mann-Whitney",
+                          text_format="star",
+                          show_test_name=False,
+                          fontsize=10,
+                          line_offset=0.003,
+                          text_offset=0.001,
+                          line_height=0.003,
+                          loc="inside",
+                          color='0')
     annotator_i.apply_and_annotate()
 
     # i.axhline(33, color='b', linestyle='--', label='Chance level')
     i.axhline(20, color='b', linestyle='--', label='Chance level')
-    i.set(ylabel="Accuracy (95% ci)")
+    i.set(ylabel="Accuracy (95% ci)\nVariance explained (%)")
+    i.set(xlabel="Retained synergies (%)")
     leg = plt.legend(labels=['Chance Level', 'Variance Explained'], labelcolor=['b', 'r'])
     handles = leg.legendHandles
     colors = ['b', 'r']
@@ -3406,8 +3421,8 @@ def print_syn_results_alternative(discard):
         fig_file += '_decr.svg'
 
     # i.set(title=title)
-    i.set_ylim(0, 100)
-    plt.autoscale()
+    i.set_ylim(0, 170)
+    # plt.autoscale()
     plt.tight_layout()
     plt.savefig(fig_file, format='svg', dpi=600)
     # plt.savefig(fig_file, dpi=600)
